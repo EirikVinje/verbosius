@@ -1,5 +1,5 @@
 import re
-from time import time
+from time import time, perf_counter
 
 import spacy
 import pandas as pd
@@ -52,13 +52,23 @@ def lemmatize(textdata, cores:int = 1):
     nlp = spacy.load('en_core_web_sm')
     lemmatizer = nlp.get_pipe("lemmatizer")
     
-    start = time()
-    doc = nlp.pipe(textdata, batch_size=1000, disable=["tagger", "parser", "ner"], n_process=cores)
-    end = time()
+    start = perf_counter()
+    docs = nlp.pipe(textdata, batch_size=1000, disable=["parser", "ner"], n_process=cores)
+    end = perf_counter()
 
-    print(f'lemmatization took {end-start} seconds')
+    lemmas = []
+    tokens = []
+    part_idxs = []
+    for doc in docs:
+        for idx, token in enumerate(doc):
+            tokens.append(token)
+            lemmas.append(token.lemma_)
+            if token.pos_ == 'PART':
+                part_idxs.append(idx)
 
-    return textdata
+    # print(f'lemmatization took {end-start} seconds')
+
+    return lemmas, tokens, part_idxs
 
 
 

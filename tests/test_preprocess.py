@@ -12,13 +12,17 @@ def test_clean_text():
 
 def test_lemmatize():
 
-    textdata = ['I walked to the store and bought some apples']
+    textdata = ["I walked to the store and bought some apples, I didn't buy any oranges"]
     textdata = preprocess.clean_text(textdata)
-    textdata = preprocess.lemmatize(textdata)
+    output = preprocess.lemmatize(textdata)
+
+    lemma_text = ' '.join(output[0]).lower()
 
     #print(textdata)
-
-    assert textdata[0] == 'I walk to the store and buy some apple', textdata[0]
+    assert lemma_text == "i walk to the store and buy some apple i do not buy any orange", lemma_text
+    assert output[0] == ['I','walk','to','the','store','and','buy','some','apple','I','do','not','buy','any','orange'], output[0]
+    assert output[1] == ['i', 'walked', 'to', 'the', 'store', 'and', 'bought', 'some', 'apples', ',', 'i', 'did', "nt", 'buy', 'any', 'oranges'], output[1]
+    assert output[2] == [11], output[2]
 
 
 if __name__ == "__main__":
