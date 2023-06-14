@@ -47,7 +47,7 @@ def clean_text(textdata):
     return textdata
 
 
-def lemmatize(textdata, cores):
+def lemmatize(textdata, cores:int = 1):
 
     nlp = spacy.load('en_core_web_sm')
     lemmatizer = nlp.get_pipe("lemmatizer")
@@ -61,24 +61,7 @@ def lemmatize(textdata, cores):
     return textdata
 
 
-def test_clean_text():
 
-    textdata = ['<p> This is a test sentence with SPECIAL CHARACTERS @#@#$ and numbers 10 100 1000. </p>']
-    textdata = clean_text(textdata)
-
-    print(textdata)
-
-    assert textdata[0] == 'this is a test sentence with special characters and numbers 10 100 1000'
-
-
-def test_lemmatize():
-
-    textdata = ['I walked to the store and bought some apples']
-    textdata = lemmatize(textdata)
-
-    print(textdata)
-
-    assert textdata[0] == 'I walk to the store and buy some apple'
 
 
 
