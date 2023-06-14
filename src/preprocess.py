@@ -1,0 +1,100 @@
+import re
+from time import time
+
+import spacy
+import pandas as pd
+from bs4 import BeautifulSoup
+
+
+def load_data(path):
+
+    df_train = pd.read_csv(f'{directory}/imdb_train.csv')
+    df_train = df_train.sample(frac=1).reset_index(drop=True)
+    df_test = pd.read_csv(f'{directory}/imdb_test.csv')
+    df_test = df_test.sample(frac=1).reset_index(drop=True)
+    train_data = df_train.values.tolist()
+    test_data = df_test.values.tolist()
+
+    X_train = [x[0] for x in train_data]
+    Y_train = [x[1] for x in train_data]
+    X_test = [x[0] for x in test_data]
+    Y_test = [x[1] for x in test_data]
+
+    return X_train, Y_train, X_test, Y_test
+
+
+def strip_html(textdata):
+    
+    soup = BeautifulSoup(textdata, "html.parser")
+    return soup.get_text()
+
+
+def clean_text(textdata):
+    
+    _only_letters_pattern = re.compile(r"[^A-Za-z0-9']+")
+    _no_long_numbers_pattern = re.compile(r'\d{5,}')
+    _no_multiple_quotes_pattern = re.compile(r"'+")
+
+    for i in range(len(textdata)):
+    
+        textdata[i] = strip_html(textdata[i])
+        textdata[i] = textdata[i].lower()
+        textdata[i] = _only_letters_pattern.sub(' ',textdata[i])
+        textdata[i] = _no_long_numbers_pattern.sub('', textdata[i])
+        textdata[i] = _no_multiple_quotes_pattern.sub("", textdata[i])
+        textdata[i] = textdata[i].strip()
+
+    return textdata
+
+
+def lemmatize(textdata, cores):
+
+    nlp = spacy.load('en_core_web_sm')
+    lemmatizer = nlp.get_pipe("lemmatizer")
+    
+    start = time()
+    doc = nlp.pipe(textdata, batch_size=1000, disable=["tagger", "parser", "ner"], n_process=cores)
+    end = time()
+
+    print(f'lemmatization took {end-start} seconds')
+
+    return textdata
+
+
+def test_clean_text():
+
+    textdata = ['<p> This is a test sentence with SPECIAL CHARACTERS @#@#$ and numbers 10 100 1000. </p>']
+    textdata = clean_text(textdata)
+
+    print(textdata)
+
+    assert textdata[0] == 'this is a test sentence with special characters and numbers 10 100 1000'
+
+
+def test_lemmatize():
+
+    textdata = ['I walked to the store and bought some apples']
+    textdata = lemmatize(textdata)
+
+    print(textdata)
+
+    assert textdata[0] == 'I walk to the store and buy some apple'
+
+
+
+if __name__ == "__main__":
+
+    #test_clean_text()
+    #test_lemmatize()
+
+    directory = '/home/kolla/projects/datasets/imdb'
+
+    X_train, Y_train, X_test, Y_test = load_data(directory)
+
+    X_train = clean_text(X_train)
+    X_test = clean_text(X_test)
+
+    X_train = lemmatize(X_train)
+
+    print(len(X_train))
+
