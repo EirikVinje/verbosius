@@ -20,35 +20,47 @@ def test_lemmatize():
     Simple test to check if lemmatization is working as expected
     """
     textdata = ["I walked to the store and bought some apples, I didn't buy any oranges"]
-    textdata = preprocess.clean_text(textdata)
-    output = preprocess.lemmatize(textdata)
+    processed_textdata = preprocess.clean_text(textdata)
+    lemmas, tokens, part_idxs = preprocess.lemmatize(processed_textdata)
     
-    lemma_text = ' '.join(output[0][0]).lower()
+    
+    assert lemmas[0] == ['I','walk','to','the','store','and','buy','some','apple','I','do','not','buy','any','orange'], lemmas[0]
+    assert tokens[0] == ['i', 'walked', 'to', 'the', 'store', 'and', 'bought', 'some', 'apples', 'i', 'did', "nt", 'buy', 'any', 'oranges'], tokens[0]
+    assert part_idxs[0] == [11], part_idxs[0]
 
-    #print(textdata)
-    assert lemma_text == "i walk to the store and buy some apple i do not buy any orange", lemma_text
-    assert output[0][0] == ['I','walk','to','the','store','and','buy','some','apple','I','do','not','buy','any','orange'], output[0][0]
-    assert output[0][1] == ['i', 'walked', 'to', 'the', 'store', 'and', 'bought', 'some', 'apples', 'i', 'did', "nt", 'buy', 'any', 'oranges'], output[0][1]
-    assert output[0][2] == [11], output[0][2]
+
 
     textdata = ["yes i did it", "no i didn't do it"]
     processed_textdata = preprocess.clean_text(textdata)
-    output = preprocess.lemmatize(processed_textdata)
+    lemmas, tokens, part_idxs = preprocess.lemmatize(processed_textdata)
 
-    
-    expected_token_text = ['yes i did it', "no i did nt do it"]
-    expected_lemma_text = ['yes I do it', 'no I do not do it']
+
+    expected_tokens = [['yes', 'i', 'did', 'it'], ['no', 'i', 'did', 'nt', 'do', 'it']]
+    expected_lemmas = [['yes', 'I', 'do', 'it'], ['no', 'I', 'do', 'not', 'do', 'it']]
     expected_part_idx = [[], [3]]
-    for index, text in enumerate(output):
-        lemma_text = ' '.join(text[0]).lower()
 
-        assert lemma_text == expected_lemma_text[index].lower(), lemma_text
-        assert text[0] == expected_lemma_text[index].split(), text[0]
-        assert text[1] == expected_token_text[index].split(), text[1]
-        assert text[2] == expected_part_idx[index], text[2]
+
+    assert lemmas == expected_lemmas, lemmas
+    assert tokens == expected_tokens, tokens
+    assert part_idxs == expected_part_idx, part_idxs
+
+
+def test_concatenate_lemmas():
+    """
+    Simple test to check if combining lemmas to sentences is working as expected
+    """
+    lemma_output = [['I', 'walk', 'to', 'the', 'store', 'and', 'buy', 'some', 'apple', 'I', 'do', 'not', 'buy', 'any', 'orange'], 
+                    ['yes', 'I', 'do', 'it'], 
+                    ['no', 'I', 'do', 'not', 'do', 'it']]
+    
+    sentences = preprocess.concatenate_lemmas(lemma_output)
+
+    assert sentences == ['i walk to the store and buy some apple i do not buy any orange', 'yes i do it', 'no i do not do it'], sentences
+
 
 
 if __name__ == "__main__":
     test_clean_text()
     test_lemmatize()
+    test_concatenate_lemmas()
     print('all tests passed in {}'.format(__file__))

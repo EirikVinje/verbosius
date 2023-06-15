@@ -29,8 +29,19 @@ def strip_html(textdata):
     return soup.get_text()
 
 
-def concat_lemmas(data):
-    pass
+def concatenate_lemmas(lemma_output):
+    """
+    lemma_output: list of lemmas for each sentence [[lemmas],[lemmas],[lemmas]]
+    """
+    sentences = []
+
+    for lemmas in lemma_output:
+        sentence = ' '.join(lemmas)
+        sentences.append(sentence.lower())
+    
+    return sentences
+
+
 
 def clean_text(textdata):
     
@@ -59,7 +70,9 @@ def lemmatize(textdata, cores:int = 1):
     docs = nlp.pipe(textdata, batch_size=1000, disable=["parser", "ner"], n_process=cores)
     end = perf_counter()
 
-    lemma_output = []
+    lemmas_complete = []
+    tokens_complete = []
+    part_idxs_complete = []
     for doc in docs:
         lemmas = []
         tokens = []
@@ -69,10 +82,12 @@ def lemmatize(textdata, cores:int = 1):
             lemmas.append(token.lemma_)
             if token.pos_ == 'PART':
                 part_idxs.append(idx)
-        lemma_output.append((lemmas, tokens, part_idxs))
+        lemmas_complete.append(lemmas)
+        tokens_complete.append(tokens)
+        part_idxs_complete.append(part_idxs)
     # print(f'lemmatization took {end-start} seconds')
 
-    return lemma_output
+    return lemmas_complete, tokens_complete, part_idxs_complete
 
 
 
