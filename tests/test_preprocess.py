@@ -59,7 +59,7 @@ def test_concatenate_lemmas():
                          'no i do not do it'], sentences
 
 def test_preprocess_from_text_to_lemma_text():
-    data = ["<p>This is a test sentence that should try to assess that the complete pipeline of the procesing works as intended, and that it doesn't mess anything up. This is very important as I will receive a sum of 10000000 dollars if it works.</p>"]
+    data = ["<p>This is a test sentence that should try to assess that the complete pipeline of the procesing works as intended, and that it doesn't mess anything up. This is very important as I will receive a sum of 10000000 dollars if it works.!!!@###</p>"]
     processed_data = preprocess.clean_text(data)
     lemmas, tokens, part_idxs = preprocess.lemmatize(processed_data)
 
