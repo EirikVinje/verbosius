@@ -75,10 +75,6 @@ def lemmatize(textdata, cores:int = 1):
     return lemma_output
 
 
-
-
-
-
 if __name__ == "__main__":
 
     #test_clean_text()
