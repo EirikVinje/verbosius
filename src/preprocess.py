@@ -29,18 +29,6 @@ def strip_html(textdata):
     return soup.get_text()
 
 
-def concatenate_lemmas(lemma_output):
-    """
-    lemma_output: list of lemmas for each sentence [[lemmas],[lemmas],[lemmas]]
-    """
-    sentences = []
-
-    for lemmas in lemma_output:
-        sentence = ' '.join(lemmas)
-        sentences.append(sentence.lower())
-    
-    return sentences
-
 
 
 def clean_text(textdata):
@@ -61,31 +49,44 @@ def clean_text(textdata):
     return textdata
 
 
+def concatenate_lemmas(lemma_output):
+    """
+    lemma_output: list of lemmas for each sentence
+    """
+    sentences = []
+
+    for lemmas in lemma_output:
+        sentence = ' '.join(lemmas)
+        sentences.append(sentence.lower())
+    
+    return sentences
+
+
+
+
 def lemmatize(textdata, cores:int = 1):
 
     nlp = spacy.load('en_core_web_sm')
-    lemmatizer = nlp.get_pipe("lemmatizer")
-    
-    start = perf_counter()
     docs = nlp.pipe(textdata, batch_size=1000, disable=["parser", "ner"], n_process=cores)
-    end = perf_counter()
-
+    
+    
     lemmas_complete = []
     tokens_complete = []
     part_idxs_complete = []
+    
     for doc in docs:
         lemmas = []
         tokens = []
         part_idxs = []
         for idx, token in enumerate(doc):
-            tokens.append(str(token))
-            lemmas.append(token.lemma_)
-            if token.pos_ == 'PART':
-                part_idxs.append(idx)
+            if len(token.lemma_.strip()) >= 1:
+                tokens.append(token)
+                lemmas.append(token.lemma_.strip())
+                if token.pos_ == 'PART':
+                    part_idxs.append(idx)
         lemmas_complete.append(lemmas)
         tokens_complete.append(tokens)
         part_idxs_complete.append(part_idxs)
-    # print(f'lemmatization took {end-start} seconds')
 
     return lemmas_complete, tokens_complete, part_idxs_complete
 
