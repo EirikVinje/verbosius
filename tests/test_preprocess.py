@@ -6,12 +6,14 @@ def test_clean_text():
     non-alphanumeric characters are handled correctly in the clean text function
     """
 
-    textdata = ['<p> This is a test sentence with SPECIAL CHARACTERS @#@#$ and numbers 10 100 1000. </p>', 
-                "<body> Didn't, shouldn't, wouldn't"]
+    textdata = ['<p> This is a test sentence with SPECIAL CHARACTERS @#@#$ and numbers 10 1000000000 100 1000 1000000000. </p>', 
+                "<body> Didn't, shouldn't, wouldn't </body>",
+                "<i> 1029384610987246591827631582641"]
     textdata = preprocess.clean_text(textdata)
 
-    assert textdata[0] == 'this is a test sentence with special characters and numbers 10 100 1000', textdata[0]
+    assert textdata[0] == 'this is a test sentence with special characters and numbers 10  100 1000', textdata[0]
     assert textdata[1] == 'didnt shouldnt wouldnt', textdata[1]
+    assert textdata[2] == "", textdata[2]
 
 def test_lemmatize():
     """
