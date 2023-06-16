@@ -1,6 +1,7 @@
 import re
 import spacy
 
+import numpy as np
 import pandas as pd
 
 from time import time, perf_counter
@@ -46,7 +47,7 @@ def clean_text(textdata):
         textdata[i] = textdata[i].lower()
         textdata[i] = _only_letters_pattern.sub(' ',textdata[i])
         textdata[i] = _no_long_numbers_pattern.sub('', textdata[i])
-        textdata[i] = _no_multiple_quotes_pattern.sub("", textdata[i])
+        # textdata[i] = _no_multiple_quotes_pattern.sub("", textdata[i])
         textdata[i] = textdata[i].strip()
 
     return textdata
@@ -60,7 +61,7 @@ def concatenate_lemmas(lemma_output):
 
     for lemmas in lemma_output:
         sentence = ' '.join(lemmas)
-        sentences.append(sentence.lower())
+        sentences.append(sentence)
     
     return sentences
 
@@ -70,41 +71,39 @@ def concatenate_lemmas(lemma_output):
 def lemmatize(textdata, cores:int = 1):
 
     nlp = spacy.load('en_core_web_sm')
-    docs = nlp.pipe(textdata, batch_size=1000, disable=["parser", "ner"], n_process=cores)
+    docs = nlp.pipe(textdata, batch_size=100, disable=["parser", "ner"], n_process=cores)
     
     
-    lemmas_complete = []
-    tokens_complete = []
-    part_idxs_complete = []
+    lemmas = []
+    texts = []
+    part_idxs = []
     
     for doc in docs:
-        lemmas = []
-        tokens = []
-        part_idxs = []
-        for idx, token in enumerate(doc):
-            if len(token.lemma_.strip()) >= 1:
-                tokens.append(token)
-                lemmas.append(token.lemma_.strip())
-                if token.pos_ == 'PART':
-                    part_idxs.append(idx)
-        lemmas_complete.append(lemmas)
-        tokens_complete.append(tokens)
-        part_idxs_complete.append(part_idxs)
+        lemmas.append([token.lemma_.lower() for token in doc if len(token.lemma_.strip()) >= 1])
+        texts.append([token.text for token in doc])
+        part_idxs.append([idx for idx, token in enumerate(doc) if token.pos_ == 'PART'])
 
-    return lemmas_complete, tokens_complete, part_idxs_complete
+
+    return lemmas, texts, part_idxs
 
 
 if __name__ == "__main__":
+    """test_text = ["This isn't a test sentence, I'm a tests sentence"]
+    test_text = clean_text(test_text)
+    print(test_text)
+    lemmas, texts, part_idxs = lemmatize(test_text)
+    print(lemmas)
+    print(texts)
+    print(part_idxs)"""
 
-    #test_clean_text()
-    #test_lemmatize()
-
-    data = pd.read_csv('/home/tobxtra/data/explainable_transformer/IMDB Dataset.csv')
+    data = pd.read_csv('IMDB Dataset.csv')
     data = data.sample(frac=1).reset_index(drop=True)
     data = data.values.tolist()
-    X_train = [x[0] for x in data[:5000]]
-    Y_train = [x[1] for x in data[:5000]]
-    X_train, X_test, Y_train, Y_test = train_test_split(X_train, Y_train, test_size=0.2, random_state=42)
+    X_train = [x[0] for x in data[:25000]]
+    Y_train = [x[1] for x in data[:25000]]
+    X_test = [x[0] for x in data[25000:]]
+    Y_test = [x[1] for x in data[25000:]]
+    # X_train, X_test, Y_train, Y_test = train_test_split(X_train, Y_train, test_size=0.2, random_state=42)
 
     print(len(X_train))
 
@@ -112,8 +111,8 @@ if __name__ == "__main__":
     X_test_cleaned = clean_text(X_test)
     print('cleaned')
 
-    X_train_lemmas, X_train_tokens, X_train_part_idxs = lemmatize(X_train_cleaned)
-    X_test_lemmas, X_test_tokens, X_test_part_idxs = lemmatize(X_test_cleaned)
+    X_train_lemmas, X_train_tokens, X_train_part_idxs = lemmatize(X_train_cleaned, cores=7)
+    X_test_lemmas, X_test_tokens, X_test_part_idxs = lemmatize(X_test_cleaned, cores=7)
     print('lemmatized')
 
     X_train_final = concatenate_lemmas(X_train_lemmas)
@@ -132,4 +131,3 @@ if __name__ == "__main__":
     clf = LogisticRegression().fit(X, Y_train)
     print("Training Accuracy: %s" % clf.score(X, Y_train))
     print("Test Accuracy: %s" % clf.score(X_test, Y_test))
-
