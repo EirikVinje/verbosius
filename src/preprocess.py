@@ -1,12 +1,15 @@
 import re
-from time import time, perf_counter
-
 import spacy
+
 import pandas as pd
+
+from time import time, perf_counter
 from bs4 import BeautifulSoup
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
 
-
-def load_data(path):
+"""def load_data(path):
 
     df_train = pd.read_csv(f'{directory}/imdb_train.csv')
     df_train = df_train.sample(frac=1).reset_index(drop=True)
@@ -20,7 +23,7 @@ def load_data(path):
     X_test = [x[0] for x in test_data]
     Y_test = [x[1] for x in test_data]
 
-    return X_train, Y_train, X_test, Y_test
+    return X_train, Y_train, X_test, Y_test"""
 
 
 def strip_html(textdata):
@@ -100,14 +103,37 @@ if __name__ == "__main__":
     #test_clean_text()
     #test_lemmatize()
 
-    directory = '/home/kolla/projects/datasets/imdb'
-
-    X_train, Y_train, X_test, Y_test = load_data(directory)
-
-    X_train = clean_text(X_train)
-    X_test = clean_text(X_test)
-
-    X_train = lemmatize(X_train)
+    data = pd.read_csv('/home/tobxtra/data/explainable_transformer/IMDB Dataset.csv')
+    data = data.sample(frac=1).reset_index(drop=True)
+    data = data.values.tolist()
+    X_train = [x[0] for x in data[:5000]]
+    Y_train = [x[1] for x in data[:5000]]
+    X_train, X_test, Y_train, Y_test = train_test_split(X_train, Y_train, test_size=0.2, random_state=42)
 
     print(len(X_train))
+
+    X_train_cleaned = clean_text(X_train)
+    X_test_cleaned = clean_text(X_test)
+    print('cleaned')
+
+    X_train_lemmas, X_train_tokens, X_train_part_idxs = lemmatize(X_train_cleaned)
+    X_test_lemmas, X_test_tokens, X_test_part_idxs = lemmatize(X_test_cleaned)
+    print('lemmatized')
+
+    X_train_final = concatenate_lemmas(X_train_lemmas)
+    X_test_final = concatenate_lemmas(X_test_lemmas)
+    print('concatenated')
+
+    cv = CountVectorizer(binary=True,
+                         max_features=5000,
+                         min_df=5,
+                         max_df=0.5,
+                         stop_words='english')
+
+    X = cv.fit_transform(X_train_final)
+    X_test = cv.transform(X_test_final)
+
+    clf = LogisticRegression().fit(X, Y_train)
+    print("Training Accuracy: %s" % clf.score(X, Y_train))
+    print("Test Accuracy: %s" % clf.score(X_test, Y_test))
 
