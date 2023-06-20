@@ -33,8 +33,6 @@ def strip_html(textdata):
     return soup.get_text()
 
 
-
-
 def clean_text(textdata):
     
     _only_letters_pattern = re.compile(r"[^A-Za-z0-9']+")
