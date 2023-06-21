@@ -25,15 +25,15 @@ class TestPreprocess(unittest.TestCase):
         """
         Simple test to check if lemmatization is working as expected
         """
-        clean_texts = ["I didnt see this movie", "I have seen cats and dogs"]
+        clean_texts = ["i didnt see this movie", "i have seen cats and dogs"]
 
         texts, tokens, lemmas, labels = preprocess.lemmatize(clean_texts, [0, 1])
 
-        self.assertEqual(lemmas[0], ['I', 'do', 'not', 'see', 'this', 'movie'], lemmas[0])
-        self.assertEqual(lemmas[1], ['I', 'have', 'see', 'cat', 'and', 'dog'], lemmas[1])
+        self.assertEqual(lemmas[0], ['i', 'do', 'not', 'see', 'this', 'movie'], lemmas[0])
+        self.assertEqual(lemmas[1], ['i', 'have', 'see', 'cat', 'and', 'dog'], lemmas[1])
 
-        self.assertEqual(tokens[0], ['I', 'did', 'nt', 'see', 'this', 'movie'], tokens[0])
-        self.assertEqual(tokens[1], ['I', 'have', 'seen', 'cats', 'and', 'dogs'], tokens[1])
+        self.assertEqual(tokens[0], ['i', 'did', 'nt', 'see', 'this', 'movie'], tokens[0])
+        self.assertEqual(tokens[1], ['i', 'have', 'seen', 'cats', 'and', 'dogs'], tokens[1])
 
         self.assertEqual(texts[0], ["i", "didnt", "see", "this", "movie"], texts[0])
         self.assertEqual(texts[1], ["i", "have", "seen", "cats", "and", "dogs"], texts[1])
@@ -52,12 +52,12 @@ class TestPreprocess(unittest.TestCase):
 
         self.assertEqual(ids, [0, 1, 1, 2, 3, 4], ids)
 
-        tokens = ["i", "l", "o", "v", "e", " ", "c", "a", "t", "s"]
+        tokens = ["i", "l", "o", "v", "e", "c", "a", "t", "s"]
         stext = ["i", "love", "cats"]
 
         ids = preprocess.map_tokens(stext, tokens)
 
-        self.assertEqual(ids, [0, 1, 2, 2, 2, 2, 3, 4, 4, 4, 4], ids)
+        self.assertEqual(ids, [0, 1, 1, 1, 1, 2, 2, 2, 2], ids)
         
 
 
