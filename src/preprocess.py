@@ -66,43 +66,59 @@ def concatenate_lemmas(lemma_output):
     return sentences
 
 
-def lemmatize(text, nlp, cores:int = 4):
+def lemmatize(texts : list, labels : list, cores:int = 4):
 
-    stext = text[0].split()
-    docs = nlp(text[0])
-    tokens = [doc.text for doc in docs]
-    lemmas = [doc.lemma_ for doc in docs]
+    nlp = spacy.load("en_core_web_sm")
+    docs = nlp.pipe(texts, n_process=cores) 
+
+    texts = [text.split() for text in texts]
+    tokens = []
+    lemmas = []
+
+    for doc in docs:
+
+        tokens.append([token.text for token in doc])
+        lemmas.append([token.lemma_ for token in doc])
+
+    return texts, tokens, lemmas, labels
+
+
+def map_tokens(stext : list, tokens : list):
+
     ids = []
-
-    i = 0
-    j = 0
-    idx = 0
+    topw = 0
+    topt = 0
     
     while True:
-
-        if tokens[i] == stext[j]:
-            ids.append(idx)
-            i += 1
-            j += 1
         
-        elif tokens[i] + tokens[i+1] == stext[j]:
-            ids.append(idx)
-            ids.append(idx)
-            i += 2
-            j += 1
+        print(topt, topw)
 
-        else:
-            ids.append(idx)
-            i += 1
-            j += 1
-
-
-        if i == len(tokens) or j == len(stext):
+        if topt >= len(tokens) or topw >= len(stext):
             break
-    
-        idx += 1
 
-    return tokens, lemmas, ids
+        elif tokens[topt] == stext[topw]:
+            ids.append(topw)
+            topw += 1 
+            topt += 1
+
+        elif tokens[topt] in stext[topw]:
+            top_len = len(tokens[topt])  
+            ids.append(topw)
+            topt += 1
+
+            while True:
+
+                if top_len == len(stext[topw]):
+                    topw += 1
+                    break
+                
+                elif stext[topw].find(tokens[topt], top_len) == top_len:
+                    ids.append(topw)
+                    top_len += len(tokens[topt])
+                    topt += 1
+
+    return ids
+
 
 
 if __name__ == "__main__":
