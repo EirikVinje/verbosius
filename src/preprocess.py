@@ -78,7 +78,7 @@ def lemmatize(texts : list, labels : list, cores:int = 4):
     for doc in docs:
 
         tokens.append([token.text for token in doc])
-        lemmas.append([token.lemma_ for token in doc])
+        lemmas.append([token.lemma_.lower() for token in doc])
 
     return texts, tokens, lemmas, labels
 
@@ -90,8 +90,6 @@ def map_tokens(stext : list, tokens : list):
     topt = 0
     
     while True:
-        
-        print(topt, topw)
 
         if topt >= len(tokens) or topw >= len(stext):
             break
@@ -116,6 +114,10 @@ def map_tokens(stext : list, tokens : list):
                     ids.append(topw)
                     top_len += len(tokens[topt])
                     topt += 1
+        
+        else:
+            ids.append(-1)
+            topt += 1
 
     return ids
 
