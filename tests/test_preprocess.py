@@ -1,4 +1,4 @@
-import src.preprocess as preprocess
+import verbosius.preprocessing.preprocess as preprocess
 
 
 def test_clean_text():

@@ -1,4 +1,4 @@
-import src.generate_trainingdata as generate_trainingdata
+import verbosius.trainingdata.generate_trainingdata as generate_trainingdata
 
 
 def test_allign_tokens_labels_weights():
