@@ -1,5 +1,3 @@
-
-
 class IMDB:
 
     def __init__(self, two_cat : bool, batch : tuple):

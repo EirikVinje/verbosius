@@ -1,9 +1,9 @@
 import pickle
 import os
 
-import preprocess as preprocess
-import datasource as datasource
-import stage as stage
+import verbosius.preprocessing.preprocess as preprocess
+import verbosius.preprocessing.datasource as datasource
+import verbosius.preprocessing.stage as stage
 
 
 def main():
