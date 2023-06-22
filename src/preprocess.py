@@ -10,22 +10,6 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 
-"""def load_data(path):
-
-    df_train = pd.read_csv(f'{directory}/imdb_train.csv')
-    df_train = df_train.sample(frac=1).reset_index(drop=True)
-    df_test = pd.read_csv(f'{directory}/imdb_test.csv')
-    df_test = df_test.sample(frac=1).reset_index(drop=True)
-    train_data = df_train.values.tolist()
-    test_data = df_test.values.tolist()
-
-    X_train = [x[0] for x in train_data]
-    Y_train = [x[1] for x in train_data]
-    X_test = [x[0] for x in test_data]
-    Y_test = [x[1] for x in test_data]
-
-    return X_train, Y_train, X_test, Y_test"""
-
 
 def strip_html(textdata):
     
@@ -35,6 +19,19 @@ def strip_html(textdata):
 
 def clean_text(textdata):
     
+    """
+    Parameters:
+    -----------
+    textdata : list
+        List of documents to be cleaned
+
+    Returns:
+    --------
+    textdata : list
+        List of cleaned documents
+
+    """
+
     _only_letters_pattern = re.compile(r"[^A-Za-z0-9']+")
     _no_long_numbers_pattern = re.compile(r'\d{3,}')
     _no_multiple_quotes_pattern = re.compile(r"'+")
@@ -53,20 +50,31 @@ def clean_text(textdata):
     return textdata
 
 
-def concatenate_lemmas(lemma_output):
-    """
-    lemma_output: list of lemmas for each sentence
-    """
-    sentences = []
-
-    for lemmas in lemma_output:
-        sentence = ' '.join(lemmas)
-        sentences.append(sentence)
+def lemmatize(texts : list, cores:int = 4):
     
-    return sentences
+    """
+    Parameters:
+    -----------
+    texts : list
+        List of documents to be lemmatized
+    
+    labels : list
+        List of labels for the strings
 
+    Returns:
+    --------
+    texts : list
+        List of documents split into words
 
-def lemmatize(texts : list, labels : list, cores:int = 4):
+    tokens : list
+        List of documents split into tokens
+
+    lemmas : list
+        List of documents with tokens transformed into lemmas
+
+    labels : list
+        List of labels to each document
+    """
 
     nlp = spacy.load("en_core_web_sm")
     docs = nlp.pipe(texts, n_process=cores) 
@@ -80,44 +88,66 @@ def lemmatize(texts : list, labels : list, cores:int = 4):
         tokens.append([token.text for token in doc])
         lemmas.append([token.lemma_.lower() for token in doc])
 
-    return texts, tokens, lemmas, labels
+    return texts, tokens, lemmas
 
 
-def map_tokens(stext : list, tokens : list):
+def map_tokens(stexts : list, tokens : list):
+
+    """
+    Parameters:
+    -----------
+    stext : list
+        List of document split into words
+    
+    tokens : list
+        List of document split into tokens
+
+    Returns:
+    --------
+    ids : list
+        List of ids correseponding to the tokens in the document
+
+    """
 
     ids = []
-    topw = 0
-    topt = 0
-    
-    while True:
 
-        if topt >= len(tokens) or topw >= len(stext):
-            break
-
-        elif tokens[topt] == stext[topw]:
-            ids.append(topw)
-            topw += 1 
-            topt += 1
-
-        elif tokens[topt] in stext[topw]:
-            top_len = len(tokens[topt])  
-            ids.append(topw)
-            topt += 1
-
-            while True:
-
-                if top_len == len(stext[topw]):
-                    topw += 1
-                    break
-                
-                elif stext[topw].find(tokens[topt], top_len) == top_len:
-                    ids.append(topw)
-                    top_len += len(tokens[topt])
-                    topt += 1
+    for stext, token in zip(stexts, tokens):
         
-        else:
-            ids.append(-1)
-            topt += 1
+        id = []
+        topw = 0
+        topt = 0
+        
+        while True:
+
+            if topt >= len(token) or topw >= len(stext):
+                break
+
+            elif token[topt] == stext[topw]:
+                id.append(topw)
+                topw += 1 
+                topt += 1
+
+            elif token[topt] in stext[topw]:
+                top_len = len(token[topt])  
+                id.append(topw)
+                topt += 1
+
+                while True:
+
+                    if top_len == len(stext[topw]):
+                        topw += 1
+                        break
+                    
+                    elif stext[topw].find(token[topt], top_len) == top_len:
+                        id.append(topw)
+                        top_len += len(token[topt])
+                        topt += 1
+            
+            else:
+                id.append(-1)
+                topt += 1
+
+        ids.append(id)
 
     return ids
 

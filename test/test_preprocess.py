@@ -24,7 +24,7 @@ def test_lemmatize():
     """
     clean_texts = ["i didnt see this movie", "i have seen cats and dogs"]
 
-    texts, tokens, lemmas, labels = preprocess.lemmatize(clean_texts, [0, 1])
+    texts, tokens, lemmas = preprocess.lemmatize(clean_texts)
 
     assert lemmas[0] == ['i', 'do', 'not', 'see', 'this', 'movie'], lemmas[0]
     assert lemmas[1] == ['i', 'have', 'see', 'cat', 'and', 'dog'], lemmas[1]
@@ -42,22 +42,15 @@ def test_map_tokens():
     Simple test to check if mapping tokens to lemmas is working as expected
     """
 
-    tokens = ["i", "did", "nt", "see", "this", "movie"]
-    stext = ["i", "didnt", "see", "this", "movie"]
+    tokens = [["i", "did", "nt", "see", "this", "movie"], ["i", "l", "o", "v", "e", "c", "a", "t", "s"]]
+    stexts = [["i", "didnt", "see", "this", "movie"], ["i", "love", "cats"]]
 
-    ids = preprocess.map_tokens(stext, tokens)
+    ids = preprocess.map_tokens(stexts=stexts, tokens=tokens)
 
-    assert ids == [0, 1, 1, 2, 3, 4], ids
-
-    tokens = ["i", "l", "o", "v", "e", "c", "a", "t", "s"]
-    stext = ["i", "love", "cats"]
-
-    ids = preprocess.map_tokens(stext, tokens)
-
-    assert ids == [0, 1, 2, 3, 4, 5, 6, 7, 8], ids
+    assert ids[0] == [0, 1, 1, 2, 3, 4], ids[0]
+    assert ids[1] == [0, 1, 1, 1, 1, 2, 2, 2, 2], ids[1]
 
         
-
 if __name__ == "__main__":
     
     #test_clean_text()
