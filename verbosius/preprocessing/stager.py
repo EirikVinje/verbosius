@@ -14,7 +14,7 @@ def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, outpu
     # Handle mew batch size and amount stuff here vvv
     imdb = imdb(two_cat=True, batch=(0, 1000))
     
-    train_x, train_y, test_x, test_y = ds.load_data(path=input, test=True)
+    train_x, train_y, test_x, test_y = imdb.load_data(path=input, test=True)
     
     
     # clean the data from unwanted symbols and such
