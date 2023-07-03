@@ -1,27 +1,25 @@
 import pickle
 import os
 
-import verbosius.preprocessing.preprocess as preprocess
-import verbosius.preprocessing.datasource as datasource
-import verbosius.preprocessing.stage as stage
+import preprocessing.preprocess as preprocess
+import preprocessing.datasource as datasource
+import preprocessing.stage as stage
 
 
 def main():
 
-    imdb = datasource.dataset("imdb")
-
-    imdb = imdb(two_cat=True, batch=(0, 1000))
-    
-    imdb.load_data(path="path/to/data") 
-    
+    # load data
+    ds = datasource.dataset("imdb")
+    ds = ds(two_cat=True, batch=(0, 500))    
+    train_x, train_y, test_x, test_y = ds.load_data(path="verbosius_data/imdb", test=True) 
     
     # clean the data from unwanted symbols and such
     cleaned_train_x = preprocess.clean_text(train_x)
     cleaned_test_x = preprocess.clean_text(test_x)
 
     # lemmatize the data
-    split_train_x, token_train_x, lemma_train_x = preprocess.lemmatize(cleaned_train_x)
-    split_test_x, token_test_x, lemma_test_x = preprocess.lemmatize(cleaned_test_x)
+    split_train_x, token_train_x, lemma_train_x = preprocess.lemmatize(cleaned_train_x, lemmatizer="en_core_web_sm")
+    split_test_x, token_test_x, lemma_test_x = preprocess.lemmatize(cleaned_test_x, lemmatizer="en_core_web_sm")
 
     # get token maps
     token_ids_train_x = preprocess.map_tokens(split_train_x, token_train_x)
@@ -32,8 +30,8 @@ def main():
     test_data = stage.stage_data(cleaned_test_x, split_test_x, token_test_x, lemma_test_x, token_ids_test_x, test_y)
 
     # write data
-    stage.write_data(train_data, path="data", name="imdb_train")
-    stage.write_data(test_data, path="data", name="imdb_test")
+    stage.write_data(train_data, path="verbosius_data/staged_data", name="imdb_train")
+    stage.write_data(test_data, path="verbosius_data/staged_data", name="imdb_test")
 
     
     # TODO : python stager.py --dataset imdb --batch 0 1000 --input path/to/input --output path/to/stageroutput
