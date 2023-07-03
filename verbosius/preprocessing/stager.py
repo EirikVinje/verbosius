@@ -7,13 +7,14 @@ import verbosius.preprocessing.datasource as datasource
 import verbosius.preprocessing.stage as stage
 
 
-def main(dataset:str, batch:tuple, input:str, output:str):
+def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, output:str):
 
-    imdb = datasource.dataset("imdb")
+    imdb = datasource.dataset(dataset)
 
+    # Handle mew batch size and amount stuff here vvv
     imdb = imdb(two_cat=True, batch=(0, 1000))
     
-    imdb.load_data(path="path/to/data") 
+    imdb.load_data(path=input) 
     
     
     # clean the data from unwanted symbols and such
@@ -33,11 +34,51 @@ def main(dataset:str, batch:tuple, input:str, output:str):
     test_data = stage.stage_data(cleaned_test_x, split_test_x, token_test_x, lemma_test_x, token_ids_test_x, test_y)
 
     # write data
-    stage.write_data(train_data, path="data", name="imdb_train")
-    stage.write_data(test_data, path="data", name="imdb_test")
+    stage.write_data(train_data, path=output, name=f"{dataset}_train")
+    stage.write_data(test_data, path=output, name=f"{dataset}_test")
 
     
     # TODO : python stager.py --dataset imdb --batch 0 1000 --input path/to/input --output path/to/stageroutput
+
+
+
+def dataset_checker(dataset):
+    valid_datasets = ['imdb', 'rottentomatoes', 'amazon']
+    if dataset.lower() not in valid_datasets:
+        raise argparse.ArgumentTypeError(f"Invalid dataset, available datasets are: {(i for i in valid_datasets)}")
+    return dataset.lower()
+
+def batch_size_checker(batch_size):
+    batch_size = int(batch_size)
+
+    if batch_size <= 0:
+        raise argparse.ArgumentTypeError(f"Invalid batch size, batch size must be greater than 0")
+
+    return batch_size
+
+
+
+def batch_amount_checker(batch_amount):
+    batch_amount = int(batch_amount)
+
+    if batch_amount <= 0:
+        raise argparse.ArgumentTypeError(f"Invalid batch amount, batch amount must be greater than 0")
+    
+    return batch_amount
+
+
+def input_checker(input):
+    if os.path.isfile(input):
+        return input
+    else:
+        raise argparse.ArgumentTypeError(f'Invalid input path, "{input}" is not a valid file')
+
+
+def output_checker(output):
+    if os.access(os.path.dirname(output), os.W_OK) and os.path.isdir(output):
+        return output
+    else:
+        raise argparse.ArgumentTypeError(f'Invalid output path, "{output}" is not writable or is not a directory')
 
 
 
@@ -45,14 +86,26 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Stage data for training")
 
-    parser.add_argument("--dataset", type=str, help="Dataset to stage")
-    parser.add_argument("--batch", type=int, nargs=2, help="Batch of data to stage, two integers")
-    parser.add_argument("--input", type=str, help="Path to input data")
-    parser.add_argument("--output", type=str, help="Path to output data")
+
+    parser.add_argument("--dataset", type=dataset_checker, 
+                        help="Dataset to stage")
+    
+    parser.add_argument("--batch_size", type=batch_size_checker, nargs='?', default=10000,
+                        help="Set size for individual batch, must be greater than 0. Default value is 10000")
+    
+    parser.add_argument("--batch_amount_per_mix", type=batch_amount_checker, nargs ='?', default=1,
+                        help="Set amount of batches to stage at a time. Minimum value is 1. Default value is 1.")
+
+    parser.add_argument("--input", type=input_checker, 
+                        help="Path to input data, must be a path to a valid file.")
+    parser.add_argument("--output", type=output_checker, 
+                        help="Path to output data, must be a path to a directory that exists and is writable.")
+
 
     args = parser.parse_args()
 
-    main(args.dataset.lower(), tuple(args.batch), args.input, args.output)
+
+    main(args.dataset, args.batch_size, args.batch_amount_per_mix, args.input, args.output)
 
 
     
