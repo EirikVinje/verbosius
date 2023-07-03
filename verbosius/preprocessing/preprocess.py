@@ -161,7 +161,7 @@ def map_tokens(stexts : list, tokens : list):
 
 
 if __name__ == "__main__":
-    
+
     sentence = ["I haven't seen this movie yet, but I will see it soon with my cat's."]
 
     cleaned_sentence = clean_text(sentence)
