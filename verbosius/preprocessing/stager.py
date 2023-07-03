@@ -11,11 +11,10 @@ def main():
     imdb = datasource.dataset("imdb")
 
     imdb = imdb(two_cat=True, batch=(0, 1000))
-
+    
     imdb.load_data(path="path/to/data") 
     
-    return
-
+    
     # clean the data from unwanted symbols and such
     cleaned_train_x = preprocess.clean_text(train_x)
     cleaned_test_x = preprocess.clean_text(test_x)
@@ -37,6 +36,10 @@ def main():
     stage.write_data(test_data, path="data", name="imdb_test")
 
     
+    # TODO : python stager.py --dataset imdb --batch 0 1000 --input path/to/input --output path/to/stageroutput
+
+
+
 if __name__ == "__main__":
 
     main()
