@@ -1,3 +1,7 @@
+import os
+import pandas as pd
+
+
 class IMDB:
 
     def __init__(self, two_cat : bool, batch : tuple):
@@ -5,10 +9,32 @@ class IMDB:
         self.two_cat = two_cat
         self.batch = batch
 
-    def load_data(self, path: str):
+    def load_data(self, path: str, test: bool = False):
 
-        print("Loading IMDB data")
+        root = os.path.expanduser('~')
+        path = os.path.join(root, "projects", path)
+        
+        if test:
+            df_train = pd.read_csv(os.path.join(path, "imdb_train.csv")).reset_index(drop=True)
+            df_test = pd.read_csv(os.path.join(path, "imdb_test.csv")).reset_index(drop=True)
+            train_data = df_train.values.tolist()
+            test_data = df_test.values.tolist()
 
+            train_x = [x[0] for x in train_data[self.batch[0]:self.batch[1]]]
+            train_y = [x[1] for x in train_data[self.batch[0]:self.batch[1]]]
+            test_x = [x[0] for x in test_data[self.batch[0]:self.batch[1]]]
+            test_y = [x[1] for x in test_data[self.batch[0]:self.batch[1]]]
+            
+            return train_x, train_y, test_x, test_y
+
+        else:
+            df_train = pd.read_csv(os.path.join(path, "imdb_train.csv")).reset_index(drop=True)
+            train_data = df_train.values.tolist()
+            train_x = [x[0] for x in train_data[self.batch[0]:self.batch[1]]]
+            train_y = [x[1] for x in train_data[self.batch[0]:self.batch[1]]]
+
+            return train_x, train_y
+            
 
 class RottenTomatoes:
 
@@ -44,3 +70,7 @@ def dataset(dataset : str):
         return Amazon
     else:
         raise ValueError("No such dataset exists")
+    
+
+def batch_data(class_imbalance : bool, n_batches_per_mix : int, batch_size : int):
+    pass

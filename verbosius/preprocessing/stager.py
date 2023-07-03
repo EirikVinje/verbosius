@@ -2,9 +2,9 @@ import pickle
 import os
 import argparse
 
-import verbosius.preprocessing.preprocess as preprocess
-import verbosius.preprocessing.datasource as datasource
-import verbosius.preprocessing.stage as stage
+import preprocessing.preprocess as preprocess
+import preprocessing.datasource as datasource
+import preprocessing.stage as stage
 
 
 def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, output:str):
@@ -14,7 +14,7 @@ def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, outpu
     # Handle mew batch size and amount stuff here vvv
     imdb = imdb(two_cat=True, batch=(0, 1000))
     
-    imdb.load_data(path=input) 
+    train_x, train_y, test_x, test_y = ds.load_data(path=input, test=True)
     
     
     # clean the data from unwanted symbols and such
@@ -22,8 +22,8 @@ def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, outpu
     cleaned_test_x = preprocess.clean_text(test_x)
 
     # lemmatize the data
-    split_train_x, token_train_x, lemma_train_x = preprocess.lemmatize(cleaned_train_x)
-    split_test_x, token_test_x, lemma_test_x = preprocess.lemmatize(cleaned_test_x)
+    split_train_x, token_train_x, lemma_train_x = preprocess.lemmatize(cleaned_train_x, lemmatizer="en_core_web_sm")
+    split_test_x, token_test_x, lemma_test_x = preprocess.lemmatize(cleaned_test_x, lemmatizer="en_core_web_sm")
 
     # get token maps
     token_ids_train_x = preprocess.map_tokens(split_train_x, token_train_x)
