@@ -1,12 +1,13 @@
 import pickle
 import os
+import argparse
 
 import verbosius.preprocessing.preprocess as preprocess
 import verbosius.preprocessing.datasource as datasource
 import verbosius.preprocessing.stage as stage
 
 
-def main():
+def main(dataset:str, batch:tuple, input:str, output:str):
 
     imdb = datasource.dataset("imdb")
 
@@ -42,8 +43,16 @@ def main():
 
 if __name__ == "__main__":
 
-    main()
+    parser = argparse.ArgumentParser(description="Stage data for training")
 
+    parser.add_argument("--dataset", type=str, help="Dataset to stage")
+    parser.add_argument("--batch", type=int, nargs=2, help="Batch of data to stage, two integers")
+    parser.add_argument("--input", type=str, help="Path to input data")
+    parser.add_argument("--output", type=str, help="Path to output data")
+
+    args = parser.parse_args()
+
+    main(args.dataset.lower(), tuple(args.batch), args.input, args.output)
 
 
     
