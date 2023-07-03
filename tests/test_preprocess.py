@@ -53,7 +53,8 @@ def test_map_tokens():
         
 if __name__ == "__main__":
     
-    #test_clean_text()
-    #test_lemmatize()
-    #test_map_tokens()
+    test_clean_text()
+    test_lemmatize()
+    test_map_tokens()
+    print(f"All tests passed in {__file__}")
     pass
