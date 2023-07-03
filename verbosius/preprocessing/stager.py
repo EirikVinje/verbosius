@@ -2,28 +2,30 @@ import pickle
 import os
 import argparse
 
-import verbosius.preprocessing.preprocess as preprocess
-import verbosius.preprocessing.datasource as datasource
-import verbosius.preprocessing.stage as stage
+import preprocessing.preprocess as preprocess
+import preprocessing.datasource as datasource
+import preprocessing.stage as stage
 
 
 def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, output:str):
+
 
     imdb = datasource.dataset(dataset)
 
     # Handle mew batch size and amount stuff here vvv
     imdb = imdb(two_cat=True, batch=(0, 1000))
     
-    imdb.load_data(path=input) 
+    train_x, train_y, test_x, test_y = ds.load_data(path=input, test=True) 
     
+
     
     # clean the data from unwanted symbols and such
     cleaned_train_x = preprocess.clean_text(train_x)
     cleaned_test_x = preprocess.clean_text(test_x)
 
     # lemmatize the data
-    split_train_x, token_train_x, lemma_train_x = preprocess.lemmatize(cleaned_train_x)
-    split_test_x, token_test_x, lemma_test_x = preprocess.lemmatize(cleaned_test_x)
+    split_train_x, token_train_x, lemma_train_x = preprocess.lemmatize(cleaned_train_x, lemmatizer="en_core_web_sm")
+    split_test_x, token_test_x, lemma_test_x = preprocess.lemmatize(cleaned_test_x, lemmatizer="en_core_web_sm")
 
     # get token maps
     token_ids_train_x = preprocess.map_tokens(split_train_x, token_train_x)
@@ -34,8 +36,10 @@ def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, outpu
     test_data = stage.stage_data(cleaned_test_x, split_test_x, token_test_x, lemma_test_x, token_ids_test_x, test_y)
 
     # write data
+
     stage.write_data(train_data, path=output, name=f"{dataset}_train")
     stage.write_data(test_data, path=output, name=f"{dataset}_test")
+
 
     
     # TODO : python stager.py --dataset imdb --batch 0 1000 --input path/to/input --output path/to/stageroutput
