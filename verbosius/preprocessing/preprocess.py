@@ -1,10 +1,11 @@
 import re
-import spacy
+from time import time, perf_counter
 
 import numpy as np
 import pandas as pd
+import spacy
+from tqdm import tqdm
 
-from time import time, perf_counter
 from bs4 import BeautifulSoup
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
@@ -37,7 +38,8 @@ def clean_text(textdata):
     _no_multiple_quotes_pattern = re.compile(r"'+")
     _no_multiple_spaces_pattern = re.compile(r"  +")
 
-    for i in range(len(textdata)):
+    print("Cleaning text...")
+    for i in tqdm(range(len(textdata))):
     
         textdata[i] = strip_html(textdata[i])
         textdata[i] = textdata[i].lower()
@@ -47,10 +49,11 @@ def clean_text(textdata):
         textdata[i] = _no_multiple_spaces_pattern.sub(" ", textdata[i])
         textdata[i] = textdata[i].strip()
 
+    print()
     return textdata
 
 
-def lemmatize(texts : list, cores:int = 4):
+def lemmatize(texts : list, cores:int = 4, lemmatizer : str = "en_core_web_sm"):
     
     """
     Parameters:
@@ -76,18 +79,20 @@ def lemmatize(texts : list, cores:int = 4):
         List of labels to each document
     """
 
-    nlp = spacy.load("en_core_web_sm")
+    nlp = spacy.load(lemmatizer)
     docs = nlp.pipe(texts, n_process=cores) 
 
     texts = [text.split() for text in texts]
     tokens = []
     lemmas = []
 
-    for doc in docs:
+    print("Lemmatizing text...")
+    for doc in tqdm(docs):
 
         tokens.append([token.text for token in doc])
         lemmas.append([token.lemma_.lower() for token in doc])
 
+    print()
     return texts, tokens, lemmas
 
 
@@ -111,7 +116,8 @@ def map_tokens(stexts : list, tokens : list):
 
     ids = []
 
-    for stext, token in zip(stexts, tokens):
+    print("Mapping tokens...")
+    for (stext, token) in tqdm(zip(stexts, tokens)):
         
         id = []
         topw = 0
@@ -149,6 +155,7 @@ def map_tokens(stexts : list, tokens : list):
 
         ids.append(id)
 
+    print()
     return ids
 
 

@@ -20,6 +20,9 @@ def stage_data(cleaned_x, split_x, token_x, lemma_x, token_ids_x, y):
 
 def write_data(data_dicts, path, name):
 
+    root = os.path.expanduser('~')
+    path = os.path.join(root, "projects", path)
+
     dir = os.listdir(path)
     n = len(dir)
 
