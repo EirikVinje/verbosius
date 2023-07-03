@@ -30,9 +30,8 @@ def main():
     test_data = stage.stage_data(cleaned_test_x, split_test_x, token_test_x, lemma_test_x, token_ids_test_x, test_y)
 
     # write data
-    stage.write_data(train_data, path="verbosius_data/staged_data", name="imdb_train")
-    stage.write_data(test_data, path="verbosius_data/staged_data", name="imdb_test")
-
+    stage.write_data(train_data, path="verbosius_data/staged_data", name="imdb_train", timestamp=False)
+    stage.write_data(test_data, path="verbosius_data/staged_data", name="imdb_test", timestamp=False)
     
     # TODO : python stager.py --dataset imdb --batch 0 1000 --input path/to/input --output path/to/stageroutput
 
