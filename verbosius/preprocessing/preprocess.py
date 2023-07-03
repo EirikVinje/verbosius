@@ -86,11 +86,13 @@ def lemmatize(texts : list, cores:int = 4, lemmatizer : str = "en_core_web_sm"):
     tokens = []
     lemmas = []
 
-    print("Lemmatizing text...")
-    for doc in tqdm(docs):
+    docs = list(docs)
 
-        tokens.append([token.text for token in doc])
-        lemmas.append([token.lemma_.lower() for token in doc])
+    print("Lemmatizing text...")
+    for i in tqdm(range(len(docs))):
+
+        tokens.append([token.text for token in docs[i]])
+        lemmas.append([token.lemma_.lower() for token in docs[i]])
 
     print()
     return texts, tokens, lemmas
@@ -117,7 +119,7 @@ def map_tokens(stexts : list, tokens : list):
     ids = []
 
     print("Mapping tokens...")
-    for (stext, token) in tqdm(zip(stexts, tokens)):
+    for i in tqdm(range(len(stexts))):
         
         id = []
         topw = 0
@@ -125,28 +127,28 @@ def map_tokens(stexts : list, tokens : list):
         
         while True:
 
-            if topt >= len(token) or topw >= len(stext):
+            if topt >= len(tokens[i]) or topw >= len(stexts[i]):
                 break
 
-            elif token[topt] == stext[topw]:
+            elif tokens[i][topt] == stexts[i][topw]:
                 id.append(topw)
                 topw += 1 
                 topt += 1
 
-            elif token[topt] in stext[topw]:
-                top_len = len(token[topt])  
+            elif tokens[i][topt] in stexts[i][topw]:
+                top_len = len(tokens[i][topt])  
                 id.append(topw)
                 topt += 1
 
                 while True:
 
-                    if top_len == len(stext[topw]):
+                    if top_len == len(stexts[i][topw]):
                         topw += 1
                         break
                     
-                    elif stext[topw].find(token[topt], top_len) == top_len:
+                    elif stexts[i][topw].find(tokens[i][topt], top_len) == top_len:
                         id.append(topw)
-                        top_len += len(token[topt])
+                        top_len += len(tokens[i][topt])
                         topt += 1
             
             else:
