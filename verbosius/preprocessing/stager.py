@@ -68,10 +68,10 @@ def batch_amount_checker(batch_amount):
 
 
 def input_checker(input):
-    if os.path.isfile(input):
+    if os.access(os.path.dirname(input), os.W_OK) and os.path.isdir(input):
         return input
     else:
-        raise argparse.ArgumentTypeError(f'Invalid input path, "{input}" is not a valid file')
+        raise argparse.ArgumentTypeError(f'Invalid input path, "{input}" is not writable or is not a directory')
 
 
 def output_checker(output):
