@@ -1,13 +1,14 @@
 import numpy as np
 import pytest
 from verbosius.preprocessing import datasource
-
+from pathlib import Path
 
 def test_batch_data_with_one_batch():
     """
     Simple test to check that loading data with one batch gives the same as simply loading the data.
     """
-    path = "/home/tobxtra/data/verbosius/imdb/"
+    path = (((Path(__file__).parent).parent).parent).parent / "data" / "verbosius" / "imdb"
+
 
     ds = datasource.dataset('imdb')
     ds = ds(two_cat=True)
@@ -30,7 +31,8 @@ def test_batch_data_with_one_batch_with_shuffle():
     """
     Simple test to check that loading data with one batch gives the same as simply loading the data.
     """
-    path = "/home/tobxtra/data/verbosius/imdb/"
+    path = (((Path(__file__).parent).parent).parent).parent / "data" / "verbosius" / "imdb"
+
 
     ds = datasource.dataset('imdb')
     ds = ds(two_cat=True)
@@ -52,7 +54,8 @@ def test_batch_data_with_one_batch_with_shuffle():
 
 def test_batch_data_with_two_batches():
 
-    path = "/home/tobxtra/data/verbosius/imdb/"
+    path = (((Path(__file__).parent).parent).parent).parent / "data" / "verbosius" / "imdb"
+
 
     ds = datasource.dataset('imdb')
     ds = ds(two_cat=True)
@@ -76,7 +79,8 @@ def test_batch_data_with_two_batches():
 
 def test_batch_data_mix_size_greater_than_data_size():
 
-    path = "/home/tobxtra/data/verbosius/imdb/"
+    path = (((Path(__file__).parent).parent).parent).parent / "data" / "verbosius" / "imdb"
+
 
     ds = datasource.dataset('imdb')
     ds = ds(two_cat=True)
@@ -102,7 +106,8 @@ def test_batch_data_mix_size_greater_than_data_size():
 
 def test_batch_data_two_rounds():
 
-    path = "/home/tobxtra/data/verbosius/imdb/"
+    path = (((Path(__file__).parent).parent).parent).parent / "data" / "verbosius" / "imdb"
+
 
     ds = datasource.dataset('imdb')
     ds = ds(two_cat=True)
@@ -137,7 +142,7 @@ def test_batch_data_two_rounds():
 
 
 def test_batch_data_multiple_rounds():
-    path = "/home/tobxtra/data/verbosius/imdb/"
+    path = (((Path(__file__).parent).parent).parent).parent / "data" / "verbosius" / "imdb"
 
     ds = datasource.dataset('imdb')
     ds = ds(two_cat=True)
