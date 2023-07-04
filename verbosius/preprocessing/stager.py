@@ -11,12 +11,20 @@ def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, outpu
 
     ds = datasource.dataset(dataset)
 
-    # Handle mew batch size and amount stuff here vvv
-    ds = ds(two_cat=True, batch=(0, 1000))
     
-    train_x, train_y, test_x, test_y = ds.load_data(path=input, test=True)
+    ds = ds(two_cat=True)
+    train_x, train_y, test_x, test_y = datasource.batch_data(dataset = ds,
+                                                             n_batches_per_mix = 1,
+                                                             batch_size = 25000,
+                                                             start_point = 0,
+                                                             path = input,
+                                                             test = True)
     
-    
+    train_x = train_x[0]
+    train_y = train_y[0]
+    test_x = test_x[0]
+    test_y = test_y[0]
+
     # clean the data from unwanted symbols and such
     cleaned_train_x = preprocess.clean_text(train_x)
     cleaned_test_x = preprocess.clean_text(test_x)
