@@ -1,5 +1,6 @@
 import pickle
 import os
+import time
 
 def stage_data(cleaned_x, split_x, token_x, lemma_x, token_ids_x, y):
 
@@ -18,7 +19,7 @@ def stage_data(cleaned_x, split_x, token_x, lemma_x, token_ids_x, y):
     return data_dicts
 
 
-def write_data(data_dicts, path, name):
+def write_data(data_dicts, path, name, timestamp : bool = False):
 
     root = os.path.expanduser('~')
     path = os.path.join(root, "projects", path)
@@ -26,8 +27,14 @@ def write_data(data_dicts, path, name):
     dir = os.listdir(path)
     n = len(dir)
 
-    with open(f"{path}/{name}_{n}.pkl", "wb") as f:
-        pickle.dump(data_dicts, f)
+    if timestamp:
+        localtime = f"{time.localtime().tm_year}{time.localtime().tm_mon}{time.localtime().tm_mday}_{time.localtime().tm_hour}{time.localtime().tm_min}"
+        with open(f"{path}/{name}_n{n}_{localtime}.pkl", "wb") as f:
+            pickle.dump(data_dicts, f)
+
+    else:
+        with open(f"{path}/{name}_n{n}.pkl", "wb") as f:
+            pickle.dump(data_dicts, f)
 
 
 

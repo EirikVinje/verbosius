@@ -42,13 +42,13 @@ def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, outpu
     test_data = stage.stage_data(cleaned_test_x, split_test_x, token_test_x, lemma_test_x, token_ids_test_x, test_y)
 
     # write data
-    #stage.write_data(train_data, path=output, name=f"{dataset}_train")
-    #stage.write_data(test_data, path=output, name=f"{dataset}_test")
 
+    stage.write_data(train_data, path=output, name=f"{dataset}_train")
+    stage.write_data(test_data, path=output, name=f"{dataset}_test")
     
     # TODO : python stager.py --dataset imdb --batch 0 1000 --input path/to/input --output path/to/stageroutput
 
-
+    
 
 def dataset_checker(dataset):
     valid_datasets = ['imdb', 'rottentomatoes', 'amazon']
