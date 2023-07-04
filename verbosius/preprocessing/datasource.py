@@ -26,24 +26,16 @@ class IMDB:
             train_data = df_train.values.tolist()
             test_data = df_test.values.tolist()
 
-            if shuffle:
-                rng.shuffle(train_data)
-                rng.shuffle(test_data)
-
-            train_x = [x[0] for x in train_data[batch[0]:batch[1]]]
-            train_y = [x[1] for x in train_data[batch[0]:batch[1]]]
-            test_x = [x[0] for x in test_data[batch[0]:batch[1]]]
-            test_y = [x[1] for x in test_data[batch[0]:batch[1]]]
             
-            return train_x, train_y, test_x, test_y
+            
+            return train_data, test_data
 
         else:
             df_train = pd.read_csv(os.path.join(path, "imdb_train.csv")).reset_index(drop=True)
             train_data = df_train.values.tolist()
-            train_x = [x[0] for x in train_data[batch[0]:batch[1]]]
-            train_y = [x[1] for x in train_data[batch[0]:batch[1]]]
 
-            return train_x, train_y
+
+            return train_data
             
 
 class RottenTomatoes:
