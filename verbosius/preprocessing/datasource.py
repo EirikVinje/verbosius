@@ -4,6 +4,7 @@ import random
 import pandas as pd
 import numpy as np
 
+from collections import Counter
 
 class IMDB:
 
@@ -13,29 +14,25 @@ class IMDB:
 
 
 
-    def load_data(self, path: str, batch: tuple, test: bool = False, shuffle: bool = False, seed: int = 42):
+    def load_data(self, path: str, test: bool = False):
 
         root = os.path.expanduser('~')
         path = os.path.join(root, "projects", path)
-        
-        rng = np.random.default_rng(seed)
 
         if test:
             df_train = pd.read_csv(os.path.join(path, "imdb_train.csv")).reset_index(drop=True)
             df_test = pd.read_csv(os.path.join(path, "imdb_test.csv")).reset_index(drop=True)
-            train_data = df_train.values.tolist()
-            test_data = df_test.values.tolist()
+            train_data = np.array(df_train)
+            test_data = np.array(df_test)
 
-            
-            
             return train_data, test_data
 
         else:
             df_train = pd.read_csv(os.path.join(path, "imdb_train.csv")).reset_index(drop=True)
-            train_data = df_train.values.tolist()
+            train_data = df_train.values.to_numpy()
 
 
-            return train_data
+            return train_data, None
             
 
 class RottenTomatoes:
@@ -77,34 +74,62 @@ def dataset(dataset : str):
 def batch_data(dataset, n_batches_per_mix : int, batch_size : int, start_point:int, path : str, test : bool = False, shuffle : bool = False, seed : int = 42):
     total_mix_size = n_batches_per_mix * batch_size + start_point
 
-    un_batched_mix = dataset.load_data(path, (start_point, total_mix_size), test=True, shuffle=shuffle, seed=seed)
+    un_batched_mix = dataset.load_data(path, test=True)
 
+
+
+    train_data, test_data = un_batched_mix
+
+    texts_train = train_data[:, 0]
+    labels_train = train_data[:, 1]
+
+    indices_class_0_train = np.where(labels_train==0)[0]
+    indices_class_1_train = np.where(labels_train==1)[0]
+
+    min_count = batch_size//2 #min(num_elements_0, num_elements_1)
+
+    np.random.shuffle(indices_class_0_train)
+    np.random.shuffle(indices_class_1_train)
+
+    split_ind_0_train = np.array_split(indices_class_0_train[:min_count*n_batches_per_mix], n_batches_per_mix)
+    split_ind_1_train = np.array_split(indices_class_1_train[:min_count*n_batches_per_mix], n_batches_per_mix)
+
+
+    train_x = []
+    train_y = []
+    for i in range(n_batches_per_mix):
+        split_ind = np.concatenate((split_ind_0_train[i], split_ind_1_train[i]))
+        split_text = texts_train[split_ind]
+        split_label = labels_train[split_ind]
+
+        train_x.append(split_text)
+        train_y.append(split_label)
+
+    
+    
+    for i in range(n_batches_per_mix):
+        print(Counter(train_y[i]))
 
     if test:
-        train_x, train_y, test_x, test_y = un_batched_mix
+        texts_test = test_data[:, 0]
+        labels_test = test_data[:, 1]
+        indices_class_0_test = np.where(labels_test==0)[0]
+        indices_class_1_test = np.where(labels_test==1)[0]
 
-        train_x_batched = []
-        train_y_batched = []
-        test_x_batched = []
-        test_y_batched = []
+        np.random.shuffle(indices_class_0_test)
+        np.random.shuffle(indices_class_1_test)
 
+        split_ind_0_test = np.array_split(indices_class_0_test[:min_count*n_batches_per_mix], n_batches_per_mix)
+        split_ind_1_test = np.array_split(indices_class_1_test[:min_count*n_batches_per_mix], n_batches_per_mix)
+        test_x = []
+        test_y = []
         for i in range(n_batches_per_mix):
-            train_x_batched.append(train_x[i*batch_size:(i+1)*batch_size])
-            train_y_batched.append(train_y[i*batch_size:(i+1)*batch_size])
-            test_x_batched.append(test_x[i*batch_size:(i+1)*batch_size])
-            test_y_batched.append(test_y[i*batch_size:(i+1)*batch_size])
+            split_ind = np.concatenate((split_ind_0_test[i], split_ind_1_test[i]))
+            split_text = texts_test[split_ind]
+            split_label = labels_test[split_ind]
 
-        return train_x_batched, train_y_batched, test_x_batched, test_y_batched
+            test_x.append(split_text)
+            test_y.append(split_label)
 
-
-    else:
-        train_x, train_y = un_batched_mix
-
-        train_x_batched = []
-        train_y_batched = []
-
-        for i in range(n_batches_per_mix):
-            train_x_batched.append(train_x[i*batch_size:(i+1)*batch_size])
-            train_y_batched.append(train_y[i*batch_size:(i+1)*batch_size])
-
-        return train_x_batched, train_y_batched
+        return train_x, train_y, test_x, test_y
+    return train_x, train_y, None, None
