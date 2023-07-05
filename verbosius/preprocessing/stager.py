@@ -106,15 +106,17 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=batch_size_checker, nargs='?', default=10000,
                         help="Set size for individual batch, must be greater than 0. Default value is 10000")
     
-    parser.add_argument("--batch_amount_per_mix", type=batch_amount_checker, nargs ='?', default=1,
+    parser.add_argument("--batch_amount", type=batch_amount_checker, nargs ='?', default=1,
                         help="Set amount of batches to stage at a time. Minimum value is 1. Default value is 1.")
 
     parser.add_argument("--input", type=input_checker, 
-                        help="Path to input data, must be a path to a valid file.")
+                        help="Path to input data, must be the absolute path to a valid directory where the datafiles are located.")
+    
     parser.add_argument("--output", type=output_checker, 
                         help="Path to output data, must be a path to a directory that exists and is writable.")
+    
     parser.add_argument("--test", type=test_checker, nargs='?', default=1,
-                        help="Test the stager with a small dataset")
+                        help="Set whether or not test data should also be prepared. Default value is true.")
 
     args = parser.parse_args()
 
