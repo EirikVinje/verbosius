@@ -1,7 +1,46 @@
 #import green_tsetlin as gt
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
+from config import Parameters
 
+
+def Rulemaker(train_lemma_text, test_lemma_text, train_y, test_y, n_classes):
+    
+    p = Parameters()
+
+    vectorizer = CountVectorizer(max_features=p.MAX_FEATURES,
+                                 max_df=p.MAX_DF, 
+                                 min_df=p.MIN_DF,
+                                 ngram_range=p.N_GRAM_RANGE,
+                                 binary=True,
+                                 dtype=np.uint8,
+                                 stop_words = 'english')
+    
+    train_x_bin = vectorizer.fit_transform(train_lemma_text)
+    test_x_bin = vectorizer.transform(test_lemma_text)
+    vocabulary = vectorizer.get_feature_names_out()
+
+    tm = gt.TsetlinMachine(n_literals=train_x_bin.shape[1], 
+                           n_clauses=p.NUMBER_OF_CLAUSES, 
+                           n_classes=n_classes,
+                           s=p.S, 
+                           n_literal_budget=p.LITERAL_BUDGET)
+
+    train_x_bin = train_x_bin.todense()
+    test_x_bin = test_x_bin.todense()
+    
+    tm.set_train_data(train_x_bin, train_y)
+    tm.set_test_data(test_x_bin, test_y)
+    trainer = gt.Trainer(p.T, n_epochs=p.TM_EPOCHS, seed=32, n_jobs=6, early_exit_acc=0.84)
+
+    r = trainer.train(tm)    
+
+    rp = gt.RulePredictor()
+    fm = list(range(train_x_bin.shape[1]))
+    rp.create_from_state(tm.get_state(), fm)
+    
+    return rp
+    
 
 def allign_tokens_labels_weights(tokens, vocab_weights, sentiment, threshold):
     
