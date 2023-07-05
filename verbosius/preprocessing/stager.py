@@ -20,8 +20,6 @@ def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, outpu
                                         path = input,
                                         test = test)
     
-
-    
     for train_x, train_y, test_x, test_y in zip(batched_data[0], batched_data[1], batched_data[2], batched_data[3]):
 
         # clean the data from unwanted symbols and such
