@@ -1,39 +1,43 @@
-#import green_tsetlin as gt
+import pandas as gt # pandas == green_tsetlin
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
-from config import Parameters
+
+import verbosius.config as config
 
 
-def Rulemaker(train_lemma_text, test_lemma_text, train_y, test_y, n_classes):
+def rulemaker(data):
     
-    p = Parameters()
-
-    vectorizer = CountVectorizer(max_features=p.MAX_FEATURES,
-                                 max_df=p.MAX_DF, 
-                                 min_df=p.MIN_DF,
-                                 ngram_range=p.N_GRAM_RANGE,
+    train_x = [instance["lemmas"] for instance in data["train"]]
+    train_y = [instance["label"] for instance in data["train"]]
+    test_x = [instance["lemmas"] for instance in data["test"]]
+    test_y = [instance["label"] for instance in data["test"]]
+    
+    vectorizer = CountVectorizer(max_features=config.MAX_FEATURES,
+                                 max_df=config.MAX_DF, 
+                                 min_df=config.MIN_DF,
+                                 ngram_range=config.N_GRAM_RANGE,
                                  binary=True,
                                  dtype=np.uint8,
                                  stop_words = 'english')
     
-    train_x_bin = vectorizer.fit_transform(train_lemma_text)
-    test_x_bin = vectorizer.transform(test_lemma_text)
+    train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x])
+    test_x_bin = vectorizer.transform([" ".join(x) for x in test_x])
     vocabulary = vectorizer.get_feature_names_out()
 
     tm = gt.TsetlinMachine(n_literals=train_x_bin.shape[1], 
-                           n_clauses=p.NUMBER_OF_CLAUSES, 
-                           n_classes=n_classes,
-                           s=p.S, 
-                           n_literal_budget=p.LITERAL_BUDGET)
+                           n_clauses=config.NUMBER_OF_CLAUSES, 
+                           n_classes=data["n_classes"],
+                           s=config.S, 
+                           n_literal_budget=config.LITERAL_BUDGET)
 
     train_x_bin = train_x_bin.todense()
     test_x_bin = test_x_bin.todense()
-    
+
     tm.set_train_data(train_x_bin, train_y)
     tm.set_test_data(test_x_bin, test_y)
-    trainer = gt.Trainer(p.T, n_epochs=p.TM_EPOCHS, seed=32, n_jobs=6, early_exit_acc=0.84)
+    trainer = gt.Trainer(config.T, n_epochs=config.TM_EPOCHS, seed=32, n_jobs=6, early_exit_acc=0.84)
 
-    r = trainer.train(tm)    
+    trainer.train(tm)    
 
     rp = gt.RulePredictor()
     fm = list(range(train_x_bin.shape[1]))
@@ -42,7 +46,7 @@ def Rulemaker(train_lemma_text, test_lemma_text, train_y, test_y, n_classes):
     return rp
     
 
-def allign_tokens_labels_weights(tokens, vocab_weights, sentiment, threshold):
+def allign_tokens_labels_weights_bigram(tokens, vocab_weights, sentiment, threshold):
     
     alligned_tokens = []
     alligned_weights = []
@@ -81,7 +85,6 @@ def allign_tokens_labels_weights(tokens, vocab_weights, sentiment, threshold):
             alligned_weights[j] = "#"
             alligned_weights[j-1] += weight
     
-
     alligned_tokens = [token for token in alligned_tokens if token != "#"]
     alligned_weights = [weight for weight in alligned_weights if weight != "#"]
 
@@ -89,7 +92,6 @@ def allign_tokens_labels_weights(tokens, vocab_weights, sentiment, threshold):
         alligned_labels = [2 if x > threshold else 1 if x < -threshold else 0 for x in alligned_weights]
     else:
         alligned_labels = [1 if x > threshold else 2 if x < -threshold else 0 for x in alligned_weights]
-    
     
     return alligned_tokens, alligned_weights, alligned_labels
 
@@ -155,6 +157,19 @@ def allign_tokens_labels_weights_trigram(tokens, vocab_weights, sentiment, thres
     
     
     return alligned_tokens, alligned_weights, alligned_labels
+
+
+def do_allign_tokens_labels_weights(rm, data_x, data_bin_x, data_y):
+
+    for (x, text, y) in zip(data_bin_x, data_x, data_y):
+        
+        if y == rm.predict(x):
+            
+            _, expl = rm.predict(x, explain=True)
+            
+            #x_alligned = allign_tokens_labels_weights(text = text, weights = expl, sentiment = y, vocabulary = vocabulary, threshold = threshold)
+            
+            #tokendata_test.append(x_alligned)
 
 
 if __name__ == "__main__":

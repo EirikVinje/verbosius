@@ -10,9 +10,8 @@ import preprocessing.stage as stage
 def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, output:str, test:bool):
 
     ds = datasource.dataset(dataset)
-
-    
     ds = ds(two_cat=True)
+
     batched_data = datasource.batch_data(dataset = ds,
                                         n_batches_per_mix = batch_amount_per_mix,
                                         batch_size = batch_size,
@@ -20,6 +19,16 @@ def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, outpu
                                         path = input,
                                         test = test)
     
+    dir = os.listdir(output)
+    n = len(dir)
+    new_batchdist = os.path.join(output, f"batchdist_{n}")
+
+    if not os.path.exists(new_batchdist):
+        os.mkdir(new_batchdist)
+
+    else:
+        assert False, f"Directory {new_batchdist} already exists, please remove it before continuing" 
+
     for train_x, train_y, test_x, test_y in zip(batched_data[0], batched_data[1], batched_data[2], batched_data[3]):
 
         # clean the data from unwanted symbols and such
@@ -39,19 +48,17 @@ def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, outpu
         test_data = stage.stage_data(cleaned_test_x, split_test_x, token_test_x, lemma_test_x, token_ids_test_x, test_y)
 
         # write data
-
-        stage.write_data(train_data, path=output, name=f"{dataset}_train")
-        stage.write_data(test_data, path=output, name=f"{dataset}_test")
+        data = {"train": train_data, "test": test_data, "distributer" : dataset, "n_classes" : ds.n_classes}
+        stage.write_data(data=data, path=new_batchdist)
         
-    # TODO : python stager.py --dataset imdb --batch 0 1000 --input path/to/input --output path/to/stageroutput
-
     
-
+    
 def dataset_checker(dataset):
     valid_datasets = ['imdb', 'rottentomatoes', 'amazon']
     if dataset.lower() not in valid_datasets:
         raise argparse.ArgumentTypeError(f"Invalid dataset, available datasets are: {(i for i in valid_datasets)}")
     return dataset.lower()
+
 
 def batch_size_checker(batch_size):
     batch_size = int(batch_size)
@@ -60,7 +67,6 @@ def batch_size_checker(batch_size):
         raise argparse.ArgumentTypeError(f"Invalid batch size, batch size must be greater than 0")
 
     return batch_size
-
 
 
 def batch_amount_checker(batch_amount):
