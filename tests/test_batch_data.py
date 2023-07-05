@@ -12,7 +12,7 @@ def test_batch_data_with_one_batch():
 
     ds = datasource.dataset('imdb')
     ds = ds(two_cat=True)
-    load_data = ds.load_data(path=path, batch=(0, 25000), test=True)
+    load_data = ds.load_data(path=path, test=True)
 
     batch_data = datasource.batch_data(dataset = ds, 
                                        n_batches_per_mix = 1, 
@@ -36,7 +36,7 @@ def test_batch_data_with_one_batch_with_shuffle():
 
     ds = datasource.dataset('imdb')
     ds = ds(two_cat=True)
-    load_data = ds.load_data(path=path, batch=(0, 25000), test=True, shuffle=True)
+    load_data = ds.load_data(path=path, test=True, shuffle=True)
 
     batch_data = datasource.batch_data(dataset = ds, 
                                        n_batches_per_mix = 1, 
@@ -59,7 +59,7 @@ def test_batch_data_with_two_batches():
 
     ds = datasource.dataset('imdb')
     ds = ds(two_cat=True)
-    load_data = ds.load_data(path=path, batch=(0, 25000), test=True)
+    load_data = ds.load_data(path=path, test=True)
 
     batch_data = datasource.batch_data(dataset = ds,
                                         n_batches_per_mix = 2,
@@ -84,7 +84,7 @@ def test_batch_data_mix_size_greater_than_data_size():
 
     ds = datasource.dataset('imdb')
     ds = ds(two_cat=True)
-    load_data = ds.load_data(path=path, batch=(0, 25000), test=True)
+    load_data = ds.load_data(path=path, test=True)
 
 
     batch_size = 20000
@@ -111,7 +111,7 @@ def test_batch_data_two_rounds():
 
     ds = datasource.dataset('imdb')
     ds = ds(two_cat=True)
-    load_data = ds.load_data(path=path, batch=(0, 25000), test=True)
+    load_data = ds.load_data(path=path, test=True)
 
     rounds = 2
     batch_size = 25000//(rounds*2)
@@ -146,7 +146,7 @@ def test_batch_data_multiple_rounds():
 
     ds = datasource.dataset('imdb')
     ds = ds(two_cat=True)
-    load_data = ds.load_data(path=path, batch=(0, 25000), test=True)
+    load_data = ds.load_data(path=path, test=True)
 
     rounds = 16
     batch_size = 25000//(rounds*2)
