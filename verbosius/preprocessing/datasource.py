@@ -12,29 +12,19 @@ class IMDB:
         
         self.two_cat = two_cat
 
-
-
-    def load_data(self, path: str, test: bool = False):
+    def load_data(self, path: str):
 
         root = os.path.expanduser('~')
         path = os.path.join(root, "projects", path)
+        
+        df_train = pd.read_csv(os.path.join(path, "imdb_train.csv")).reset_index(drop=True)
+        df_test = pd.read_csv(os.path.join(path, "imdb_test.csv")).reset_index(drop=True)
+        train_data = np.array(df_train) # [[text, label], [text, label], ...]
+        test_data = np.array(df_test) 
 
-        if test:
-            df_train = pd.read_csv(os.path.join(path, "imdb_train.csv")).reset_index(drop=True)
-            df_test = pd.read_csv(os.path.join(path, "imdb_test.csv")).reset_index(drop=True)
-            train_data = np.array(df_train)
-            test_data = np.array(df_test)
+        return train_data, test_data
 
-            return train_data, test_data
-
-        else:
-            df_train = pd.read_csv(os.path.join(path, "imdb_train.csv")).reset_index(drop=True)
-            train_data = df_train.values.to_numpy()
-
-
-            return train_data, None
             
-
 class RottenTomatoes:
 
     def __init__(self, two_cat : bool, batch : tuple):
@@ -75,8 +65,6 @@ def batch_data(dataset, n_batches_per_mix : int, batch_size : int, start_point:i
     total_mix_size = n_batches_per_mix * batch_size + start_point
 
     un_batched_mix = dataset.load_data(path, test=True)
-
-
 
     train_data, test_data = un_batched_mix
 
