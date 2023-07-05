@@ -105,10 +105,6 @@ def batch_data(dataset, n_batches_per_mix : int, batch_size : int, start_point:i
         train_x.append(split_text)
         train_y.append(split_label)
 
-    
-    
-    for i in range(n_batches_per_mix):
-        print(Counter(train_y[i]))
 
     if test:
         texts_test = test_data[:, 0]
