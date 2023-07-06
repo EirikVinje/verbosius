@@ -13,10 +13,9 @@ def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, outpu
 
     
     ds = ds(two_cat=True)
-    batched_data = datasource.batch_data(dataset = ds,
+    batched_data = datasource.batch_data_multiclass(dataset = ds,
                                         n_batches_per_mix = batch_amount_per_mix,
                                         batch_size = batch_size,
-                                        start_point = 0,
                                         path = input,
                                         test = test)
     
@@ -50,7 +49,7 @@ def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, outpu
     
 
 def dataset_checker(dataset):
-    valid_datasets = ['imdb', 'rottentomatoes', 'amazon']
+    valid_datasets = ['imdb', 'rottentomatoes', 'amazon', 'mnist']
     if dataset.lower() not in valid_datasets:
         raise argparse.ArgumentTypeError(f"Invalid dataset, available datasets are: {(i for i in valid_datasets)}")
     return dataset.lower()
@@ -121,7 +120,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
 
-    main(args.dataset, args.batch_size, args.batch_amount_per_mix, args.input, args.output, args.test)
+    main(args.dataset, args.batch_size, args.batch_amount, args.input, args.output, args.test)
 
 
     
