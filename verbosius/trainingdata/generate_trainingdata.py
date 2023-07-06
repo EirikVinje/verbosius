@@ -1,8 +1,9 @@
-import pandas as gt # pandas == green_tsetlin
+import green_tsetlin as gt
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 
-import verbosius.config as config
+import config as config
+
 
 
 def rulemaker(data):
@@ -12,6 +13,9 @@ def rulemaker(data):
     test_x = [instance["lemmas"] for instance in data["test"]]
     test_y = [instance["label"] for instance in data["test"]]
     
+    train_y = np.array(train_y, dtype=np.uint32)
+    test_y = np.array(test_y, dtype=np.uint32)
+
     vectorizer = CountVectorizer(max_features=config.MAX_FEATURES,
                                  max_df=config.MAX_DF, 
                                  min_df=config.MIN_DF,
