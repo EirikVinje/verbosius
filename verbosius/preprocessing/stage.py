@@ -24,7 +24,7 @@ def write_data(data, path):
     dir = os.listdir(path)
     n = len(dir)
         
-    with open(f"{path}/data_{n}.pkl", "wb") as f:
+    with open(f"{path}/batch_{n}.pkl", "wb") as f:
         pickle.dump(data, f)
 
 
