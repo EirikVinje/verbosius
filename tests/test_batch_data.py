@@ -226,6 +226,44 @@ def test_multiclass_batch_test_with_two_classes():
     assert (batch_data_orig[3][1] == batch_data_multi[3][1]).all(), "test_y 2"
 
 
+def test_multiclass_batch_test_with_10_classes():
+    path = (((Path(__file__).parent).parent).parent).parent / "data" / "verbosius" / "imdb"
+
+    ds = datasource.dataset('mnist')
+    ds = ds(two_cat=True)
+    batch_size = 25000//2
+    
+    t0 = perf_counter()
+    batch_data_orig = datasource.batch_data(dataset = ds,
+                                            n_batches_per_mix=2,
+                                            batch_size=batch_size,
+                                            path=path,
+                                            test=True,
+                                            shuffle=False)
+
+    t1 = perf_counter()
+    t2 = perf_counter()
+
+
+    batch_data_multi = datasource.batch_data_TEMP(dataset = ds,
+                                            n_batches_per_mix=2,
+                                            batch_size=batch_size,
+                                            path=path,
+                                            test=True,
+                                            shuffle=False)
+    t3 = perf_counter()
+    
+
+
+    assert (batch_data_orig[0][0] == batch_data_multi[0][0]).all(), "train_x 1"
+    assert (batch_data_orig[0][1] == batch_data_multi[0][1]).all(), "train_x 2"
+    assert (batch_data_orig[1][0] == batch_data_multi[1][0]).all(), "train_y 1"
+    assert (batch_data_orig[1][1] == batch_data_multi[1][1]).all(), "train_y 2"
+    assert (batch_data_orig[2][0] == batch_data_multi[2][0]).all(), "test_x 1"
+    assert (batch_data_orig[2][1] == batch_data_multi[2][1]).all(), "test_x 2"
+    assert (batch_data_orig[3][0] == batch_data_multi[3][0]).all(), "test_y 1"
+    assert (batch_data_orig[3][1] == batch_data_multi[3][1]).all(), "test_y 2"
+
 if __name__ == "__main__":
     # test_batch_data_with_one_batch()
     # test_batch_data_with_one_batch_with_shuffle()

@@ -1,4 +1,4 @@
-#import green_tsetlin as gt
+import green_tsetlin as gt
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 
