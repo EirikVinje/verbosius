@@ -7,13 +7,13 @@ import preprocessing.datasource as datasource
 import preprocessing.stage as stage
 
 
-def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, output:str, test:bool):
+def main(dataset:str, batch_size:int, batch_amount:int, input:str, output:str, test:bool):
 
     ds = datasource.dataset(dataset)
     ds = ds(two_cat=True)
 
     batched_data = datasource.batch_data(dataset = ds,
-                                        n_batches_per_mix = batch_amount_per_mix,
+                                        n_batches_per_mix = batch_amount,
                                         batch_size = batch_size,
                                         start_point = 0,
                                         path = input,
@@ -21,8 +21,8 @@ def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, outpu
     
     dir = os.listdir(output)
     n = len(dir)
-    new_batchdist = os.path.join(output, f"batchdist_{n}")
-
+    new_batchdist = os.path.join(output, f"{dataset}_batchdist_{n}")
+    
     if not os.path.exists(new_batchdist):
         os.mkdir(new_batchdist)
 
@@ -48,7 +48,7 @@ def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, outpu
         test_data = stage.stage_data(cleaned_test_x, split_test_x, token_test_x, lemma_test_x, token_ids_test_x, test_y)
 
         # write data
-        data = {"train": train_data, "test": test_data, "distributer" : dataset, "n_classes" : ds.n_classes}
+        data = {"train": train_data, "test": test_data, "distributer" : dataset, "n_classes" : 2}
         stage.write_data(data=data, path=new_batchdist)
         
     
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
 
-    main(args.dataset, args.batch_size, args.batch_amount_per_mix, args.input, args.output, args.test)
+    main(args.dataset, args.batch_size, args.batch_amount, args.input, args.output, args.test)
 
 
     

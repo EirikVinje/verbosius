@@ -167,9 +167,7 @@ def do_allign_tokens_labels_weights(rm, data_x, data_bin_x, data_y):
             
             _, expl = rm.predict(x, explain=True)
             
-            #x_alligned = allign_tokens_labels_weights(text = text, weights = expl, sentiment = y, vocabulary = vocabulary, threshold = threshold)
-            
-            #tokendata_test.append(x_alligned)
+            #
 
 
 if __name__ == "__main__":

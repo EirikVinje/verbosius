@@ -78,7 +78,7 @@ def lemmatize(texts : list, cores:int = 4, lemmatizer : str = "en_core_web_sm"):
     labels : list
         List of labels to each document
     """
-
+    print("Lemmatizing text...")
     nlp = spacy.load(lemmatizer)
     docs = nlp.pipe(texts, n_process=cores) 
 
@@ -88,7 +88,7 @@ def lemmatize(texts : list, cores:int = 4, lemmatizer : str = "en_core_web_sm"):
 
     docs = list(docs)
 
-    print("Lemmatizing text...")
+    
     for i in tqdm(range(len(docs))):
 
         tokens.append([token.text for token in docs[i]])

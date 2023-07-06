@@ -64,7 +64,7 @@ def dataset(dataset : str):
 def batch_data(dataset, n_batches_per_mix : int, batch_size : int, start_point:int, path : str, test : bool = False, shuffle : bool = False, seed : int = 42):
     total_mix_size = n_batches_per_mix * batch_size + start_point
 
-    un_batched_mix = dataset.load_data(path, test=True)
+    un_batched_mix = dataset.load_data(path)
 
     train_data, test_data = un_batched_mix
 
