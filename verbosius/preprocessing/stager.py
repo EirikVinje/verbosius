@@ -129,7 +129,7 @@ if __name__ == "__main__":
                         help="Dataset to stage")
     
     parser.add_argument("--batch_size", type=batch_size_checker, nargs='?', default=10000,
-                        help="Set size for individual batch, must be greater than 0. Default value is 10000")
+                        help="Set size for individual batch, must be greater than 0. Default value is 10000. If used together with a train/test - split this batch size will be split up into a train and test part accordingly. ")
     
     parser.add_argument("--batch_amount", type=batch_amount_checker, nargs ='?', default=1,
                         help="Set amount of batches to stage at a time. Minimum value is 1. Default value is 1.")
@@ -166,6 +166,3 @@ if __name__ == "__main__":
 
 
     main(args.dataset, args.batch_size, args.batch_amount, args.input, args.output, args.test, args.test_size, args.use_test_set, args.batch_size_test, args.batch_amount_test, args.seed, args.shuffle)
-
-
-    

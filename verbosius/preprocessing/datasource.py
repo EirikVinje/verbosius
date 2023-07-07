@@ -219,7 +219,7 @@ def batch_data_multiclass(dataset,
 
 
 
-    if not use_test_set:        
+    if not use_test_set and test_batch_size == -1:        
         test_batch_size = int(batch_size*test_size)
         batch_size = batch_size - test_batch_size
     elif test_batch_size == -1:
@@ -313,6 +313,8 @@ def batch_data_multiclass(dataset,
         print(len(train_y[0]))
         print(len(test_x[0]))
         print(len(test_y[0]))
+        print(len(train_x))
+        print(len(test_x))
 
 
         return train_x, train_y, test_x, test_y, n_classes
