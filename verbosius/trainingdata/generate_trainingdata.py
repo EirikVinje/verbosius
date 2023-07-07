@@ -1,7 +1,9 @@
-import green_tsetlin as gt
+from collections import Counter
+
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 
+import green_tsetlin as gt
 import config as config
 
 
@@ -72,6 +74,7 @@ def allign_tokens_labels_weights_bigram(tokens, vocab_weights, sentiment, thresh
             alligned_tokens.append(unigram)
             alligned_weights.append(0.0)
 
+
     for j in range(1, len(alligned_tokens)-1):
         
         if " " in alligned_tokens[j] and " " not in alligned_tokens[j-1] and alligned_tokens[j-1] in alligned_tokens[j]:
@@ -100,65 +103,101 @@ def allign_tokens_labels_weights_bigram(tokens, vocab_weights, sentiment, thresh
     return alligned_tokens, alligned_weights, alligned_labels
 
 
-def allign_tokens_labels_weights_trigram(tokens, vocab_weights, sentiment, threshold):
+def allign_tokens_labels_weights_trigram(tokens, vocab_weights, sentiment, threshold : float = 0.0):
     
+    """
+    Parameters:
+    -----------
+    tokens : list : lemmas
+    vocab_weights : dict : {ngram : weight}
+    sentiment : int : class label
+    
+    Returns:
+    --------
+    alligned_tokens : list : alligned lemma tokens
+
+    """
+
+
     alligned_tokens = []
     alligned_weights = []
 
-    for i in range(1, len(tokens) + 1):
+    is_tri = False
+    is_bi = False
+    is_uni = False
+    
+    count = 0
 
-        bigram = tokens[i-1] + " " + tokens[i] if i < len(tokens) else None
-        unigram = tokens[i-1]
-        trigram = tokens[i-1] + " " + tokens[i] + " " + tokens[i+1] if i < len(tokens) - 1 else None
+    for i in range(0, len(tokens)):
+        
+        #print(is_uni, is_bi, is_tri)
+        #print("count: ", count)
+        #print()
 
-        if bigram in vocab_weights.keys():
-            alligned_tokens.append(bigram)
-            alligned_weights.append(vocab_weights[bigram])
+        if is_tri and count < 2:
+            count += 1
+            continue
+        
+        elif is_tri:
+            count = 0
+            is_tri = False
+            
+        if is_bi and count < 1:
+            count += 1
+            continue
+        
+        elif is_bi:
+            count = 0
+            is_bi = False
 
-        elif unigram in vocab_weights.keys():
+        #print("next")
+        #print()
+
+        is_uni = False
+        is_bi = False
+        is_tri = False
+
+        unigram = tokens[i] if i < len(tokens) else None
+        bigram = tokens[i] + " " + tokens[i+1] if i+1 < len(tokens) else None
+        trigram = tokens[i] + " " + tokens[i+1] + " " + tokens[i+2] if i+2 < len(tokens) else None
+
+        #print(unigram)
+        #print(bigram)
+        #print(trigram)
+        #print()
+
+        if unigram in vocab_weights.keys():
             alligned_tokens.append(unigram)
             alligned_weights.append(vocab_weights[unigram])
+            is_uni = True
 
-        elif trigram in vocab_weights.keys():
+        if bigram in vocab_weights.keys():
+            if is_uni:
+                alligned_tokens.pop()
+                alligned_weights.pop()
+
+            alligned_tokens.append(bigram)
+            alligned_weights.append(vocab_weights[bigram])
+            is_bi = True
+            
+        if trigram in vocab_weights.keys():
+            if is_bi:
+                alligned_tokens.pop()
+                alligned_weights.pop()
+            
             alligned_tokens.append(trigram)
             alligned_weights.append(vocab_weights[trigram])
-        
-        else:
+            is_tri = True
+            
+            
+        if trigram not in vocab_weights.keys() and bigram not in vocab_weights.keys() and unigram not in vocab_weights.keys():
             alligned_tokens.append(unigram)
             alligned_weights.append(0.0)
-
-    print(alligned_tokens)
-
-    for j in range(1, len(alligned_tokens)-1):
-
-        token_0 = alligned_tokens[j-1]
-        token_1 = alligned_tokens[j]
-        token_2 = alligned_tokens[j+1]
-        
-        if " " in alligned_tokens[j] and " " not in alligned_tokens[j-1] and alligned_tokens[j-1] in alligned_tokens[j]:
-            alligned_tokens[j-1] = "#"
-            weight = alligned_weights[j-1]
-            alligned_weights[j-1] = "#"
-            alligned_weights[j] += weight
-            
-        elif " " in alligned_tokens[j] and " " in alligned_tokens[j-1] and alligned_tokens[j-1].split(" ")[1] in alligned_tokens[j]:
-            alligned_tokens[j-1] = alligned_tokens[j-1].split(" ")[0]
-                
-        if alligned_tokens[j] in alligned_tokens[j-1]:
-            alligned_tokens[j] = "#"
-            weight = alligned_weights[j-1]
-            alligned_weights[j] = "#"
-            alligned_weights[j-1] += weight
-    
-
-    alligned_tokens = [token for token in alligned_tokens if token != "#"]
-    alligned_weights = [weight for weight in alligned_weights if weight != "#"]
 
     if sentiment == 1:
         alligned_labels = [2 if x > threshold else 1 if x < -threshold else 0 for x in alligned_weights]
     else:
         alligned_labels = [1 if x > threshold else 2 if x < -threshold else 0 for x in alligned_weights]
-    
     
     return alligned_tokens, alligned_weights, alligned_labels
 
