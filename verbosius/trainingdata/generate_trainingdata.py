@@ -130,10 +130,6 @@ def allign_tokens_labels_weights_trigram(tokens, vocab_weights, sentiment, thres
 
     for i in range(0, len(tokens)):
         
-        #print(is_uni, is_bi, is_tri)
-        #print("count: ", count)
-        #print()
-
         if is_tri and count < 2:
             count += 1
             continue
@@ -150,9 +146,6 @@ def allign_tokens_labels_weights_trigram(tokens, vocab_weights, sentiment, thres
             count = 0
             is_bi = False
 
-        #print("next")
-        #print()
-
         is_uni = False
         is_bi = False
         is_tri = False
@@ -160,11 +153,6 @@ def allign_tokens_labels_weights_trigram(tokens, vocab_weights, sentiment, thres
         unigram = tokens[i] if i < len(tokens) else None
         bigram = tokens[i] + " " + tokens[i+1] if i+1 < len(tokens) else None
         trigram = tokens[i] + " " + tokens[i+1] + " " + tokens[i+2] if i+2 < len(tokens) else None
-
-        #print(unigram)
-        #print(bigram)
-        #print(trigram)
-        #print()
 
         if unigram in vocab_weights.keys():
             alligned_tokens.append(unigram)
@@ -188,7 +176,6 @@ def allign_tokens_labels_weights_trigram(tokens, vocab_weights, sentiment, thres
             alligned_tokens.append(trigram)
             alligned_weights.append(vocab_weights[trigram])
             is_tri = True
-            
             
         if trigram not in vocab_weights.keys() and bigram not in vocab_weights.keys() and unigram not in vocab_weights.keys():
             alligned_tokens.append(unigram)
