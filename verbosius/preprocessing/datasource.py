@@ -22,21 +22,14 @@ class IMDB:
 
         root = os.path.expanduser('~')
         path = os.path.join(root, "projects", path)
+        
+        df_train = pd.read_csv(os.path.join(path, "imdb_train.csv")).reset_index(drop=True)
+        df_test = pd.read_csv(os.path.join(path, "imdb_test.csv")).reset_index(drop=True)
+        train_data = np.array(df_train) # [[text, label], [text, label], ...]
+        test_data = np.array(df_test) 
 
-        if test:
-            df_train = pd.read_csv(os.path.join(path, "imdb_train.csv")).reset_index(drop=True)
-            df_test = pd.read_csv(os.path.join(path, "imdb_test.csv")).reset_index(drop=True)
-            train_data = np.array(df_train)
-            test_data = np.array(df_test)
+        return train_data, test_data
 
-            return train_data, test_data
-
-        else:
-            df_train = pd.read_csv(os.path.join(path, "imdb_train.csv")).reset_index(drop=True)
-            train_data = df_train.values.to_numpy()
-
-
-            return train_data, None
             
 
 class MNIST:
@@ -120,9 +113,7 @@ def batch_data(dataset, n_batches_per_mix : int, batch_size : int, path : str, t
     left for testing purposes, batch_data_multiclass is the update version that should be used. 
     """
 
-    un_batched_mix = dataset.load_data(path, test=True)
-
-
+    un_batched_mix = dataset.load_data(path)
 
     train_data, test_data = un_batched_mix
 
