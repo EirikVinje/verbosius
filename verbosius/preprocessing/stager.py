@@ -2,27 +2,34 @@ import pickle
 import os
 import argparse
 
+import numpy as np
 import preprocessing.preprocess as preprocess
 import preprocessing.datasource as datasource
 import preprocessing.stage as stage
 
 
-def main(dataset:str, batch_size:int, batch_amount:int, input:str, output:str, test:bool):
+def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, output:str, test:bool, test_size:float, use_test_set:bool, batch_size_test:int, batch_amount_test:int, seed:int, shuffle:bool):
 
     ds = datasource.dataset(dataset)
     ds = ds(two_cat=True)
-
-    batched_data = datasource.batch_data(dataset = ds,
-                                        n_batches_per_mix = batch_amount,
-                                        batch_size = batch_size,
-                                        start_point = 0,
-                                        path = input,
-                                        test = test)
+    batched_data = datasource.batch_data_multiclass(dataset = ds,
+                                                    n_batches_per_mix = batch_amount_per_mix,
+                                                    batch_size = batch_size,
+                                                    path = input,
+                                                    test = test,
+                                                    use_test_set=use_test_set,
+                                                    test_batch_size=batch_size_test,
+                                                    test_batches_per_mix=batch_amount_test,
+                                                    test_size=test_size,
+                                                    shuffle=shuffle,
+                                                    seed=seed)
+    
+    n_classes = batched_data[-1]
     
     dir = os.listdir(output)
     n = len(dir)
     new_batchdist = os.path.join(output, f"{dataset}_batchdist_{n}")
-    
+
     if not os.path.exists(new_batchdist):
         os.mkdir(new_batchdist)
 
@@ -54,7 +61,7 @@ def main(dataset:str, batch_size:int, batch_amount:int, input:str, output:str, t
     
     
 def dataset_checker(dataset):
-    valid_datasets = ['imdb', 'rottentomatoes', 'amazon']
+    valid_datasets = ['imdb', 'rottentomatoes', 'amazon', 'mnist']
     if dataset.lower() not in valid_datasets:
         raise argparse.ArgumentTypeError(f"Invalid dataset, available datasets are: {(i for i in valid_datasets)}")
     return dataset.lower()
@@ -91,13 +98,32 @@ def output_checker(output):
     else:
         raise argparse.ArgumentTypeError(f'Invalid output path, "{output}" is not writable or is not a directory')
 
-def test_checker(test):
+def bool_checker(test):
     if test.lower() == "true" or int(test) == 1:
         return True
     elif test.lower() == "false" or int(test) == 0:
         return False
     else:
         raise argparse.ArgumentTypeError(f"Invalid value, {test} is not a valid value. Valid values are true and false")
+
+def test_size_checker(test_size):
+    test_size = float(test_size)
+
+    if test_size <= 0 or test_size >= 1:
+        raise argparse.ArgumentTypeError(f"Invalid test size, test size must be between 0 and 1")
+    
+    return test_size
+
+def use_test_set_checker(use_test_set):
+    if use_test_set.lower() == "true" or int(use_test_set) == 1:
+        return True
+    elif use_test_set.lower() == "false" or int(use_test_set) == 0:
+        return False
+    else:
+        raise argparse.ArgumentTypeError(f"Invalid value, {use_test_set} is not a valid value. Valid values are true and false")
+
+
+
 
 if __name__ == "__main__":
 
@@ -108,7 +134,7 @@ if __name__ == "__main__":
                         help="Dataset to stage")
     
     parser.add_argument("--batch_size", type=batch_size_checker, nargs='?', default=10000,
-                        help="Set size for individual batch, must be greater than 0. Default value is 10000")
+                        help="Set size for individual batch, must be greater than 0. Default value is 10000. If used together with a train/test - split this batch size will be split up into a train and test part accordingly. ")
     
     parser.add_argument("--batch_amount", type=batch_amount_checker, nargs ='?', default=1,
                         help="Set amount of batches to stage at a time. Minimum value is 1. Default value is 1.")
@@ -119,13 +145,29 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=output_checker, 
                         help="Path to output data, must be a path to a directory that exists and is writable.")
     
-    parser.add_argument("--test", type=test_checker, nargs='?', default=1,
+    parser.add_argument("--test", type=bool_checker, nargs='?', default=1,
                         help="Set whether or not test data should also be prepared. Default value is true.")
+
+    parser.add_argument("--test_size", type=test_size_checker, nargs='?', default=0.5,
+                        help="Set the percentage size of the test data. If not sat test and train sizes will be equal.")
+
+    parser.add_argument("--use_test_set", type=bool_checker, nargs='?', default=0,
+                        help="Set whether or not your data has its own test set already, if test==True and use_test_set==False test data is extracted from the training data. Default value is false. If sat test_size will be ignored, and test batched will be extracted from the test set with same size and amount as for the training set. To change this set batch_size_test and batch_amount_test.")
+
+    parser.add_argument("--batch_size_test", type=batch_size_checker, nargs='?', default=-1,
+                        help="Set size for individual batch, must be greater than 0. If sat test_size argument will be ignored.")
+
+    parser.add_argument("--batch_amount_test", type=batch_amount_checker, nargs ='?', default=-1,
+                        help="Set amount of batches to stage at a time. Minimum value is 1.")
+    
+    parser.add_argument("--seed", type=int, nargs='?', default=np.random.randint(0, 99999999),
+                        help="Set seed for all randomizxation in batching. Default value is a random seed.")
+    
+    parser.add_argument("--shuffle", type=bool_checker, nargs='?', default=1,
+                        help="Set whether or not to shuffle the data. Default value is true.")
+
 
     args = parser.parse_args()
 
 
-    main(args.dataset, args.batch_size, args.batch_amount, args.input, args.output, args.test)
-
-
-    
+    main(args.dataset, args.batch_size, args.batch_amount, args.input, args.output, args.test, args.test_size, args.use_test_set, args.batch_size_test, args.batch_amount_test, args.seed, args.shuffle)
