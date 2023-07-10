@@ -33,7 +33,9 @@ class IMDB:
             
 
 class MNIST:
-
+    """
+    Exists for testing purposes, not intended for use in the pipeline, will crash if used because not text data.
+    """
     def __init__(self, two_cat : bool):
         self.two_cat = two_cat
 
