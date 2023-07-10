@@ -34,7 +34,7 @@ def objective(trial, train_x, train_y, test_x, test_y):
 if __name__ == '__main__':
 
 
-    path = "/home/tobxtra/data/verbosius/store_imdb_pickle/"
+    path = "/home/bigtech/data/verbosius/store_imdb_pickle/"
     batch_num = _
     data = pickle.load(open(f"{path}/batch_{batch_num}.pkl", "rb")) 
 

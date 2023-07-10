@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # *************** PREPROSESSING *************** 
-preproc_input_path=/home/tobxtra/data/verbosius/imdb/
-preproc_output_path=/home/tobxtra/data/verbosius/store_imdb_pickle/
+preproc_input_path=/home/bigtech/data/verbosius/imdb/
+preproc_output_path=/home/bigtech/data/verbosius/store_imdb_pickle/
 
 dataset=imdb
 batch_size=25000
@@ -13,8 +13,8 @@ seed=42
 
 
 # *************** GENERATE TRAINING DATA ***************
-traindat_input_path=/home/tobxtra/data/verbosius/store_imdb_pickle/
-traindat_output_path=/home/tobxtra/data/verbosius/store_imdb_trainingdata/
+traindat_input_path=/home/bigtech/data/verbosius/store_imdb_pickle/
+traindat_output_path=/home/bigtech/data/verbosius/store_imdb_trainingdata/
 
 batchdist_n=0
 
