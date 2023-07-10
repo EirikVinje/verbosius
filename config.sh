@@ -5,8 +5,8 @@ preproc_input_path=/home/tobxtra/data/verbosius/imdb/
 preproc_output_path=/home/tobxtra/data/verbosius/store_imdb_pickle/
 
 dataset=imdb
-batch_size=12500
-batch_amount=2
+batch_size=25000
+batch_amount=1
 use_test_set=True
 shuffle=True
 seed=42
