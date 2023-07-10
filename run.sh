@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source /home/tobxtra/projects/verbosius/config.sh
 
-python verbosius/preprocessing/stager.py --dataset imdb --batch_size 100 --batch_amount 10 --input /home/tobxtra/data/verbosius/imdb/ --output /home/tobxtra/data/verbosius/store_imdb_pickle/ --use_test_set True --shuffle True --seed 42
-python verbosius/trainingdata/stage_trainingdata.py --dataset imdb --batchdist_n 0 --input /home/tobxtra/data/verbosius/store_imdb_pickle/ --output /home/tobxtra/data/verbosius/store_imdb_trainingdata/
+
+python verbosius/preprocessing/stager.py --dataset $dataset --batch_size $batch_size --batch_amount $batch_amount --input $preproc_input_path --output $preproc_output_path --use_test_set $use_test_set --shuffle $shuffle --seed $seed
+python verbosius/trainingdata/stage_trainingdata.py --dataset $dataset --batchdist_n $batchdist_n --input $traindat_input_path --output $traindat_output_path

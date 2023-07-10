@@ -207,7 +207,7 @@ if __name__ == "__main__":
     # make vocabulary with unigrams, bigrams and trigrams
     vocabulary = {
         "i" : 0.1,
-        "not happy" : 0.2,
+        "not happy" : -0.7,
         "happy with" : 0.4,
         "with the movie" : 0.5,
         "the movie" : 0.6,
