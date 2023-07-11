@@ -46,7 +46,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     batch_num = args.batch_num
 
-    path = "/home/bigtech/data/verbosius/store_imdb_pickle"
+    path = "/home/bigtech/data/verbosius/store_imdb_pickle/imdb_batchdist_2"
     data = pickle.load(open(f"{path}/batch_{batch_num}.pkl", "rb")) 
 
     train_x_t = [instance["lemmas"] for instance in data["train"]]
@@ -73,8 +73,8 @@ if __name__ == '__main__':
                                  dtype=np.uint8,
                                  stop_words = 'english')
     
-    train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x])
-    test_x_bin = vectorizer.transform([" ".join(x) for x in test_x])
+    train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x]).todense()
+    test_x_bin = vectorizer.transform([" ".join(x) for x in test_x]).todense()
 
 
     
