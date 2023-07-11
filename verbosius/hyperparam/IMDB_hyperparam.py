@@ -1,6 +1,7 @@
 import optuna
 import pickle
 import argparse
+import os
 
 import numpy as np
 import green_tsetlin as gt
@@ -38,32 +39,40 @@ if __name__ == '__main__':
 
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--batch_num", type=int, default=0, help="Which batch number to use")
+    parser.add_argument("--batch_dist", type=int, default=0, help="Which batch number to use")
     parser.add_argument("--n_trials", type=int, default=100, help="Number of trials for hyperparam search")
     parser.add_argument("--n_jobs", type=int, default=2, help="Number of parallel jobs")
-    parser.add_argument("--data_amount", type=float, default=1.0, help="Fraction of data to use")
+    parser.add_argument("--data_amount", type=float, default=.2, help="Fraction of data to use")
 
     args = parser.parse_args()
-    batch_num = args.batch_num
+    batch_dist = args.batch_dist
 
-    path = "/home/bigtech/data/verbosius/store_imdb_pickle/imdb_batchdist_2"
-    data = pickle.load(open(f"{path}/batch_{batch_num}.pkl", "rb")) 
-
-    train_x_t = [instance["lemmas"] for instance in data["train"]]
-    train_y_t = [instance["label"] for instance in data["train"]]
-    test_x_t = [instance["lemmas"] for instance in data["test"]]
-    test_y_t = [instance["label"] for instance in data["test"]]
+    path = f"/home/bigtech/data/verbosius/store_imdb_pickle/imdb_batchdist_{batch_dist}"
     
-    train_x, _, train_y, _ = train_test_split(train_x_t, train_y_t, test_size=(1-args.data_amount))
-    test_x, _, test_y, _ = train_test_split(test_x_t, test_y_t, test_size=(1-args.data_amount))
+    train_x_t = []
+    train_y_t = []
+    test_x_t = []
+    test_y_t = []
+    for file in os.listdir(path):
+        print("y")
+        with open(f"{path}/{file}", "rb") as f:
+            data = pickle.load(f)
+
+        train_x_t.extend([instance["lemmas"] for instance in data["train"]])
+        train_y_t.extend([instance["label"] for instance in data["train"]])
+        test_x_t.extend([instance["lemmas"] for instance in data["test"]])
+        test_y_t.extend([instance["label"] for instance in data["test"]])
+    
+
+
+    train_x, _, train_y, _ = train_test_split(train_x_t, train_y_t, train_size=args.data_amount, stratify=train_y_t)
+    test_x, _, test_y, _ = train_test_split(test_x_t, test_y_t, train_size=args.data_amount, stratify=test_y_t)
 
 
     train_y = np.array(train_y, dtype=np.uint32)
     test_y = np.array(test_y, dtype=np.uint32)
     
-    print(Counter(train_y))
-    print(Counter(test_y))
-    assert False
+
 
     vectorizer = CountVectorizer(max_features=5000,
                                  max_df=0.7, 
