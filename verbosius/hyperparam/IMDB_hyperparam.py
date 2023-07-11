@@ -24,8 +24,8 @@ def objective(trial, train_x, train_y, test_x, test_y):
 
     trainer = gt.Trainer(threshold=threshold, 
                          n_epochs=n_epochs,
-                         n_jobs=2,
-                         early_exit_acc=0.865)
+                         n_jobs=6,
+                         early_exit_acc=0.86)
     
     output = trainer.train(tm)
 
