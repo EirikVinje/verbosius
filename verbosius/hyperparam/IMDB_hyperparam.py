@@ -1,5 +1,6 @@
 import optuna
 import pickle
+import argparse
 
 import numpy as np
 import green_tsetlin as gt
@@ -34,8 +35,16 @@ def objective(trial, train_x, train_y, test_x, test_y):
 if __name__ == '__main__':
 
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--batch_num", type=int, default=0, help="Which batch number to use")
+    parser.add_argument("--n_trials", type=int, default=100, help="Number of trials for hyperparam search")
+    parser.add_argument("--n_jobs", type=int, default=2, help="Number of parallel jobs")
+    parser.add_argument("--data_amount", type=float, default=1.0, help="Fraction of data to use")
+
+    args = parser.parse_args()
+    batch_num = args.batch_num
+
     path = "/home/bigtech/data/verbosius/store_imdb_pickle/"
-    batch_num = _
     data = pickle.load(open(f"{path}/batch_{batch_num}.pkl", "rb")) 
 
     train_x = [instance["lemmas"] for instance in data["train"]]
@@ -62,4 +71,4 @@ if __name__ == '__main__':
     obj_func = lambda trial: objective(trial, train_x_bin, train_y, test_x_bin, test_y)
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(obj_func, n_trials=2, show_progress_bar=True)
+    study.optimize(obj_func, n_trials=args.n_trials, show_progress_bar=True)
