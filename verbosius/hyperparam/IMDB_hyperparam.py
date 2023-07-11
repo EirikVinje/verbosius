@@ -34,8 +34,8 @@ def objective(trial, train_x, train_y, test_x, test_y):
 if __name__ == '__main__':
 
 
-    path = "/home/bigtech/data/verbosius/store_imdb_pickle/"
-    batch_num = _
+    path = "/home/bigtech/data/verbosius/store_imdb_pickle/imdb_batchdist_2"
+    batch_num = 0
     data = pickle.load(open(f"{path}/batch_{batch_num}.pkl", "rb")) 
 
     train_x = [instance["lemmas"] for instance in data["train"]]
@@ -54,8 +54,8 @@ if __name__ == '__main__':
                                  dtype=np.uint8,
                                  stop_words = 'english')
     
-    train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x])
-    test_x_bin = vectorizer.transform([" ".join(x) for x in test_x])
+    train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x]).todense()
+    test_x_bin = vectorizer.transform([" ".join(x) for x in test_x]).todense()
 
 
     
