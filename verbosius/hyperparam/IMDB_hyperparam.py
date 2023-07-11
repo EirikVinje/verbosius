@@ -6,8 +6,10 @@ import numpy as np
 import green_tsetlin as gt
 
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split
+from collections import Counter
 
-def objective(trial, train_x, train_y, test_x, test_y):
+def objective(trial, train_x, train_y, test_x, test_y, n_jobs, ):
     num_clauses = trial.suggest_int("num_clauses", 4000, 12000)
     s = trial.suggest_int("s", 1, 100)
     threshold = trial.suggest_int("threshold", 100, 1000)
@@ -25,7 +27,7 @@ def objective(trial, train_x, train_y, test_x, test_y):
 
     trainer = gt.Trainer(threshold=threshold, 
                          n_epochs=n_epochs,
-                         n_jobs=6,
+                         n_jobs=n_jobs,
                          early_exit_acc=0.86)
     
     output = trainer.train(tm)
@@ -44,16 +46,24 @@ if __name__ == '__main__':
     args = parser.parse_args()
     batch_num = args.batch_num
 
-    path = "/home/bigtech/data/verbosius/store_imdb_pickle/"
+    path = "/home/bigtech/data/verbosius/store_imdb_pickle"
     data = pickle.load(open(f"{path}/batch_{batch_num}.pkl", "rb")) 
 
-    train_x = [instance["lemmas"] for instance in data["train"]]
-    train_y = [instance["label"] for instance in data["train"]]
-    test_x = [instance["lemmas"] for instance in data["test"]]
-    test_y = [instance["label"] for instance in data["test"]]
+    train_x_t = [instance["lemmas"] for instance in data["train"]]
+    train_y_t = [instance["label"] for instance in data["train"]]
+    test_x_t = [instance["lemmas"] for instance in data["test"]]
+    test_y_t = [instance["label"] for instance in data["test"]]
     
+    train_x, _, train_y, _ = train_test_split(train_x_t, train_y_t, test_size=(1-args.data_amount))
+    test_x, _, test_y, _ = train_test_split(test_x_t, test_y_t, test_size=(1-args.data_amount))
+
+
     train_y = np.array(train_y, dtype=np.uint32)
     test_y = np.array(test_y, dtype=np.uint32)
+    
+    print(Counter(train_y))
+    print(Counter(test_y))
+    assert False
 
     vectorizer = CountVectorizer(max_features=5000,
                                  max_df=0.7, 
@@ -68,7 +78,7 @@ if __name__ == '__main__':
 
 
     
-    obj_func = lambda trial: objective(trial, train_x_bin, train_y, test_x_bin, test_y)
+    obj_func = lambda trial: objective(trial, train_x_bin, train_y, test_x_bin, test_y, args.n_jobs)
 
     study = optuna.create_study(direction="maximize")
     study.optimize(obj_func, n_trials=args.n_trials, show_progress_bar=True)
