@@ -15,7 +15,7 @@ def objective(trial, train_x, train_y, test_x, test_y, n_jobs, ):
     s = trial.suggest_int("s", 1, 100)
     threshold = trial.suggest_int("threshold", 100, 1000)
     literal_budget = trial.suggest_int("literal_budget", 1, 100)
-    n_epochs = trial.suggest_int("n_epochs", 10, 25)
+    
 
     tm = gt.TsetlinMachine(n_literals=train_x.shape[1],
                            n_clauses=num_clauses, 
@@ -27,7 +27,7 @@ def objective(trial, train_x, train_y, test_x, test_y, n_jobs, ):
     tm.set_test_data(test_x, test_y)
 
     trainer = gt.Trainer(threshold=threshold, 
-                         n_epochs=n_epochs,
+                         n_epochs=10,
                          n_jobs=n_jobs,
                          early_exit_acc=0.86)
     
@@ -63,7 +63,8 @@ if __name__ == '__main__':
         test_x_t.extend([instance["lemmas"] for instance in data["test"]])
         test_y_t.extend([instance["label"] for instance in data["test"]])
     
-
+    print(Counter(train_y_t))
+    print(Counter(test_y_t))
 
     train_x, _, train_y, _ = train_test_split(train_x_t, train_y_t, train_size=args.data_amount, stratify=train_y_t)
     test_x, _, test_y, _ = train_test_split(test_x_t, test_y_t, train_size=args.data_amount, stratify=test_y_t)
@@ -72,7 +73,8 @@ if __name__ == '__main__':
     train_y = np.array(train_y, dtype=np.uint32)
     test_y = np.array(test_y, dtype=np.uint32)
     
-
+    print(Counter(train_y))
+    print(Counter(test_y))
 
     vectorizer = CountVectorizer(max_features=5000,
                                  max_df=0.7, 
