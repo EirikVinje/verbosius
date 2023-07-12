@@ -52,7 +52,6 @@ def rulemaker(data):
     
 
 def fit_grams(grammies, weights):
-
     """
     Parameters:
     -----------
@@ -68,66 +67,88 @@ def fit_grams(grammies, weights):
     weights : list
         list of weights for each n-gram
     """
-    
 
-    for j, gram in enumerate(grammies):
+    print(f"grammies: {grammies}")
+    print(f"weights: {weights}")
+    
+    j = 0
+    i = 0
+    while j < len(grammies)-1: 
         
+        curr_gram = grammies[j]
         next_gram = grammies[j+1] if j+1 < len(grammies) else None
         
-        s_gram = gram.split()
-        s_next_gram = next_gram.split() if next_gram else [-1]
+        split_curr_gram = curr_gram.split(" ")
+        split_next_gram = next_gram.split(" ") if next_gram else [-1]
 
-        space_gram = Counter(gram)[" "]
-        space_next_gram = Counter(next_gram)[" "] if next_gram else -1
+        n_space_curr_gram = Counter(curr_gram)[" "]
+        n_space_next_gram = Counter(next_gram)[" "] if next_gram else -1
 
-        if space_gram == 1 and space_next_gram == 2 and s_gram[1] == s_next_gram[0]:    
-            w = weights[j]/2
-            weights[j] = w
-            weights[j+1] += w
-            grammies[j] = gram.split()[0]
+        weight_curr_gram = weights[j]
+        weight_next_gram = weights[j+1] if next_gram else -1
 
+        #print(f"curr_gram: {curr_gram}, next_gram: {next_gram}")
 
-        elif space_gram == 1 and space_next_gram == 1 and s_gram[1] == s_next_gram[0]:
-            new_tri = "{} {} {}".format(gram.split()[0], gram.split()[1], next_gram.split()[2])
-            grammies[j] = new_tri
-            weights[j] = weights[j] + weights[j+1]
+        if split_curr_gram[-1] == split_next_gram[0] and next_gram is not None:
             
-            weights.pop(j+1)
-            grammies.pop(j+1)
+            if n_space_curr_gram == 1 and n_space_next_gram == 1:
+                
+                new_tri = "{} {} {}".format(split_curr_gram[0], split_curr_gram[1], split_next_gram[1])
+                grammies[j] = new_tri
+                grammies.pop(j+1)
 
+                weights[j] = weight_curr_gram + weight_next_gram
+                weights.pop(j+1)
 
-        elif space_gram == 2 and space_next_gram == 1 and s_gram[-1] == s_next_gram[0]:
-            w = weights[j+1]/2
-            weights[j] += w
-            weights[j+1] = w
-            grammies[j+1] = next_gram.split()[1]
+            elif n_space_curr_gram == 1 and n_space_next_gram == 2:
+                
+                grammies[j] = split_curr_gram[0]
 
+                weights[j] = weight_curr_gram/2
+                weights[j+1] += weight_curr_gram/2
 
-        elif space_gram == 2 and space_next_gram == 2 and s_gram[-1] == s_next_gram[0]:
-            curr_tri = 1 if weights[j] >= weights[j+1] else 0 
+                j += 1
 
-            if curr_tri:
-                w = weights[j+1]
-                weights[j] += w * 1/3
-                weights[j+1] = w * 2/3
-                grammies[j+1] = " ".join(s_next_gram[1:])
+            elif n_space_curr_gram == 2 and n_space_next_gram == 1:
+
+                grammies[j+1] = split_next_gram[1]
+                
+                weights[j+1] = weight_next_gram/2
+                weights[j] += weight_next_gram/2
+
+                j += 1
+
+            elif n_space_curr_gram == 2 and n_space_next_gram == 2:
+
+                grammies[j] = " ".join(split_curr_gram[:-1])
+                
+                weights[j] = weight_curr_gram * 1/3
+                weights[j+1] += weight_curr_gram * 2/3
+
+                j += 1
             
-            else:
-                w = weights[j]
-                weights[j] = w * 2/3
-                weights[j+1] += w * 1/3
-                grammies[j] = " ".join(s_gram[:-1])
-
-
-        elif space_gram == 2 and space_next_gram == 0 and s_gram[-1] == s_next_gram[0]:
-            weights[j] += weights[j+1]
-
-            weights.pop(j+1)
-            grammies.pop(j+1)
+            elif n_space_curr_gram == 0 and n_space_next_gram == 1:
+                
+                grammies[j] = next_gram
+                weights[j] = weight_curr_gram + weight_next_gram                
+                
+                grammies.pop(j+1)
+                weights.pop(j+1)
+        
+        elif n_space_curr_gram == 2 and n_space_next_gram == 2 and split_curr_gram[1:] == split_next_gram[:-1]:
             
+            grammies[j] = split_curr_gram[0]
+            
+            weights[j] = weight_curr_gram * 1/3
+            weights[j+1] += weight_curr_gram * 2/3
+        
+            j += 1
+        
+        
+        else:
+            j += 1
 
     return grammies, weights
-
 
 
 def find_grams(tokens, vocabulary):
@@ -154,54 +175,79 @@ def find_grams(tokens, vocabulary):
 
     is_tri = False
     is_bi = False
-    is_uni = False
-    
-    skip = 0
+
+    skip_tri = 0
+    skip_bi = 0
 
     for i, curr_token in enumerate(tokens):
         
-        if is_tri and skip < 3:
-            skip += 1
+        #print()
+
+        if is_tri and skip_tri < 3:
+            skip_tri += 1
     
-        if skip == 3:
-            skip = 0
+        elif skip_tri == 3:
+            skip_tri = 0
             is_tri = False
+
+        if is_bi and skip_bi < 2:
+            skip_bi += 1
+        
+        elif skip_bi == 2:
+            skip_bi = 0
+            is_bi = False
 
         unigram = curr_token if i < len(tokens) else None
         bigram = "{} {}".format(curr_token, tokens[i+1]) if i+1 < len(tokens) else None
         trigram = "{} {} {}".format(curr_token, tokens[i+1], tokens[i+2]) if i+2 < len(tokens) else None
-        
+
+        #print(f"unigram: {unigram}, bigram: {bigram}, trigram: {trigram}")
+        #print(f"skip_tri: {skip_tri}, skip_bi: {skip_bi}")
+        #print(f"is_tri: {is_tri}, is_bi: {is_bi}")
+
         if trigram in vocabulary.keys():
             
+            #print(f"adding trigram: {trigram}")
             grammies.append(trigram)
             weights.append(vocabulary[trigram])
             is_tri = True
-            skip = 0
+            skip_tri = 0
         
-        elif bigram in vocabulary.keys():
+        if bigram in vocabulary.keys():
             
-            if skip < 2 and is_tri:
+            if skip_tri < 2 and is_tri:
                 weights[-1] += vocabulary[bigram]
 
             else:
+                #print(f"adding bigram: {bigram}")
                 grammies.append(bigram)
                 weights.append(vocabulary[bigram])
+                is_bi = True
+                skip_bi = 0
+
+        if unigram in vocabulary.keys():
             
-        elif unigram in vocabulary.keys():
+            if skip_tri < 3 and is_tri:
+                weights[-1] += vocabulary[unigram]
             
-            if skip < 3 and is_tri:
+            elif skip_bi < 2 and is_bi:
                 weights[-1] += vocabulary[unigram]
 
             else:
+                #print(f"adding unigram: {unigram}")
                 grammies.append(unigram)
                 weights.append(vocabulary[unigram])
+        
+        if trigram not in vocabulary.keys() and bigram not in vocabulary.keys() and unigram not in vocabulary.keys():
             
-        elif trigram not in vocabulary.keys() and bigram not in vocabulary.keys() and unigram not in vocabulary.keys():
+            if skip_tri < 3 and is_tri:
+                continue
             
-            if skip < 3 and is_tri:
+            elif skip_bi < 2 and is_bi:
                 continue
             
             else:
+                #print(f"adding unknown unigram: {unigram}")
                 grammies.append(unigram)
                 weights.append(0.0)
 
