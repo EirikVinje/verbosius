@@ -1,31 +1,26 @@
 #!/bin/bash
 
-# *************** PREPROSESSING *************** 
-preproc_input_path=/home/tobxtra/data/verbosius/imdb/
-preproc_output_path=/home/tobxtra/data/verbosius/store_imdb_pickle/
+# Most parameters are input in verbosius/config.py, as this allows for easy
+# use in python scripts. This file is used to convert the python variables
+# to bash variables, so that they can be used in run.sh for when you run the pipeline
+# ONLY add variables here if they are not used in python scripts, else keep them
+# in config.py, and add conversion here, as done for the other variables.
 
-dataset=imdb
-batch_size=12500
-batch_amount=2
-use_test_set=True
-shuffle=True
-seed=42
+# *************** PREPROSESSING *************** 
+preproc_input_path="$(python -c 'import config; print(config.preproc_input_path)')"
+preproc_output_path="$(python -c 'import config; print(config.preproc_output_path)')"
+
+dataset="$(python -c 'import config; print(config.dataset)')"
+batch_size="$(python -c 'import config; print(config.batch_size)')"
+batch_amount="$(python -c 'import config; print(config.batch_amount)')"
+use_test_set="$(python -c 'import config; print(config.use_test_set)')"
+shuffle="$(python -c 'import config; print(config.shuffle)')"
+seed="$(python -c 'import config; print(config.seed)')"
 
 
 # *************** GENERATE TRAINING DATA ***************
-traindat_input_path=/home/tobxtra/data/verbosius/store_imdb_pickle/
-traindat_output_path=/home/tobxtra/data/verbosius/store_imdb_trainingdata/
+traindat_input_path="$(python -c 'import config; print(config.traindat_input_path)')"
+traindat_output_path="$(python -c 'import config; print(config.traindat_output_path)')'"
 
-batchdist_n=0
-
-# TM PARAMS
-MAX_DF=0.7
-MIN_DF=10
-MAX_FEATURES=5000
-N_GRAM_RANGE=(1, 2)
-NUMBER_OF_CLAUSES=8000
-LITERAL_BUDGET=10
-S=42.69
-T=1000
-TM_EPOCHS=10
+batchdist_n="$(python -c 'import config; print(config.batchdist_n)')"
 
