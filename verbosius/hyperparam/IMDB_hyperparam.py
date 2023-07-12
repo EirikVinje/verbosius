@@ -9,12 +9,52 @@ import green_tsetlin as gt
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 from collections import Counter
+from warnings import simplefilter
 
-def objective(trial, train_x, train_y, test_x, test_y, n_jobs, ):
-    num_clauses = trial.suggest_int("num_clauses", 4000, 12000)
-    s = trial.suggest_int("s", 1, 100)
-    threshold = trial.suggest_int("threshold", 100, 1000)
-    literal_budget = trial.suggest_int("literal_budget", 1, 100)
+simplefilter(action='ignore', category=UserWarning)
+
+def objective(trial, train_x, train_y, test_x, test_y, n_jobs):
+
+    train_x_store = train_x
+    train_y_store = train_y
+    test_x_store = test_x
+    test_y_store = test_y
+    
+    # FIRST TRIAL PARAMS
+    """num_clauses = trial.suggest_int("num_clauses", 4000, 8000)
+    s = trial.suggest_float("s", 1, 10)
+    threshold = trial.suggest_int("threshold", 1000, 6000)
+    literal_budget = trial.suggest_int("literal_budget", 5, 20)
+    max_df = trial.suggest_float("max_df", 0.5, 0.9)
+    min_df = trial.suggest_int("min_df", 5, 20)
+    ngram_range = trial.suggest_categorical("ngram_range", [(1,1), (1,2), (1,3), (2,2), (2,3), (3,3)])
+    stop_words = trial.suggest_categorical("stop_words", [None, "english"])"""
+
+    # NEW TRIAL PARAMS
+    num_clauses = trial.suggest_int("num_clauses", 4000, 8000)
+    s = trial.suggest_float("s", 3, 10)
+    threshold = trial.suggest_int("threshold", 2000, 8000)
+    literal_budget = trial.suggest_int("literal_budget", 5, 20)
+    max_df = trial.suggest_float("max_df", 0.5, 0.9)
+    min_df = trial.suggest_int("min_df", 5, 20)
+    ngram_range = trial.suggest_categorical("ngram_range", [(1,1), (1,2), (1,3)])
+    stop_words = trial.suggest_categorical("stop_words", [None, "english"])
+
+
+    vectorizer = CountVectorizer(max_features=5000,
+                                 max_df=max_df, 
+                                 min_df=min_df,
+                                 ngram_range=ngram_range,
+                                 binary=True,
+                                 dtype=np.uint8,
+                                 stop_words = stop_words)
+    
+    train_x = vectorizer.fit_transform([" ".join(x) for x in train_x_store]).todense()
+    test_x = vectorizer.transform([" ".join(x) for x in test_x_store]).todense()
+
+
+
+
     
 
     tm = gt.TsetlinMachine(n_literals=train_x.shape[1],
@@ -29,9 +69,11 @@ def objective(trial, train_x, train_y, test_x, test_y, n_jobs, ):
     trainer = gt.Trainer(threshold=threshold, 
                          n_epochs=10,
                          n_jobs=n_jobs,
-                         early_exit_acc=0.86)
+                         early_exit_acc=1.0)
     
     output = trainer.train(tm)
+
+    trial.set_user_attr("best_test_epoch", output["best_test_epoch"])
 
     return output["best_test_score"]
 
@@ -45,16 +87,14 @@ if __name__ == '__main__':
     parser.add_argument("--data_amount", type=float, default=.2, help="Fraction of data to use")
 
     args = parser.parse_args()
-    batch_dist = args.batch_dist
-
-    path = f"/home/bigtech/data/verbosius/store_imdb_pickle/imdb_batchdist_{batch_dist}"
     
+    path = f"/home/bigtech/data/verbosius/store_imdb_pickle/imdb_batchdist_{args.batch_dist}"
+
     train_x_t = []
     train_y_t = []
     test_x_t = []
     test_y_t = []
     for file in os.listdir(path):
-        print("y")
         with open(f"{path}/{file}", "rb") as f:
             data = pickle.load(f)
 
@@ -62,34 +102,26 @@ if __name__ == '__main__':
         train_y_t.extend([instance["label"] for instance in data["train"]])
         test_x_t.extend([instance["lemmas"] for instance in data["test"]])
         test_y_t.extend([instance["label"] for instance in data["test"]])
-    
-    print(Counter(train_y_t))
-    print(Counter(test_y_t))
 
-    train_x, _, train_y, _ = train_test_split(train_x_t, train_y_t, train_size=args.data_amount, stratify=train_y_t)
-    test_x, _, test_y, _ = train_test_split(test_x_t, test_y_t, train_size=args.data_amount, stratify=test_y_t)
-
+    if args.data_amount < 1:
+        train_x, _, train_y, _ = train_test_split(train_x_t, train_y_t, train_size=args.data_amount, stratify=train_y_t, random_state=42)
+        test_x, _, test_y, _ = train_test_split(test_x_t, test_y_t, train_size=args.data_amount, stratify=test_y_t, random_state=42)
+    else:
+        train_x = train_x_t
+        train_y = train_y_t
+        test_x = test_x_t
+        test_y = test_y_t
 
     train_y = np.array(train_y, dtype=np.uint32)
     test_y = np.array(test_y, dtype=np.uint32)
-    
-    print(Counter(train_y))
-    print(Counter(test_y))
-
-    vectorizer = CountVectorizer(max_features=5000,
-                                 max_df=0.7, 
-                                 min_df=10,
-                                 ngram_range=(1,2),
-                                 binary=True,
-                                 dtype=np.uint8,
-                                 stop_words = 'english')
-    
-    train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x]).todense()
-    test_x_bin = vectorizer.transform([" ".join(x) for x in test_x]).todense()
-
 
     
-    obj_func = lambda trial: objective(trial, train_x_bin, train_y, test_x_bin, test_y, args.n_jobs)
+    obj_func = lambda trial: objective(trial, train_x, train_y, test_x, test_y, args.n_jobs)
 
     study = optuna.create_study(direction="maximize")
     study.optimize(obj_func, n_trials=args.n_trials, show_progress_bar=True)
+
+    print(study.best_params)
+    print(study.best_value)
+    with open(f"/home/bigtech/data/verbosius/hp_studies/imdb_study_batchdist_{args.batch_dist}_ntrials_{args.n_trials}_acc_{int(study.best_value*100000)}.pkl", "wb") as f:
+        pickle.dump(study, f)
