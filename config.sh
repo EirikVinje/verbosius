@@ -7,6 +7,7 @@
 # in config.py, and add conversion here, as done for the other variables.
 
 # *************** PREPROSESSING *************** 
+
 preproc_input_path="$(python -c 'import config; print(config.preproc_input_path)')"
 preproc_output_path="$(python -c 'import config; print(config.preproc_output_path)')"
 
