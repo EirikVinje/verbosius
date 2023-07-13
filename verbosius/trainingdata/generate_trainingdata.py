@@ -1,4 +1,5 @@
 from collections import Counter
+from copy import deepcopy
 
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
@@ -27,7 +28,10 @@ def rulemaker(data):
     
     train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x])
     test_x_bin = vectorizer.transform([" ".join(x) for x in test_x])
-    vocabulary = vectorizer.get_feature_names_out()
+    feature_names = vectorizer.get_feature_names_out()
+
+    data["train"]["bin"] = train_x_bin
+    data["test"]["bin"] = test_x_bin
 
     tm = gt.TsetlinMachine(n_literals=train_x_bin.shape[1], 
                            n_clauses=config.NUMBER_OF_CLAUSES, 
@@ -48,7 +52,7 @@ def rulemaker(data):
     fm = list(range(train_x_bin.shape[1]))
     rp.create_from_state(tm.get_state(), fm)
     
-    return rp
+    return rp, feature_names
     
 
 def fit_grams(grammies, weights):
@@ -152,7 +156,6 @@ def fit_grams(grammies, weights):
 
 
 def find_grams(tokens, vocabulary):
-
     """
     Parameters:
     -----------
@@ -280,22 +283,121 @@ def label_grams(sentiment, weights, threshold : float = 0.0):
     return labels
 
 
-def do_grams(rm, lemma_x, data_bin_x, data_y, feature_names):
+def convert_to_not_lemma(token_map, tokens, grammies):
 
+    gram_ranges = gram_map(grammies)
+
+    print(f"tokens: {tokens}")
+    print(f"grammies: {grammies}")
+    print(f"gram_ranges: {gram_ranges}")
+    print(f"token_map: {token_map}")
+    print()
+
+    new_grammies = []
+            
+    i = 0
+    while True:
+        
+        current_token = tokens[i]
+        range_id = find_gram_interval(i, gram_ranges)
+
+        #print(gram_ranges[range_id])
+
+        if i == 0:
+            new_grammies.append(current_token)
+            i += 1
+
+        elif token_map[i-1] < token_map[i]:
+            new_grammies.append(current_token)
+            i += 1
+
+        elif token_map[i-1] == token_map[i]:
+            
+            new_grammies[-1] += current_token
+            tokens.pop(i)
+            token_map.pop(i)
+            gram_ranges = update_gram_ranges(range_id, gram_ranges)
+
+        print(new_grammies)    
+        
+        if i == len(tokens):
+            break
+
+    new_grammies = [" ".join([new_grammies[i] for i in range(r[0], r[1] + 1)]) for r in gram_ranges]
+
+    return new_grammies     
+
+
+def update_gram_ranges(range_id, gram_ranges):
+
+    for i in range(range_id, len(gram_ranges)):
+
+        gram_ranges[i][0] -= 1
+        gram_ranges[i][1] -= 1
+
+    gram_ranges[range_id][0] += 1
+
+    return gram_ranges
+
+
+def find_gram_interval(i, gram_ranges):
+
+    for l, gr in enumerate(gram_ranges):
+
+        if gr[0] <= i <= gr[1]:
+            return l
+
+
+def gram_map(grammies):
+    
+    map_gram = 0
+    gram_ranges = []
+    head = 0
+    tail = 0
+    #token_map_ranges = []
+
+    for j, gram in enumerate(grammies):
+        
+        if Counter(gram)[" "] == 2:
+            #tmp = (token_map[map_gram], token_map[map_gram+1], token_map[map_gram+2])
+            map_gram += 3
+
+        elif Counter(gram)[" "] == 1:
+            #tmp = (token_map[map_gram], token_map[map_gram+1])
+            map_gram += 2
+        
+        else:
+            #tmp = (token_map[map_gram])
+            map_gram += 1
+
+        #token_map_ranges.append(tmp)
+        tail = map_gram - 1
+        gram_ranges.append([head, tail])
+        head = tail + 1
+
+    return gram_ranges #, token_map_ranges
+
+    
+def do_grams(rm, data, feature_names):
+
+    x_lemma = data["lemmas"]
+    x_bin = data["bin"]
+    y = data["label"]  
+    
     all_x = []
 
-    for (x, lemmas, y) in zip(data_bin_x, lemma_x, data_y):
+    for i, (x_b, x_l, y) in enumerate(zip(x_bin, x_lemma, y)):
         
-        if y == rm.predict(x):
+        if y == rm.predict(x_b):
             
-            _, expl = rm.predict(x, explain=True)
+            _, expl = rm.predict(x_b, explain=True)
             vocabulary = {feature_names[i]: expl[i] for i in range(len(feature_names))}
 
-            grammies, weights = find_grams(lemmas, vocabulary)
+            grammies, weights = find_grams(x_l, vocabulary)
             grammies, weights = fit_grams(grammies, weights)
             labels = label_grams(y, weights)
-
-            temp = {"lemmas": lemmas, "grammies": grammies, "weights": weights, "labels": labels}
+    
+            temp = {"lemmas": x_l, "grammies": grammies, "weights": weights, "labels": labels}
             all_x.append(temp)
             
 

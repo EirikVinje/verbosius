@@ -2,8 +2,12 @@ import os
 import pickle 
 import argparse
 
-import trainingdata.generate_trainingdata as gen_data
+import green_tsetlin as gt
+import numpy as np
+from sklearn.feature_extraction.text import CountVectorizer
 
+import trainingdata.generate_trainingdata as gen_data
+import config as config
 
 def main(dataset : str, input : str, batchdist_n : int, output : str):
 
@@ -27,11 +31,9 @@ def main(dataset : str, input : str, batchdist_n : int, output : str):
         print(f'batch {b} : dataset : {data["distributer"]} trainsize : {len(data["train"])}', 
               f'testsize : {len(data["test"])} classes : {data["n_classes"]}')
 
-        rm = gen_data.rulemaker(data)
-
-
-
-
+        rp, feature_names = gen_data.rulemaker(data)    
+            
+        
 
         print()
 

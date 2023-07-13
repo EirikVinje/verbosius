@@ -140,6 +140,19 @@ def test_grams4():
     assert " ".join(fit_grams) == text, fit_grams
 
 
+def test_convert_to_not_lemma():
+
+    tokens = ["i", "have", "nt", "seen", "your", "cat", "s", "since", "yesterday"]
+    token_map = [0, 1, 1, 2, 3, 4, 4, 5, 6]
+    grammies = ["i have", "nt seen your", "cat", "s since yesterday"]
+    
+    new_grammies = generate_trainingdata.convert_to_not_lemma(token_map, tokens, grammies)
+
+    expected_grammies = ["i havent", "seen your", "cats" ,"since yesterday"]
+    
+    assert new_grammies == expected_grammies, new_grammies
+
+
 if __name__ == '__main__':
     
     #test_grams2() 
