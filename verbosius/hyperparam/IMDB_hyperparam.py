@@ -30,16 +30,25 @@ def objective(trial, train_x, train_y, test_x, test_y, n_jobs):
     ngram_range = trial.suggest_categorical("ngram_range", [(1,1), (1,2), (1,3), (2,2), (2,3), (3,3)])
     stop_words = trial.suggest_categorical("stop_words", [None, "english"])"""
 
-    # NEW TRIAL PARAMS
-    num_clauses = trial.suggest_int("num_clauses", 4000, 8000)
+    # SECOND TRIAL PARAMS
+    """num_clauses = trial.suggest_int("num_clauses", 4000, 8000)
     s = trial.suggest_float("s", 3, 10)
-    threshold = trial.suggest_int("threshold", 2000, 8000)
+    threshold = trial.suggest_int("threshold", 5000, 8000)
     literal_budget = trial.suggest_int("literal_budget", 5, 20)
     max_df = trial.suggest_float("max_df", 0.5, 0.9)
     min_df = trial.suggest_int("min_df", 5, 20)
     ngram_range = trial.suggest_categorical("ngram_range", [(1,1), (1,2), (1,3)])
-    stop_words = trial.suggest_categorical("stop_words", [None, "english"])
+    stop_words = trial.suggest_categorical("stop_words", [None, "english"])"""
 
+    # THIRD TRIAL PARAMS
+    num_clauses = trial.suggest_int("num_clauses", 4000, 8000)
+    s = trial.suggest_float("s", 3, 10)
+    threshold = trial.suggest_int("threshold", 5000, 11000)
+    literal_budget = trial.suggest_int("literal_budget", 5, 20)
+    max_df = trial.suggest_float("max_df", 0.5, 0.9)
+    min_df = trial.suggest_int("min_df", 10, 25)
+    ngram_range = trial.suggest_categorical("ngram_range", [(1,1), (1,2), (1,3)])
+    stop_words = trial.suggest_categorical("stop_words", [None, "english"])
 
     vectorizer = CountVectorizer(max_features=5000,
                                  max_df=max_df, 
@@ -67,7 +76,7 @@ def objective(trial, train_x, train_y, test_x, test_y, n_jobs):
     tm.set_test_data(test_x, test_y)
 
     trainer = gt.Trainer(threshold=threshold, 
-                         n_epochs=10,
+                         n_epochs=7, # turned down from 10, as all the good results were found in the first 7 epochs in the first run
                          n_jobs=n_jobs,
                          early_exit_acc=1.0)
     
@@ -77,10 +86,11 @@ def objective(trial, train_x, train_y, test_x, test_y, n_jobs):
 
     return output["best_test_score"]
 
+
+
 if __name__ == '__main__':
-
-
     parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset", type=str, default="IMDB", help="Which dataset to use")
     parser.add_argument("--batch_dist", type=int, default=0, help="Which batch number to use")
     parser.add_argument("--n_trials", type=int, default=100, help="Number of trials for hyperparam search")
     parser.add_argument("--n_jobs", type=int, default=2, help="Number of parallel jobs")
