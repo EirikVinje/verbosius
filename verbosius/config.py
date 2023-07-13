@@ -2,10 +2,11 @@
 preproc_input_path="/home/bigtech/data/verbosius/imdb/"
 preproc_output_path="/home/bigtech/data/verbosius/store_imdb_pickle/"
 
-dataset="imdb"
-batch_size=25000
+dataset="rottentomatoes"
+batch_size=8530
 batch_amount=1
 use_test_set=True
+batch_size_test = 1066
 shuffle=True
 seed=42
 

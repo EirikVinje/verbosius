@@ -15,6 +15,7 @@ dataset="$(python -c 'import config; print(config.dataset)')"
 batch_size="$(python -c 'import config; print(config.batch_size)')"
 batch_amount="$(python -c 'import config; print(config.batch_amount)')"
 use_test_set="$(python -c 'import config; print(config.use_test_set)')"
+batch_size_test="$(python -c 'import config; print(config.batch_size_test)')"
 shuffle="$(python -c 'import config; print(config.shuffle)')"
 seed="$(python -c 'import config; print(config.seed)')"
 

@@ -2,6 +2,7 @@ import os
 import random
 import itertools
 
+import datasets as ds
 import pandas as pd
 import numpy as np
 
@@ -74,14 +75,39 @@ class MNIST:
 
 class RottenTomatoes:
 
-    def __init__(self, two_cat : bool, batch : tuple):
+    def __init__(self, two_cat : bool):
         
         self.two_cat = two_cat
-        self.batch = batch
 
-    def load_data(self, path: str):
+    def load_data(self, path: str,test: bool = False, test_size: float = 0.2):
 
-        return
+        rt = ds.load_dataset("rotten_tomatoes")
+        train_data = np.array(rt["train"])
+        test_data = np.array(rt["test"])
+
+
+        train_x, train_y, test_x, test_y = [], [], [], []
+        for i in range(len(train_data)):
+            train_x.append(train_data[i]["text"])
+            train_y.append(int(train_data[i]["label"]))
+        for i in range(len(test_data)):
+            test_x.append(test_data[i]["text"])
+            test_y.append(int(test_data[i]["label"]))
+        
+        train_x = np.asarray(train_x)
+        train_y = np.asarray(train_y)
+        test_x = np.asarray(test_x)
+        test_y = np.asarray(test_y)
+
+        train_x = train_x.astype(object)
+        test_x = test_x.astype(object)
+        train_y = train_y.astype(np.uint8)
+        test_y = test_y.astype(np.uint8)
+
+        train_data = np.column_stack((train_x, train_y))
+        test_data = np.column_stack((test_x, test_y))
+
+        return train_data, test_data
 
 
 class Amazon:
@@ -230,10 +256,12 @@ def batch_data_multiclass(dataset,
 
     texts_train = train_data[:, 0]
     labels_train = train_data[:, 1]
-    n_classes = len(np.unique(labels_train))
+
+    unique_classes = np.unique(labels_train)
+    n_classes = len(unique_classes)
 
     indicies_class_train = []
-    for i in range(n_classes):
+    for i in unique_classes:
         indicies_class_train.append(np.where(labels_train==i)[0])
 
     min_count = batch_size//n_classes #min(num_elements_0, num_elements_1)
@@ -270,7 +298,7 @@ def batch_data_multiclass(dataset,
 
 
         indicies_class_test = []
-        for i in range(n_classes):
+        for i in unique_classes:
             indicies_class_test.append(np.where(labels_test==i)[0])
 
 
