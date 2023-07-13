@@ -1,67 +1,147 @@
-import verbosius.trainingdata.generate_trainingdata as generate_trainingdata
+import trainingdata.generate_trainingdata as generate_trainingdata
 
 
-def test_allign_tokens_labels_weights():
-
-    """
-    Test to check if alligning tokens, labels and weights is working as expected
-    """
-
-    tokens = ["i", "was", "not", "happy", "with", "the", "movie", "it", "was", "bad"]
-
-    # make vocabulary with unigrams, bigrams and trigrams
-    vocabulary = {
-        "i" : 0.1,
-        "was not" : -0.2,
-        "not happy" : 0.2,
-        "happy" : 0.4,
-        "with the movie" : 0.5,
-        "the movie" : -0.6,
-        "it" : 0.7,
-        "was bad" : -0.8,
-    }
-
-    sentiment = 0
-    threshold = 0.0
-
-    alligned_tokens, alligned_weights, alligned_labels = generate_trainingdata.allign_tokens_labels_weights_trigram(tokens, vocabulary, sentiment, threshold)
-    
-    expected_tokens = ['i', 'was not', 'happy', 'with the movie', 'it', 'was bad']
-    expected_weights = [0.1, -0.2, 0.4, 0.5, 0.7, -0.8]
-    expected_labels = [1, 2, 1, 1, 1, 2]
-    expected_sentiment = 0 
-
-    assert alligned_tokens == expected_tokens, alligned_tokens
-    assert alligned_weights == expected_weights, alligned_weights
-    assert alligned_labels == expected_labels, alligned_labels
-    assert sentiment == expected_sentiment, sentiment
+def test_grams1():
 
     text = "i was happy with the movie but not with the popcorn"
     tokens = text.split()
 
     # make vocabulary with unigrams, bigrams and trigrams
     vocabulary = {
-        "i" : 0.1,
-        "was happy" : -0.2,
-        "happy with the" : 0.2,
-        "the movie" : 0.2,
-        "movie but" : 0.4,
-        "not with the" : 0.5,
-        "the popcorn" : -0.6,
-        
+        "i" : 1,
+        "was happy" : 2,
+        "happy with" : 1,
+        "happy with the" : 1,
+        "the movie but" : 1,
+        "but" : 1,
+        "not with" : 1,
+        "with the popcorn" : 1,
     }
 
     sentiment = 1
     threshold = 0.0
 
-    alligned_tokens, alligned_weights, alligned_labels = generate_trainingdata.allign_tokens_labels_weights_trigram(tokens, vocabulary, sentiment, threshold)
-
-    expected_tokens = ['i', 'was happy', 'with the movie', 'but', 'not with the', 'popcorn']
-
-    assert alligned_tokens == expected_tokens, alligned_tokens
-
+    grams, weights  = generate_trainingdata.find_grams(tokens, vocabulary)
     
+    expected = ["i", "was happy", "happy with the", "the movie but", "not with", "with the popcorn"]
+    assert " ".join(grams) == " ".join(expected), grams
+
+    grams_fit, weights_fit = generate_trainingdata.fit_grams(grams, weights)
+    
+    expected = ["i", "was", "happy with the", "movie but", "not", "with the popcorn"]
+    assert " ".join(grams_fit) == " ".join(expected), grams_fit
+
+
+def test_grams2():
+
+    text = "i have seen this movie and i liked it very much"
+    tokens = text.split()
+
+    # make vocabulary with unigrams, bigrams and trigrams
+    vocabulary = {
+        "i" : 1,
+        "i have" : 2,
+        "have seen this" : 1,
+        "seen this movie" : 1,
+        "this movie" : 1,
+        "this movie and" : 1,
+        "i liked" : 1,
+        "liked it" : 1,
+        "it very" : 1,
+        "very much" : 1,
+    }
+
+    sentiment = 1
+    threshold = 0.0
+
+    grams, weights  = generate_trainingdata.find_grams(tokens, vocabulary)
+    
+    expected = ["i have", "have seen this", "seen this movie", "this movie and", "i liked", "liked it", "it very", "very much"]
+
+    assert " ".join(grams) == " ".join(expected), grams
+
+    fit_grams, fit_weights = generate_trainingdata.fit_grams(grams, weights)
+    
+    expected = ["i", "have seen this", "movie and", "i liked", "it very", "much"]
+
+    assert " ".join(fit_grams) == " ".join(expected), fit_grams
+
+
+def test_grams3():
+
+    # make a test similar to test_grams2 but with a different vocabulary and text
+    
+    text = "i havent seen this movie yet but i will see it soon with my cats"
+    tokens = text.split()
+
+    # make vocabulary with unigrams, bigrams and trigrams
+    vocabulary = {
+        "i" : 1,
+        "havent" : 1,
+        "seen this" : 1,
+        "this movie yet" : 1,
+        "yet but" : 1,
+        "i will" : 1,
+        "will see" : 1,
+        "see it" : 1,
+        "it soon" : 1,
+        "soon with" : 1,
+        "with my" : 1,
+        "my cats" : 1,
+    }
+
+    sentiment = 1
+    threshold = 0.0
+
+    grams, weights  = generate_trainingdata.find_grams(tokens, vocabulary)
+    
+    fit_grams, fit_weights = generate_trainingdata.fit_grams(grams, weights)
+
+    assert " ".join(fit_grams) == text, fit_grams
+    #assert fit_weights == [1], fit_weights
+
+
+def test_grams4():
+
+    # make a similar test to test_grams3 but with a different vocabulary and text
+
+    text = "this is a very good movie and i think it is one of the best movies i have ever seen"
+    tokens = text.split()
+
+    # make vocabulary with unigrams, bigrams and trigrams
+    vocabulary = {
+        "this is" : 1,
+        "is a" : 1,
+        "a very" : 1,
+        "very good" : 1,
+        "good movie" : 1,
+        "movie and" : 1,
+        "i think" : 1,
+        "think it" : 1,
+        "it is" : 1,
+        "is one" : 1,
+        "one of" : 1,
+        "of the" : 1,
+        "the best" : 1,
+        "best movies" : 1,
+        "movies i" : 1,
+        "i have" : 1,
+        "have ever" : 1,
+        "ever seen" : 1,
+    }
+
+    sentiment = 1
+    threshold = 0.0
+
+    grams, weights  = generate_trainingdata.find_grams(tokens, vocabulary)
+
+    fit_grams, fit_weights = generate_trainingdata.fit_grams(grams, weights)
+
+    assert " ".join(fit_grams) == text, fit_grams
+
+
 if __name__ == '__main__':
     
-    #test_allign_tokens_labels_weights()
+    #test_grams2() 
+    #test_grams1()
     pass
