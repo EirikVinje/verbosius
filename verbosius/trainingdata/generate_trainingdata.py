@@ -23,7 +23,7 @@ def rulemaker(data):
                                  ngram_range=config.N_GRAM_RANGE,
                                  binary=True,
                                  dtype=np.uint8,
-                                 stop_words = 'english')
+                                 stop_words = config.STOPWORDS)
     
     train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x])
     test_x_bin = vectorizer.transform([" ".join(x) for x in test_x])
@@ -40,7 +40,7 @@ def rulemaker(data):
 
     tm.set_train_data(train_x_bin, train_y)
     tm.set_test_data(test_x_bin, test_y)
-    trainer = gt.Trainer(config.T, n_epochs=config.TM_EPOCHS, seed=32, n_jobs=6, early_exit_acc=0.84)
+    trainer = gt.Trainer(config.T, n_epochs=config.TM_EPOCHS, seed=32, n_jobs=6, early_exit_acc=config.EARLY_STOP_ACC)
 
     trainer.train(tm)    
 
