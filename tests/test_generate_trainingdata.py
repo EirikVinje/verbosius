@@ -1,3 +1,5 @@
+import numpy as np
+
 import trainingdata.generate_trainingdata as generate_trainingdata
 
 
@@ -140,21 +142,57 @@ def test_grams4():
     assert " ".join(fit_grams) == text, fit_grams
 
 
-def test_convert_to_not_lemma():
+def test_convert_to_not_lemma1():
 
     tokens = ["i", "have", "nt", "seen", "your", "cat", "s", "since", "yesterday"]
     token_map = [0, 1, 1, 2, 3, 4, 4, 5, 6]
     grammies = ["i have", "nt seen your", "cat", "s since yesterday"]
+    weights = [1, 1, 1, 1]
     
-    new_grammies = generate_trainingdata.convert_to_not_lemma(token_map, tokens, grammies)
+    new_grammies, weights = generate_trainingdata.convert_to_not_lemma(token_map, tokens, grammies, weights)
 
     expected_grammies = ["i havent", "seen your", "cats" ,"since yesterday"]
     
     assert new_grammies == expected_grammies, new_grammies
 
 
+def test_convert_to_not_lemma2():
+
+    tokens = ["i", "love", "ses", "my", "chip", "munk", "ies", "to", "death"]
+    token_map = [0, 1, 1, 2, 3, 3, 3, 4, 5]
+    grammies = ["i love", "ses my", "chip", "munk ies", "to death"]
+    weights = [1, 1, 1, 1, 1]
+    
+    new_grammies, weights = generate_trainingdata.convert_to_not_lemma(token_map, tokens, grammies, weights)
+
+    expected_grammies = ["i loveses", "my", "chipmunkies", "to death"]
+    
+    assert new_grammies == expected_grammies, new_grammies
+    assert weights == [1.5, 0.5, 2.0, 1.0], weights
+
+
+#def test_weight_texts():
+#
+#    data = [
+#        {"tokens" : ["i", "have", "nt", "seen", "your", "cat", "s", "since", "yesterday"],
+#         "lemmas" : ["i", "have", "not", "see", "your", "cat", "s", "since", "yesterday"],
+#         "token_ids" : [0, 1, 1, 2, 3, 4, 4, 5, 6],
+#         "label" : 1,
+#         "bin" : np.array([[1, 1, 0, 1, 1, 1, 0, 1, 1]], dtype=np.uint8)},
+#        {"tokens" : ["i", "love", "ses", "my", "chip", "munk", "ies", "to", "death"],
+#         "lemmas" : ["i", "love", "ses", "my", "chip", "munk", "ies", "to", "death"],
+#         "token_ids" : [0, 1, 1, 2, 3, 3, 3, 4, 5],
+#         "label" : 1,
+#         "bin" : np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1]], dtype=np.uint8)}]
+#    
+#
+#    feature_names = ["i", "have", "not", "see", "your", "cat", "s", "since", "yesterday", "love", "ses", "my", "chip", "munk", "ies", "to", "death"]
+#
+#
+#    generate_trainingdata.weight_texts(data, feature_names, testing = False, rm = None)
+#
+
+
 if __name__ == '__main__':
     
-    #test_grams2() 
-    #test_grams1()
     pass
