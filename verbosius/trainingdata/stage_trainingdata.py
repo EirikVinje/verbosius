@@ -35,20 +35,25 @@ def main(dataset : str, input : str, batchdist_n : int, output : str):
               f'testsize : {len(data["test"])} classes : {data["n_classes"]}')
 
         rp, feature_names = gen_data.rulemaker(data)    
-
+        print("yo")
         train_data = gen_data.weight_texts(data["train"], feature_names, testing = False, rm = rp)
         test_data = gen_data.weight_texts(data["test"], feature_names, testing = False, rm = rp)
+        print("yo")
 
         tokenized_train_data = gen_data.tokenize_and_align_labels(train_data, tokenizer, device)
         tokenized_test_data = gen_data.tokenize_and_align_labels(test_data, tokenizer, device)
+        print("yo")
         
         print('TOKEN TEST SIZE', tokenized_train_data['sentiment'].size())
         print('TOKEN TRAIN SIZE',tokenized_test_data['sentiment'].size())
+        print("yo")
 
         formated_train_data = gen_data.Dataset(**tokenized_train_data)
         formated_test_data = gen_data.Dataset(**tokenized_test_data)
+        print("yo")
 
         data = {"train": formated_train_data, "test": formated_test_data, "distributer" : dataset, "n_classes" : data["n_classes"]}
+        print("yo")
 
         pickle.dump(data, open(f"{output}/{dataset}_batchdist_{batchdist_n}/ready_{dataset}_batch_{n}.pkl", "wb"))
 

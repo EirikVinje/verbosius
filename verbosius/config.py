@@ -1,3 +1,6 @@
+from transformers import AutoTokenizer
+
+
 # *************** PREPROSESSING *************** 
 preproc_input_path="/home/bigtech/data/verbosius/imdb/"
 preproc_output_path="/home/bigtech/data/verbosius/store_imdb_pickle/"
@@ -22,10 +25,15 @@ MAX_DF=0.5263
 MIN_DF=21
 MAX_FEATURES=5000
 N_GRAM_RANGE=(1, 2)
-NUMBER_OF_CLAUSES=5853
+NUMBER_OF_CLAUSES=500 #5853
 LITERAL_BUDGET=8
 S=3.4606
 T=9225
-TM_EPOCHS=7
+TM_EPOCHS=1
 EARLY_STOP_ACC=0.86
 STOPWORDS=None #"english"
+
+#TOKENSTUFF
+model_name_ = "distilroberta-base"
+tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True)
+device="cuda"

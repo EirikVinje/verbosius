@@ -33,8 +33,6 @@ def rulemaker(data):
     test_x_bin = vectorizer.transform([" ".join(x) for x in test_x])
     feature_names = vectorizer.get_feature_names_out()
 
-    data["train"]["bin"] = train_x_bin
-    data["test"]["bin"] = test_x_bin
 
     tm = gt.TsetlinMachine(n_literals=train_x_bin.shape[1], 
                            n_clauses=config.NUMBER_OF_CLAUSES, 
@@ -44,6 +42,10 @@ def rulemaker(data):
 
     train_x_bin = train_x_bin.todense()
     test_x_bin = test_x_bin.todense()
+
+    for i in range(len(data["train"])):
+        data["train"][i]["bin"] = train_x_bin[i]
+        data["test"][i]["bin"] = test_x_bin[i]
 
     tm.set_train_data(train_x_bin, train_y)
     tm.set_test_data(test_x_bin, test_y)
@@ -75,8 +77,8 @@ def fit_grams(grammies, weights):
         list of weights for each n-gram
     """
 
-    print(f"grammies: {grammies}")
-    print(f"weights: {weights}")
+    # print(f"grammies: {grammies}")
+    # print(f"weights: {weights}")
     
     j = 0
     i = 0
@@ -287,11 +289,11 @@ def convert_to_not_lemma(token_map, tokens, grammies, weights):
 
     gram_ranges = gram_map(grammies)
 
-    print(f"tokens: {tokens}")
-    print(f"grammies: {grammies}")
-    print(f"gram_ranges: {gram_ranges}")
-    print(f"token_map: {token_map}")
-    print()
+    # print(f"tokens: {tokens}")
+    # print(f"grammies: {grammies}")
+    # print(f"gram_ranges: {gram_ranges}")
+    # print(f"token_map: {token_map}")
+    # print()
 
     new_grammies = []
             
@@ -516,7 +518,7 @@ def tokenize_and_align_labels(data, tokenizer, device):
     output["labels"] = torch.tensor(tokenized_inputs["labels"], dtype=torch.int8).to(device = device)
     output["targets"] = torch.tensor(tokenized_inputs["targets"], dtype=torch.int8).to(device = device)
     output["sentiment"] = torch.tensor(Y, dtype=torch.int8).to(device = device)
-    print("SENTIMENT SIZE", len(output['sentiment']))
+    # print("SENTIMENT SIZE", len(output['sentiment']))
     return output
 
 class Dataset(torch.utils.data.Dataset):
