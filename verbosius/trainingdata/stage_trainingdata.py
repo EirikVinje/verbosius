@@ -11,11 +11,14 @@ import config as config
 
 def main(dataset : str, input : str, batchdist_n : int, output : str):
 
+    tokenizer = config.tokenizer
+    device = config.device
+
     path = os.path.join(input, f"{dataset}_batchdist_{batchdist_n}")
 
     dir = os.listdir(path)
 
-    n = len(dir)
+    n_batches = len(dir)
 
     print()
     print("batches:")
@@ -24,20 +27,31 @@ def main(dataset : str, input : str, batchdist_n : int, output : str):
 
     print()
 
-    for b in range(n):
+    for n in range(n_batches):
         
-        data = pickle.load(open(f"{path}/batch_{b}.pkl", "rb"))
+        data = pickle.load(open(f"{path}/batch_{n}.pkl", "rb"))
 
-        print(f'batch {b} : dataset : {data["distributer"]} trainsize : {len(data["train"])}', 
+        print(f'batch {n} : dataset : {data["distributer"]} trainsize : {len(data["train"])}', 
               f'testsize : {len(data["test"])} classes : {data["n_classes"]}')
 
         rp, feature_names = gen_data.rulemaker(data)    
-            
+
+        train_data = gen_data.weight_texts(data["train"], feature_names, testing = False, rm = rp)
+        test_data = gen_data.weight_texts(data["test"], feature_names, testing = False, rm = rp)
+
+        tokenized_train_data = gen_data.tokenize_and_align_labels(train_data, tokenizer, device)
+        tokenized_test_data = gen_data.tokenize_and_align_labels(test_data, tokenizer, device)
         
+        print('TOKEN TEST SIZE', tokenized_train_data['sentiment'].size())
+        print('TOKEN TRAIN SIZE',tokenized_test_data['sentiment'].size())
 
-        print()
+        formated_train_data = gen_data.Dataset(**tokenized_train_data)
+        formated_test_data = gen_data.Dataset(**tokenized_test_data)
 
-    return
+        data = {"train": formated_train_data, "test": formated_test_data, "distributer" : dataset, "n_classes" : data["n_classes"]}
+
+        pickle.dump(data, open(f"{output}/{dataset}_batchdist_{batchdist_n}/ready_{dataset}_batch_{n}.pkl", "wb"))
+
 
 
 def dataset_checker(dataset):

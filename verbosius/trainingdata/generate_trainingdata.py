@@ -1,8 +1,11 @@
 from collections import Counter
 from copy import deepcopy
+import pickle
 
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
+import torch
+
 
 import green_tsetlin as gt
 import config as config
@@ -222,7 +225,6 @@ def find_grams(tokens, vocabulary):
                 weights[-1] += vocabulary[bigram]
 
             else:
-                #print(f"adding bigram: {bigram}")
                 grammies.append(bigram)
                 weights.append(vocabulary[bigram])
                 is_bi = True
@@ -237,7 +239,6 @@ def find_grams(tokens, vocabulary):
                 weights[-1] += vocabulary[unigram]
 
             else:
-                #print(f"adding unigram: {unigram}")
                 grammies.append(unigram)
                 weights.append(vocabulary[unigram])
         
@@ -250,7 +251,6 @@ def find_grams(tokens, vocabulary):
                 continue
             
             else:
-                #print(f"adding unknown unigram: {unigram}")
                 grammies.append(unigram)
                 weights.append(0.0)
 
@@ -283,7 +283,7 @@ def label_grams(sentiment, weights, threshold : float = 0.0):
     return labels
 
 
-def convert_to_not_lemma(token_map, tokens, grammies):
+def convert_to_not_lemma(token_map, tokens, grammies, weights):
 
     gram_ranges = gram_map(grammies)
 
@@ -301,8 +301,6 @@ def convert_to_not_lemma(token_map, tokens, grammies):
         current_token = tokens[i]
         range_id = find_gram_interval(i, gram_ranges)
 
-        #print(gram_ranges[range_id])
-
         if i == 0:
             new_grammies.append(current_token)
             i += 1
@@ -313,22 +311,52 @@ def convert_to_not_lemma(token_map, tokens, grammies):
 
         elif token_map[i-1] == token_map[i]:
             
+            weights = move_weights(i, tokens, weights, gram_ranges)
             new_grammies[-1] += current_token
             tokens.pop(i)
+            gram_ranges = update_gram_ranges(range_id, gram_ranges, weights)
+            
             token_map.pop(i)
-            gram_ranges = update_gram_ranges(range_id, gram_ranges)
 
-        print(new_grammies)    
-        
         if i == len(tokens):
             break
 
     new_grammies = [" ".join([new_grammies[i] for i in range(r[0], r[1] + 1)]) for r in gram_ranges]
 
-    return new_grammies     
+    return new_grammies, weights
 
 
-def update_gram_ranges(range_id, gram_ranges):
+def move_weights(i, tokens, weights, gram_ranges):
+
+    curr_range = find_gram_interval(i, gram_ranges)
+    pre_range = find_gram_interval(i-1, gram_ranges)
+
+    if curr_range != pre_range:
+        
+        ngram = Counter(" ".join(tokens[gram_ranges[curr_range][0]:gram_ranges[curr_range][1]+1]))[" "]
+        
+        if gram_ranges[curr_range][0] > gram_ranges[curr_range][1]:
+            return weights
+
+        if ngram == 2:
+            temp_weight = weights[curr_range]
+            weights[pre_range] += temp_weight * 1/3
+            weights[curr_range] = temp_weight * 2/3
+            
+        elif ngram == 1:
+            temp_weight = weights[curr_range]
+            weights[pre_range] += temp_weight * 1/2
+            weights[curr_range] = temp_weight * 1/2
+        
+        else:
+            temp_weight = weights[curr_range]
+            weights[pre_range] += temp_weight
+            weights[curr_range] = 0.0
+
+    return weights
+
+
+def update_gram_ranges(range_id, gram_ranges, weights):
 
     for i in range(range_id, len(gram_ranges)):
 
@@ -336,6 +364,10 @@ def update_gram_ranges(range_id, gram_ranges):
         gram_ranges[i][1] -= 1
 
     gram_ranges[range_id][0] += 1
+
+    if gram_ranges[range_id][0] > gram_ranges[range_id][1]:
+        gram_ranges.pop(range_id)
+        weights.pop(range_id)
 
     return gram_ranges
 
@@ -354,40 +386,61 @@ def gram_map(grammies):
     gram_ranges = []
     head = 0
     tail = 0
-    #token_map_ranges = []
-
+    
     for j, gram in enumerate(grammies):
         
         if Counter(gram)[" "] == 2:
-            #tmp = (token_map[map_gram], token_map[map_gram+1], token_map[map_gram+2])
             map_gram += 3
 
         elif Counter(gram)[" "] == 1:
-            #tmp = (token_map[map_gram], token_map[map_gram+1])
             map_gram += 2
         
         else:
-            #tmp = (token_map[map_gram])
             map_gram += 1
 
-        #token_map_ranges.append(tmp)
         tail = map_gram - 1
         gram_ranges.append([head, tail])
         head = tail + 1
 
-    return gram_ranges #, token_map_ranges
+    return gram_ranges 
 
     
-def do_grams(rm, data, feature_names):
+def weight_texts(data, feature_names, testing = False, rm = None):
 
-    x_lemma = data["lemmas"]
-    x_bin = data["bin"]
-    y = data["label"]  
+    if testing:
+        
+        y = data["label"]
+        x_b = data["bin"]
+        x_l = data["lemmas"]
+        x_t = data["tokens"]
+        token_map = data["token_ids"]
+    
+        vocabulary = {feature_names[i] : 1.0 for i in range(len(feature_names))}
+
+        grammies, weights = find_grams(x_l, vocabulary)
+        grammies, weights = fit_grams(grammies, weights)
+        labels = label_grams(y, weights)
+        grammies, weights = convert_to_not_lemma(token_map, x_t, grammies, weights)
+
+        new_x = {"tokens" : grammies,
+                    "weights" : weights,
+                    "text" : " ".join(grammies),
+                    "sentiment" : y,
+                    "labels" : labels}
+        
+        return new_x
+
     
     all_x = []
 
-    for i, (x_b, x_l, y) in enumerate(zip(x_bin, x_lemma, y)):
+    for i, inst in enumerate(data):
         
+        y = inst["label"]
+        x_b = inst["bin"]
+        x_l = inst["lemmas"]
+        x_t = inst["tokens"]
+        token_map = inst["token_ids"]
+
         if y == rm.predict(x_b):
             
             _, expl = rm.predict(x_b, explain=True)
@@ -396,11 +449,101 @@ def do_grams(rm, data, feature_names):
             grammies, weights = find_grams(x_l, vocabulary)
             grammies, weights = fit_grams(grammies, weights)
             labels = label_grams(y, weights)
+            grammies, weights = convert_to_not_lemma(token_map, x_t, grammies, weights)
+
+            new_x = {"tokens" : grammies,
+                     "weights" : weights,
+                     "text" : " ".join(grammies),
+                     "sentiment" : y,
+                     "labels" : labels}
+
+            all_x.append(new_x)
+
+    return all_x
+
+def tokenize_and_align_labels(data, tokenizer, device):
     
-            temp = {"lemmas": x_l, "grammies": grammies, "weights": weights, "labels": labels}
-            all_x.append(temp)
-            
+    Y = np.array([i['label'] for i in data])
+
+    examples = data
+
+    tokenized_inputs = tokenizer([example["tokens"] for example in examples], 
+                                 truncation=True, 
+                                 padding=True, 
+                                 return_tensors='pt',
+                                 is_split_into_words=True,
+                                 max_length=512
+                                 )
+    
+    labels = []
+    targets = []
+    
+    for i, label in enumerate([example["labels"] for example in examples]):
+        
+        word_ids = tokenized_inputs.word_ids(batch_index=i)  
+        
+        previous_word_idx = None
+
+        label_ids = []
+        target_ids = []
+        
+        
+        for word_idx in word_ids:  
+
+            if word_idx is None:
+                target_ids.append(0)
+                label_ids.append(-100)
+
+            elif word_idx != previous_word_idx:  
+                target_ids.append(1)
+                label_ids.append(label[word_idx])
+
+            else:
+                target_ids.append(0)
+                label_ids.append(-100)
+
+            previous_word_idx = word_idx
+        targets.append(target_ids)
+        labels.append(label_ids)
+    
+    tokenized_inputs["labels"] = np.array(labels,dtype=np.int8)
+    
+    tokenized_inputs["targets"] = np.array(targets,dtype=np.int8)
+
+    output = {}
+    output["input_ids"] = tokenized_inputs["input_ids"].to(device = device) 
+    output["attention_mask"] = torch.tensor(tokenized_inputs["attention_mask"], dtype=torch.int8).to(device = device)
+    output["labels"] = torch.tensor(tokenized_inputs["labels"], dtype=torch.int8).to(device = device)
+    output["targets"] = torch.tensor(tokenized_inputs["targets"], dtype=torch.int8).to(device = device)
+    output["sentiment"] = torch.tensor(Y, dtype=torch.int8).to(device = device)
+    print("SENTIMENT SIZE", len(output['sentiment']))
+    return output
+
+class Dataset(torch.utils.data.Dataset):
+    def __init__(self, input_ids, attention_mask, labels, targets, sentiment):
+        self.input_ids = input_ids
+        self.attention_mask = attention_mask
+        self.labels = labels
+        self.targets = targets
+        self.sentiment = sentiment
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, idx):
+        input_ids = self.input_ids[idx]
+        attention_mask = self.attention_mask[idx]
+        labels = self.labels[idx]
+        targets = self.targets[idx]
+        sentiment = self.sentiment[idx]
+        return {
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            'labels': labels,
+            'targets': targets,
+            'sentiment': sentiment
+        }
+
 
 if __name__ == "__main__":
-
     print("Module")
