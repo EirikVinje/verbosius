@@ -86,13 +86,10 @@ def lemmatize(texts : list, cores:int = 4, lemmatizer : str = "en_core_web_sm"):
     tokens = []
     lemmas = []
 
-    docs = list(docs)
+    for doc in tqdm(docs):
 
-    
-    for i in tqdm(range(len(docs))):
-
-        tokens.append([token.text for token in docs[i]])
-        lemmas.append([token.lemma_.lower() for token in docs[i]])
+        tokens.append([token.text for token in doc])
+        lemmas.append([token.lemma_.lower() for token in doc])
 
     print()
     return texts, tokens, lemmas
