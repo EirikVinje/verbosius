@@ -154,7 +154,7 @@ if __name__ == "__main__":
     parser.add_argument("--use_test_set", type=bool_checker, nargs='?', default=0,
                         help="Set whether or not your data has its own test set already, if test==True and use_test_set==False test data is extracted from the training data. Default value is false. If sat test_size will be ignored, and test batched will be extracted from the test set with same size and amount as for the training set. To change this set batch_size_test and batch_amount_test.")
 
-    parser.add_argument("--batch_size_test", type=batch_size_checker, nargs='?', default=-1,
+    parser.add_argument("--s", type=batch_size_checker, nargs='?', default=-1,
                         help="Set size for individual batch, must be greater than 0. If sat test_size argument will be ignored.")
 
     parser.add_argument("--batch_amount_test", type=batch_amount_checker, nargs ='?', default=-1,
