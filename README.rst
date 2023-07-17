@@ -25,6 +25,22 @@ e.g : [... "the cats were" ...]
 Scenario 2, intertwined trigram:
 
 
+BATCHING DATA:
 
+In batch data we've set it so that batchsizes for train and test can be configured
+seperately. If no test sizes are set a 80/20 split is used, unless there is a testset
+that is to be used, in that case the batchsizes are copied form the training settings.
+
+The function requires reading all the data at once, then batching it. 
+After doing so the data is batched and saved balanced over the amount of classes we have
+in our data.
+
+
+STAGER(S):
+
+For all the different stagers we've opted for allowing the user to define all file storing
+loactions. This requires absolute paths to be given at all times. This is done to allow
+for the user to store the data where they want, and not be forced to store it in a specific
+location.
 
 
