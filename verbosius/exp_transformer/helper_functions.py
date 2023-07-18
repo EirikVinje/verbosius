@@ -1,9 +1,9 @@
 import evaluate
-
-import numpy as np
-import torch as nn
 import torch
 
+import numpy as np
+
+from torch import nn
 from transformers.modeling_outputs import TokenClassifierOutput
 from transformers import AutoModel
 
@@ -11,7 +11,7 @@ from transformers import AutoModel
 class CustomModel(nn.Module):
     def __init__(self, num_labels, num_seq_labels, neutral_weight, loss_weight=1): 
         super(CustomModel,self).__init__() 
-        self.device = 'cuda' if nn.cuda.is_available() else 'cpu'
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.loss_weight = loss_weight
         
         #Load Model with given checkpoint and extract its body
@@ -23,7 +23,7 @@ class CustomModel(nn.Module):
         self.seq_classifier = nn.Linear(768, num_seq_labels)
         self.to_evidence = nn.Sequential(nn.Linear(2, 1),
                                          nn.Sigmoid())
-        self.cel = nn.CrossEntropyLoss(weight=nn.tensor([neutral_weight, 1.0, 1.0]).to(self.device))
+        self.cel = nn.CrossEntropyLoss(weight=torch.tensor([neutral_weight, 1.0, 1.0]).to(self.device))
         self.seq_cel = nn.CrossEntropyLoss()
         self.temp_evidence = None
 
@@ -42,7 +42,7 @@ class CustomModel(nn.Module):
         token_labels_pred = self.classifier(e)
         
         #print('outputs',e[:,1:,:])
-        evidence = nn.relu(self.to_evidence(token_labels_pred[:, :, 1:3]) - 0.1)
+        evidence = torch.relu(self.to_evidence(token_labels_pred[:, :, 1:3]) - 0.1)
         #self.temp_evidence = evidence.detach()
         
         

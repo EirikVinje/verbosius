@@ -64,7 +64,7 @@ def rulemaker(data):
         data["train"][i]["bin"] = train_x_bin[i]
         data["test"][i]["bin"] = test_x_bin[i]
 
-    tm.set_train_data(train_x_bin, train_y)
+    tm.set_train_data(train_x_bin[:1:], train_y[:1:])
     tm.set_test_data(test_x_bin, test_y)
     trainer = gt.Trainer(config.T, 
                          n_epochs=config.TM_EPOCHS, 

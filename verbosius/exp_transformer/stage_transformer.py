@@ -8,7 +8,7 @@ import exp_transformer.helper_functions as hf
 import exp_transformer.transformer as tf
 
 
-def main(dataset : str, input : str, batchdist_n : int, output : str, save_model : str):
+def main(dataset : str, input : str, output : str, save_model : str, batchdist_n : tuple):
     
     tokenizer = config.tokenizer
     device = config.device
@@ -23,6 +23,15 @@ def main(dataset : str, input : str, batchdist_n : int, output : str, save_model
     load_best_model_at_end = config.load_best_model_at_end
     eval_accumulation_steps = config.eval_accumulation_steps
     label_names = config.label_names
+
+    neutral_weight = config.neutral_weight
+    loss_weight = config.loss_weight
+    num_labels = config.num_labels
+    num_seq_labels = config.num_seq_labels
+
+    model = hf.CustomModel(num_labels, num_seq_labels, neutral_weight, loss_weight)
+    model = model.to(device = device)
+
     
     dists = os.listdir(input)
     batch_dists = dists[batchdist_n[0]:batchdist_n[1]]
@@ -64,7 +73,9 @@ def main(dataset : str, input : str, batchdist_n : int, output : str, save_model
                          label_names,
                          train_data,
                          test_data,
-                         tokenizer)
+                         tokenizer,
+                         save_model,
+                         model)
 
     if not save_model:
         pass
@@ -128,7 +139,6 @@ def n_batch_dist_checker(n_batch_dist):
         raise argparse.ArgumentTypeError(f"Invalid n_batch_dist, must be tuple interval, e.g (0,-1) is all batchdistros and on the exact form (int,int)")
 
     n_batch_dist = tuple(map(int, n_batch_dist.strip("()").split(",")))
-    
     if n_batch_dist[0] < 0 or n_batch_dist[1] < 0:
         raise argparse.ArgumentTypeError(f"Invalid n_batch_dist, must be tuple interval, e.g (0,-1) is all batchdistros")
     
@@ -148,7 +158,7 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=output_checker, 
                         help="Path to output data, must be a path to a directory that exists and is writable.")
     
-    parser.add_argument("--save_model", type=save_checker,
+    parser.add_argument("--save_model", type=save_checker, nargs="?", default="false",
                         help="Save model or not, either 'true' or 'false'.")
     
     parser.add_argument("--n_batchdist", type=n_batch_dist_checker,

@@ -2,7 +2,7 @@ import os
 
 from transformers import TrainingArguments, Trainer
 
-import verbosius.exp_transformer.helper_functions as hf
+import exp_transformer.helper_functions as hf
 
 
 def transformer_pipeline(device, 
@@ -21,11 +21,9 @@ def transformer_pipeline(device,
                          train_data,
                          test_data,
                          tokenizer,
-                         save_model):
+                         save_model,
+                         model):
     
-    model = hf.CustomModel()
-    model = model.to(device = device)
-
     training_args = TrainingArguments(
         output_dir = output_dir,
         learning_rate = learning_rate,
