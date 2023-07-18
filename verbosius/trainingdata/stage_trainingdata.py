@@ -5,9 +5,11 @@ import argparse
 import green_tsetlin as gt
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
+from tqdm import tqdm
 
 import trainingdata.generate_trainingdata as gen_data
 import config as config
+
 
 def main(dataset : str, input : str, batchdist_n : int, output : str):
 
@@ -21,41 +23,30 @@ def main(dataset : str, input : str, batchdist_n : int, output : str):
     n_batches = len(dir)
 
     print()
-    print("batches:")
-    for file in dir:
-        print(file)
-
+    print(f"Number of batches in {dataset} batchdist {batchdist_n}: {n_batches}")
     print()
 
-    for n in range(n_batches):
+    for n in tqdm(range(n_batches)):
         
         data = pickle.load(open(f"{path}/batch_{n}.pkl", "rb"))
-
-        print(f'batch {n} : dataset : {data["distributer"]} trainsize : {len(data["train"])}', 
-              f'testsize : {len(data["test"])} classes : {data["n_classes"]}')
-
-        rp, feature_names = gen_data.rulemaker(data)    
-        print("yo")
-        train_data = gen_data.weight_texts(data["train"], feature_names, testing = False, rm = rp)
-        test_data = gen_data.weight_texts(data["test"], feature_names, testing = False, rm = rp)
-        print("yo")
+        
+        rm, feature_names = gen_data.rulemaker(data)    
+    
+        train_data = gen_data.do_weighting(data["train"], feature_names, rm)
+        test_data = gen_data.do_weighting(data["test"], feature_names, rm)
 
         tokenized_train_data = gen_data.tokenize_and_align_labels(train_data, tokenizer, device)
         tokenized_test_data = gen_data.tokenize_and_align_labels(test_data, tokenizer, device)
-        print("yo")
         
-        print('TOKEN TEST SIZE', tokenized_train_data['sentiment'].size())
-        print('TOKEN TRAIN SIZE',tokenized_test_data['sentiment'].size())
-        print("yo")
-
         formated_train_data = gen_data.Dataset(**tokenized_train_data)
         formated_test_data = gen_data.Dataset(**tokenized_test_data)
-        print("yo")
-
-        data = {"train": formated_train_data, "test": formated_test_data, "distributer" : dataset, "n_classes" : data["n_classes"]}
-        print("yo")
-
-        pickle.dump(data, open(f"{output}/{dataset}_batchdist_{batchdist_n}/ready_{dataset}_batch_{n}.pkl", "wb"))
+        
+        data = {"train": formated_train_data, 
+                "test": formated_test_data, 
+                "distributer" : dataset, 
+                "n_classes" : data["n_classes"]}
+        
+        gen_data.write_data(data, output, dataset, batchdist_n, n)
 
 
 

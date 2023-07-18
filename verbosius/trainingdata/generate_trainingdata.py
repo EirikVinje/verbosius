@@ -1,18 +1,61 @@
 from collections import Counter
 from copy import deepcopy
 import pickle
+import os
 
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 import torch
 
-
 import green_tsetlin as gt
 import config as config
 
 
+class Dataset(torch.utils.data.Dataset):
+    def __init__(self, input_ids, attention_mask, labels, targets, sentiment):
+        self.input_ids = input_ids
+        self.attention_mask = attention_mask
+        self.labels = labels
+        self.targets = targets
+        self.sentiment = sentiment
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, idx):
+        input_ids = self.input_ids[idx]
+        attention_mask = self.attention_mask[idx]
+        labels = self.labels[idx]
+        targets = self.targets[idx]
+        sentiment = self.sentiment[idx]
+        return {
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            'labels': labels,
+            'targets': targets,
+            'sentiment': sentiment
+        }
+
+
 def rulemaker(data):
     
+    """
+    Trains the Tsetlin Machine and creates a RulePredictor from the trained Tsetlin Machine that is used to
+    weight the tokens in the data.
+
+    Parameters:
+    -----------
+    data : dict("train" : [...], "test" : [...], "distributer" : str, "n_classes" : int)
+
+    Returns:
+    --------
+    rp : RulePredictor
+        RulePredictor created from the trained Tsetlin Machine
+    
+    """
+
+
+
     train_x = [instance["lemmas"] for instance in data["train"]]
     train_y = [instance["label"] for instance in data["train"]]
     test_x = [instance["lemmas"] for instance in data["test"]]
@@ -49,7 +92,12 @@ def rulemaker(data):
 
     tm.set_train_data(train_x_bin, train_y)
     tm.set_test_data(test_x_bin, test_y)
-    trainer = gt.Trainer(config.T, n_epochs=config.TM_EPOCHS, seed=32, n_jobs=6, early_exit_acc=config.EARLY_STOP_ACC)
+    trainer = gt.Trainer(config.T, 
+                         n_epochs=config.TM_EPOCHS, 
+                         seed=32, 
+                         n_jobs=6, 
+                         early_exit_acc=config.EARLY_STOP_ACC,
+                         progress_bar=False)
 
     trainer.train(tm)    
 
@@ -60,206 +108,117 @@ def rulemaker(data):
     return rp, feature_names
     
 
-def fit_grams(grammies, weights):
+def weight_tokens(lemmas, tokens, vocabulary, token_map):
     """
+
+    Weights each token separated by a space in the text based on the weights of the n-grams in the vocabulary.
+
     Parameters:
     -----------
-    grammies : list
-        list of n-grams
-    weights : list
-        list of weights for each n-gram
-    
-    Returns:
-    --------
-    grammies : list
-        list of n-grams
-    weights : list
-        list of weights for each n-gram
-    """
-
-    # print(f"grammies: {grammies}")
-    # print(f"weights: {weights}")
-    
-    j = 0
-    i = 0
-    while j < len(grammies)-1: 
-        
-        curr_gram = grammies[j]
-        next_gram = grammies[j+1] if j+1 < len(grammies) else None
-        
-        split_curr_gram = curr_gram.split(" ")
-        split_next_gram = next_gram.split(" ") if next_gram else [-1]
-
-        n_space_curr_gram = Counter(curr_gram)[" "]
-        n_space_next_gram = Counter(next_gram)[" "] if next_gram else -1
-
-        weight_curr_gram = weights[j]
-        weight_next_gram = weights[j+1] if next_gram else -1
-
-        #print(f"curr_gram: {curr_gram}, next_gram: {next_gram}")
-
-        if split_curr_gram[-1] == split_next_gram[0] and next_gram is not None:
-            
-            if n_space_curr_gram == 1 and n_space_next_gram == 1:
-                
-                new_tri = "{} {} {}".format(split_curr_gram[0], split_curr_gram[1], split_next_gram[1])
-                grammies[j] = new_tri
-                grammies.pop(j+1)
-
-                weights[j] = weight_curr_gram + weight_next_gram
-                weights.pop(j+1)
-
-            elif n_space_curr_gram == 1 and n_space_next_gram == 2:
-                
-                grammies[j] = split_curr_gram[0]
-
-                weights[j] = weight_curr_gram/2
-                weights[j+1] += weight_curr_gram/2
-
-                j += 1
-
-            elif n_space_curr_gram == 2 and n_space_next_gram == 1:
-
-                grammies[j+1] = split_next_gram[1]
-                
-                weights[j+1] = weight_next_gram/2
-                weights[j] += weight_next_gram/2
-
-                j += 1
-
-            elif n_space_curr_gram == 2 and n_space_next_gram == 2:
-
-                grammies[j] = " ".join(split_curr_gram[:-1])
-                
-                weights[j] = weight_curr_gram * 1/3
-                weights[j+1] += weight_curr_gram * 2/3
-
-                j += 1
-            
-            elif n_space_curr_gram == 0 and n_space_next_gram == 1:
-                
-                grammies[j] = next_gram
-                weights[j] = weight_curr_gram + weight_next_gram                
-                
-                grammies.pop(j+1)
-                weights.pop(j+1)
-        
-        elif n_space_curr_gram == 2 and n_space_next_gram == 2 and split_curr_gram[1:] == split_next_gram[:-1]:
-            
-            grammies[j] = split_curr_gram[0]
-            
-            weights[j] = weight_curr_gram * 1/3
-            weights[j+1] += weight_curr_gram * 2/3
-        
-            j += 1
-        
-        
-        else:
-            j += 1
-
-    return grammies, weights
-
-
-def find_grams(tokens, vocabulary):
-    """
-    Parameters:
-    -----------
+    lemmas : list
+        List of lemmas
     tokens : list
-        list of tokens
-
+        List of tokens
     vocabulary : dict
-        dictionary of n-grams and their weights
+        Dictionary of ngrams with weights
+    token_map : list
+        List of token ids
     
     Returns:
     --------
-    grammies : list
-        list of n-grams
-    weights : list
-        list of weights for each n-gram
+    new_toks : list
+        List of tokens with ngrams connected
+    
+    new_weights : list
+        List of weights for new tokens
+    
     """
 
-    grammies = []
-    weights = []
+    weights = np.zeros(len(lemmas))
+    for i, lemma in enumerate(lemmas):
 
-    is_tri = False
-    is_bi = False
-
-    skip_tri = 0
-    skip_bi = 0
-
-    for i, curr_token in enumerate(tokens):
+        unigram = lemma if i < len(lemmas) else None
+        bigram = "{} {}".format(lemma, lemmas[i+1]) if i+1 < len(lemmas) else None
+        trigram = "{} {} {}".format(lemma, lemmas[i+1], lemmas[i+2]) if i+2 < len(lemmas) else None
         
-        #print()
-
-        if is_tri and skip_tri < 3:
-            skip_tri += 1
-    
-        elif skip_tri == 3:
-            skip_tri = 0
-            is_tri = False
-
-        if is_bi and skip_bi < 2:
-            skip_bi += 1
-        
-        elif skip_bi == 2:
-            skip_bi = 0
-            is_bi = False
-
-        unigram = curr_token if i < len(tokens) else None
-        bigram = "{} {}".format(curr_token, tokens[i+1]) if i+1 < len(tokens) else None
-        trigram = "{} {} {}".format(curr_token, tokens[i+1], tokens[i+2]) if i+2 < len(tokens) else None
-
-        #print(f"unigram: {unigram}, bigram: {bigram}, trigram: {trigram}")
-        #print(f"skip_tri: {skip_tri}, skip_bi: {skip_bi}")
-        #print(f"is_tri: {is_tri}, is_bi: {is_bi}")
-
-        if trigram in vocabulary.keys():
+        if trigram in vocabulary.keys() and trigram is not None:
             
-            #print(f"adding trigram: {trigram}")
-            grammies.append(trigram)
-            weights.append(vocabulary[trigram])
-            is_tri = True
-            skip_tri = 0
-        
-        if bigram in vocabulary.keys():
-            
-            if skip_tri < 2 and is_tri:
-                weights[-1] += vocabulary[bigram]
+            tri_w = vocabulary[trigram] * 1/3
+            weights[i] += tri_w
+            weights[i+1] += tri_w
+            weights[i+2] += tri_w
 
-            else:
-                grammies.append(bigram)
-                weights.append(vocabulary[bigram])
-                is_bi = True
-                skip_bi = 0
+        if bigram in vocabulary.keys() and bigram is not None:
+            
+            bi_w = vocabulary[bigram] * 1/2 
+            weights[i] += bi_w
+            weights[i+1] += bi_w
 
         if unigram in vocabulary.keys():
             
-            if skip_tri < 3 and is_tri:
-                weights[-1] += vocabulary[unigram]
-            
-            elif skip_bi < 2 and is_bi:
-                weights[-1] += vocabulary[unigram]
+            uni_w = vocabulary[unigram]
+            weights[i] += uni_w
 
-            else:
-                grammies.append(unigram)
-                weights.append(vocabulary[unigram])
+
+    new_toks, new_weights = connect_tokens(tokens, weights, token_map)
+    return new_toks, new_weights
+
+
+def connect_tokens(tokens, weights, token_map):
+    """
+    Converts the lemma tokens to the original tokens and connects the tokens that are connected by the same id.
+
+    Parameters:
+    -----------
+    tokens : list
+        List of tokens
+
+    weights : list
+        List of weights for each token
+    
+    token_map : list
+        List of token ids
+    
+    Returns:
+    --------
+    new_toks : list
+        List of original tokens with weights connected
+    
+    new_weights : list
+        List of weights for new tokens
+    """
+
+
+
+    new_toks = []
+    new_weights = []
+    pre_id = None
+
+    for i, token in enumerate(tokens):
         
-        if trigram not in vocabulary.keys() and bigram not in vocabulary.keys() and unigram not in vocabulary.keys():
-            
-            if skip_tri < 3 and is_tri:
-                continue
-            
-            elif skip_bi < 2 and is_bi:
-                continue
+        if pre_id is not None:
+
+            curr_id = token_map[i]
+
+            if curr_id == pre_id:
+                new_toks[-1] += token
+                new_weights[-1] += weights[i]
+                pre_id = token_map[i]
             
             else:
-                grammies.append(unigram)
-                weights.append(0.0)
+                new_toks.append(token)
+                new_weights.append(weights[i])
+                pre_id = token_map[i]
 
-    return grammies, weights
+        else:
+            new_toks.append(token)
+            new_weights.append(weights[i])
+            pre_id = token_map[i]
+
+    return new_toks, new_weights
 
 
-def label_grams(sentiment, weights, threshold : float = 0.0):
+def label_tokens(sentiment, weights, threshold : float = 0.0):
 
     """
     Parameters:
@@ -285,177 +244,53 @@ def label_grams(sentiment, weights, threshold : float = 0.0):
     return labels
 
 
-def convert_to_not_lemma(token_map, tokens, grammies, weights):
-
-    gram_ranges = gram_map(grammies)
-
-    # print(f"tokens: {tokens}")
-    # print(f"grammies: {grammies}")
-    # print(f"gram_ranges: {gram_ranges}")
-    # print(f"token_map: {token_map}")
-    # print()
-
-    new_grammies = []
-            
-    i = 0
-    while True:
-        
-        current_token = tokens[i]
-        range_id = find_gram_interval(i, gram_ranges)
-
-        if i == 0:
-            new_grammies.append(current_token)
-            i += 1
-
-        elif token_map[i-1] < token_map[i]:
-            new_grammies.append(current_token)
-            i += 1
-
-        elif token_map[i-1] == token_map[i]:
-            
-            weights = move_weights(i, tokens, weights, gram_ranges)
-            new_grammies[-1] += current_token
-            tokens.pop(i)
-            gram_ranges = update_gram_ranges(range_id, gram_ranges, weights)
-            
-            token_map.pop(i)
-
-        if i == len(tokens):
-            break
-
-    new_grammies = [" ".join([new_grammies[i] for i in range(r[0], r[1] + 1)]) for r in gram_ranges]
-
-    return new_grammies, weights
-
-
-def move_weights(i, tokens, weights, gram_ranges):
-
-    curr_range = find_gram_interval(i, gram_ranges)
-    pre_range = find_gram_interval(i-1, gram_ranges)
-
-    if curr_range != pre_range:
-        
-        ngram = Counter(" ".join(tokens[gram_ranges[curr_range][0]:gram_ranges[curr_range][1]+1]))[" "]
-        
-        if gram_ranges[curr_range][0] > gram_ranges[curr_range][1]:
-            return weights
-
-        if ngram == 2:
-            temp_weight = weights[curr_range]
-            weights[pre_range] += temp_weight * 1/3
-            weights[curr_range] = temp_weight * 2/3
-            
-        elif ngram == 1:
-            temp_weight = weights[curr_range]
-            weights[pre_range] += temp_weight * 1/2
-            weights[curr_range] = temp_weight * 1/2
-        
-        else:
-            temp_weight = weights[curr_range]
-            weights[pre_range] += temp_weight
-            weights[curr_range] = 0.0
-
-    return weights
-
-
-def update_gram_ranges(range_id, gram_ranges, weights):
-
-    for i in range(range_id, len(gram_ranges)):
-
-        gram_ranges[i][0] -= 1
-        gram_ranges[i][1] -= 1
-
-    gram_ranges[range_id][0] += 1
-
-    if gram_ranges[range_id][0] > gram_ranges[range_id][1]:
-        gram_ranges.pop(range_id)
-        weights.pop(range_id)
-
-    return gram_ranges
-
-
-def find_gram_interval(i, gram_ranges):
-
-    for l, gr in enumerate(gram_ranges):
-
-        if gr[0] <= i <= gr[1]:
-            return l
-
-
-def gram_map(grammies):
+def do_weighting(data, feature_names, rm):
+    """
     
-    map_gram = 0
-    gram_ranges = []
-    head = 0
-    tail = 0
+    Applies the weighting of tokens to the data and returns the new data.
+
+    Parameters:
+    -----------
+    data : list
+        list of dicts with the data
     
-    for j, gram in enumerate(grammies):
-        
-        if Counter(gram)[" "] == 2:
-            map_gram += 3
-
-        elif Counter(gram)[" "] == 1:
-            map_gram += 2
-        
-        else:
-            map_gram += 1
-
-        tail = map_gram - 1
-        gram_ranges.append([head, tail])
-        head = tail + 1
-
-    return gram_ranges 
-
+    feature_names : list
+        list of feature names
     
-def weight_texts(data, feature_names, testing = False, rm = None):
+    rm : RulePredictor
+        RulePredictor used to weight the tokens, generated from the Tsetlin Machine
 
-    if testing:
-        
-        y = data["label"]
-        x_b = data["bin"]
-        x_l = data["lemmas"]
-        x_t = data["tokens"]
-        token_map = data["token_ids"]
+    Returns:
+    --------
+    all_x : list
+        list of dicts with the new data
     
-        vocabulary = {feature_names[i] : 1.0 for i in range(len(feature_names))}
+    """
 
-        grammies, weights = find_grams(x_l, vocabulary)
-        grammies, weights = fit_grams(grammies, weights)
-        labels = label_grams(y, weights)
-        grammies, weights = convert_to_not_lemma(token_map, x_t, grammies, weights)
 
-        new_x = {"tokens" : grammies,
-                    "weights" : weights,
-                    "text" : " ".join(grammies),
-                    "sentiment" : y,
-                    "labels" : labels}
-        
-        return new_x
-
-    
     all_x = []
 
     for i, inst in enumerate(data):
         
         y = inst["label"]
-        x_b = inst["bin"]
-        x_l = inst["lemmas"]
-        x_t = inst["tokens"]
-        token_map = inst["token_ids"]
+        bin_x = inst["bin"]
+        lemmas_x = inst["lemmas"]
+        tokens_x = inst["tokens"]
+        tokenmap_x = inst["token_ids"]
 
-        if y == rm.predict(x_b):
-            
-            _, expl = rm.predict(x_b, explain=True)
+        prediction, expl = rm.predict(bin_x, explain=True)
+
+        if y == prediction:
+
             vocabulary = {feature_names[i]: expl[i] for i in range(len(feature_names))}
 
-            grammies, weights = find_grams(x_l, vocabulary)
-            grammies, weights = fit_grams(grammies, weights)
-            labels = label_grams(y, weights)
-            grammies, weights = convert_to_not_lemma(token_map, x_t, grammies, weights)
+            newtokens_x, weights_x = weight_tokens(lemmas_x, tokens_x, vocabulary, tokenmap_x)
 
-            new_x = {"tokens" : grammies,
-                     "weights" : weights,
-                     "text" : " ".join(grammies),
+            labels = label_tokens(y, weights_x)
+
+            new_x = {"tokens" : newtokens_x,
+                     "weights" : weights_x,
+                     "text" : " ".join(newtokens_x),
                      "sentiment" : y,
                      "labels" : labels}
 
@@ -463,9 +298,10 @@ def weight_texts(data, feature_names, testing = False, rm = None):
 
     return all_x
 
+
 def tokenize_and_align_labels(data, tokenizer, device):
     
-    Y = np.array([i['label'] for i in data])
+    Y = np.array([i['sentiment'] for i in data])
 
     examples = data
 
@@ -521,30 +357,16 @@ def tokenize_and_align_labels(data, tokenizer, device):
     # print("SENTIMENT SIZE", len(output['sentiment']))
     return output
 
-class Dataset(torch.utils.data.Dataset):
-    def __init__(self, input_ids, attention_mask, labels, targets, sentiment):
-        self.input_ids = input_ids
-        self.attention_mask = attention_mask
-        self.labels = labels
-        self.targets = targets
-        self.sentiment = sentiment
 
-    def __len__(self):
-        return len(self.labels)
+def write_data(data, output, dataset, batchdist_n, n):
+    
+    path = os.path.join(output, f"{dataset}_batchdist_{batchdist_n}")
 
-    def __getitem__(self, idx):
-        input_ids = self.input_ids[idx]
-        attention_mask = self.attention_mask[idx]
-        labels = self.labels[idx]
-        targets = self.targets[idx]
-        sentiment = self.sentiment[idx]
-        return {
-            'input_ids': input_ids,
-            'attention_mask': attention_mask,
-            'labels': labels,
-            'targets': targets,
-            'sentiment': sentiment
-        }
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+    file = open(os.path.join(path, f"ready_{dataset}_batch_{n}.pkl"), "wb")
+    pickle.dump(data, file)
 
 
 if __name__ == "__main__":

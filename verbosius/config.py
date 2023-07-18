@@ -24,7 +24,7 @@ batchdist_n=3
 MAX_DF=0.5263
 MIN_DF=21
 MAX_FEATURES=5000
-N_GRAM_RANGE=(1, 2)
+N_GRAM_RANGE=(1, 3)
 NUMBER_OF_CLAUSES=500 #5853
 LITERAL_BUDGET=8
 S=3.4606
@@ -36,7 +36,8 @@ STOPWORDS=None #"english"
 #TOKENSTUFF
 model_name_ = "distilroberta-base"
 tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True)
-device="cuda"
+
+device="cpu"
 
 input_dir = "/home/bigtech/data/verbosius/store_imdb_trainingdata/"
 output_dir = "/home/bigtech/data/verbosius/transf_output/"
