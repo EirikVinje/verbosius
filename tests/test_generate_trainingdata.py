@@ -1,3 +1,5 @@
+import pickle
+
 import numpy as np
 
 import trainingdata.generate_trainingdata as generate_trainingdata
@@ -158,39 +160,150 @@ def test_convert_to_not_lemma1():
 
 def test_convert_to_not_lemma2():
 
-    tokens = ["i", "love", "ses", "my", "chip", "munk", "ies", "to", "death"]
-    token_map = [0, 1, 1, 2, 3, 3, 3, 4, 5]
-    grammies = ["i love", "ses my", "chip", "munk ies", "to death"]
-    weights = [1, 1, 1, 1, 1]
+    vocabulary = pickle.load(open("/home/kolla/projects/verbosius_data/vocabulary.pkl", "rb"))
     
-    new_grammies, weights = generate_trainingdata.convert_to_not_lemma(token_map, tokens, grammies, weights)
-
-    expected_grammies = ["i loveses", "my", "chipmunkies", "to death"]
+    tokens = ['lets', 'put', 'it', 'this', 'way', 'i', 'actually', 'get', 'this', 'movie', 'i', 'get', 'what', 'the', 'writer', 'directer', 'was', 'trying', 'to', 'do', 'i', 'understand', 'that', 'the', 'dialog', 'was', 'meant', 'to', 'be', 'dry', 'and', 'emotionless', 'i', 'understand', 'that', 'the', 'plot', 'was', 'supposed', 'to', 'be', 'non', 'climactic', 'and', 'stale', 'that', 'was', 'what', 'the', 'writer', 'director', 'was', 'going', 'for', 'a', 'very', 'very', 'very', 'dry', 'humor', 'comedy', 'with', 'all', 'that', 'understanding', 'i', 'still', 'think', 'the', 'movie', 'sucked', 'it', 'seemed', 'like', 'the', 'writer', 'director', 'was', 'trying', 'to', 'recreate', 'napolean', 'dynamite', 'with', 'this', 'movie', 'it', 'had', 'all', 'of', 'the', 'same', 'features', 'even', 'the', 'main', 'character', 'behaved', 'similar', 'to', 'napolean', 'but', 'napolean', 'dynamite', 'was', 'actually', 'funny', 'its', 'script', 'worked', 'this', 'movie', 'is', 'not', 'it', 'has', 'no', 'purpose', 'well', 'let', 'me', 'rephrase', 'that', 'its', 'only', 'purpose', 'is', 'to', 'rip', 'off', 'napolean', 'dynamite', 'and', 'try', 'to', 'capture', 'that', 'look', 'and', 'feel', 'too', 'bad', 'it', 'did', 'nt', 'work']
     
-    assert new_grammies == expected_grammies, new_grammies
-    assert weights == [1.5, 0.5, 2.0, 1.0], weights
+    token_map = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 143, 144]
+
+    found_grammies, weights = generate_trainingdata.find_grams(tokens, vocabulary)
+
+    fit_grammies, fit_weights = generate_trainingdata.fit_grams(found_grammies, weights)
 
 
-#def test_weight_texts():
-#
-#    data = [
-#        {"tokens" : ["i", "have", "nt", "seen", "your", "cat", "s", "since", "yesterday"],
-#         "lemmas" : ["i", "have", "not", "see", "your", "cat", "s", "since", "yesterday"],
-#         "token_ids" : [0, 1, 1, 2, 3, 4, 4, 5, 6],
-#         "label" : 1,
-#         "bin" : np.array([[1, 1, 0, 1, 1, 1, 0, 1, 1]], dtype=np.uint8)},
-#        {"tokens" : ["i", "love", "ses", "my", "chip", "munk", "ies", "to", "death"],
-#         "lemmas" : ["i", "love", "ses", "my", "chip", "munk", "ies", "to", "death"],
-#         "token_ids" : [0, 1, 1, 2, 3, 3, 3, 4, 5],
-#         "label" : 1,
-#         "bin" : np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1]], dtype=np.uint8)}]
-#    
-#
-#    feature_names = ["i", "have", "not", "see", "your", "cat", "s", "since", "yesterday", "love", "ses", "my", "chip", "munk", "ies", "to", "death"]
-#
-#
-#    generate_trainingdata.weight_texts(data, feature_names, testing = False, rm = None)
-#
+def test_fit_grams():
+
+    sentence = "i have seen this movie and i liked it very very much"
+    tokens = sentence.split()
+
+    vocabulary = {
+        "i have seen" : 1,
+        "have seen this" : 1,
+        "this movie" : 1,
+        "movie and i" : 1,
+        "and i liked" : 1,
+        "liked it very" : 1,
+        "very" : 1
+    }
+
+    found_grammies, weights = generate_trainingdata.find_grams(tokens, vocabulary)
+
+    expected = ["i have seen", "have seen this", "this movie", "movie and i ", "and i liked", "liked it very", "very", "much"]
+    assert found_grammies == expected, found_grammies
+
+    fit_grammies, fit_weights = generate_trainingdata.fit_grams(found_grammies, weights)
+
+    expected = ["i have seen", "this", "movie and i", "liked it very", "very", "much"]
+    assert fit_grammies == expected, fit_grammies
+
+
+def test_find_grams():
+
+    toks = ['lets', 'put', 'it', 'this', 'way']
+
+    vocab = {
+        "lets put it" : 1,
+        "this" : 1,
+        "this way" : 1
+    }
+
+    grams, _ = generate_trainingdata.find_grams(toks, vocab)
+
+    expected = ["lets put it", "this way"]
+    assert grams == expected, grams
+
+    vocab = {
+        "lets put it" : 1,
+        "put it this" : 1,
+        "it this way" : 1
+    }
+
+    grams, _ = generate_trainingdata.find_grams(toks, vocab)
+
+    expected = ["lets put it", "put it this", "it this way"]
+    assert grams == expected, grams
+
+    vocab = {
+        "lets put" : 1,
+        "put" : 1,
+        "it this" : 1,
+        "this way" : 1
+    }
+
+    grams, _ = generate_trainingdata.find_grams(toks, vocab)
+
+    expected = ["lets put", "it this", "this way"]
+    assert grams == expected, grams
+
+    vocab = {
+        "lets" : 1,
+        "put" : 1,
+        "it" : 1,
+        "this" : 1,
+        "way" : 1
+    }
+
+    grams, _ = generate_trainingdata.find_grams(toks, vocab)
+
+    expected = ["lets", "put", "it", "this", "way"]
+    assert grams == expected, grams
+
+    vocab = {
+        "lets put it" : 1,
+        "put it" : 1,
+        "it" : 1,
+        "put it this" : 1,
+        "it this way" : 1,
+    }
+
+    grams, _ = generate_trainingdata.find_grams(toks, vocab)
+
+    assert grams == [], grams
+
+
+def test_new_new_weight_grams():
+
+    tokens = ["i", "have", "nt", "seen", "your", "cat", "s", "since", "yesterday", "and", "i", "like", "them", "very", "very", "much", "kjell", "aage"]
+    
+    lemmas = ["i", "have", "not", "see", "your", "cat", "s", "since", "yesterday", "and", "i", "like", "them", "very", "very", "much", "kjell", "aage"]
+    
+    token_map = [0, 1, 1, 2, 3, 4, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+
+    vocabulary = {
+        "i have" : 2,
+        "i have not" : 3,
+        "have not see" : 3,
+        "not" : 1,
+        "not see" : 2,
+        "your" : 1,
+        "your cat" : 2,
+        "cat" : 1,
+        "cat s" : 2,
+        "s" : 1,
+        "since yesterday" : 2,
+        "yesterday" : 1,
+        "yesterday and i" : 3,
+        "like them" : 2,
+        "them" : 1,
+        "them very" : 2,
+        "very" : 1,
+        "very much" : 2
+    }
+    
+    tokens, weights = generate_trainingdata.weight_tokens(lemmas, tokens, vocabulary, token_map)
+    
+    expected_tokens = ["i", "havent", "seen", "your", "cats", "since", "yesterday", "and", "i", "like", "them", "very", "very", "much", "kjell", "aage"]
+    assert tokens == expected_tokens, tokens
+
+    expected_weights = [2, 7, 2, 2, 5, 1, 3, 1, 1, 1, 3, 2, 2, 1, 0, 0]
+    expected_weights = [float(i) for i in expected_weights]
+    
+    assert weights == expected_weights, weights
+
+
+
+
+
 
 
 if __name__ == '__main__':

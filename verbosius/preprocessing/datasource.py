@@ -248,9 +248,6 @@ def batch_data_multiclass(dataset,
     if test_batches_per_mix == -1:
         test_batches_per_mix = n_batches_per_mix
 
-    print(batch_size)
-    print(test_batch_size)
-
     un_batched_mix = dataset.load_data(path, test=test, test_size=test_size)
     train_data, test_data = un_batched_mix
 
@@ -328,15 +325,6 @@ def batch_data_multiclass(dataset,
 
             test_x.append(split_text)
             test_y.append(split_label)
-        
-
-        print(len(train_x[0]))
-        print(len(train_y[0]))
-        print(len(test_x[0]))
-        print(len(test_y[0]))
-        print(len(train_x))
-        print(len(test_x))
-
 
         return train_x, train_y, test_x, test_y, n_classes
 

@@ -22,7 +22,10 @@ seed="$(python -c 'import config; print(config.seed)')"
 
 # *************** GENERATE TRAINING DATA ***************
 traindat_input_path="$(python -c 'import config; print(config.traindat_input_path)')"
-traindat_output_path="$(python -c 'import config; print(config.traindat_output_path)')'"
+traindat_output_path="$(python -c 'import config; print(config.traindat_output_path)')"
 
 batchdist_n="$(python -c 'import config; print(config.batchdist_n)')"
 
+
+final_input_path="$(python -c 'import config; print(config.final_input_dir)')"
+final_output_path="$(python -c 'import config; print(config.final_output_dir)')"
