@@ -2,9 +2,11 @@ import evaluate
 
 import numpy as np
 import torch as nn
+import torch
 
 from transformers.modeling_outputs import TokenClassifierOutput
 from transformers import AutoModel
+
 
 class CustomModel(nn.Module):
     def __init__(self, num_labels, num_seq_labels, neutral_weight, loss_weight=1): 
@@ -76,7 +78,33 @@ class CustomModel(nn.Module):
         
         else:
             return TokenClassifierOutput(logits=logits)
-        
+
+
+class Dataset(torch.utils.data.Dataset):
+    def __init__(self, input_ids, attention_mask, labels, targets, sentiment):
+        self.input_ids = input_ids
+        self.attention_mask = attention_mask
+        self.labels = labels
+        self.targets = targets
+        self.sentiment = sentiment
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, idx):
+        input_ids = self.input_ids[idx]
+        attention_mask = self.attention_mask[idx]
+        labels = self.labels[idx]
+        targets = self.targets[idx]
+        sentiment = self.sentiment[idx]
+        return {
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            'labels': labels,
+            'targets': targets,
+            'sentiment': sentiment
+        }
+
 
 def compute_metrics(eval_preds):
     metric = evaluate.load("accuracy")
@@ -120,4 +148,63 @@ def compute_metrics(eval_preds):
     }
     #df = pd.DataFrame(output, index=[0])
     #df.to_csv("eval_results.csv", mode="a", header=not os.path.exists("eval_results.csv"))
+    return output
+
+
+def tokenize_and_align_labels(data, tokenizer, device):
+    
+    Y = np.array([i['sentiment'] for i in data])
+
+    examples = data
+
+    tokenized_inputs = tokenizer([example["tokens"] for example in examples], 
+                                 truncation=True, 
+                                 padding=True, 
+                                 return_tensors='pt',
+                                 is_split_into_words=True,
+                                 max_length=512
+                                 )
+    
+    labels = []
+    targets = []
+    
+    for i, label in enumerate([example["labels"] for example in examples]):
+        
+        word_ids = tokenized_inputs.word_ids(batch_index=i)  
+        
+        previous_word_idx = None
+
+        label_ids = []
+        target_ids = []
+        
+        
+        for word_idx in word_ids:  
+
+            if word_idx is None:
+                target_ids.append(0)
+                label_ids.append(-100)
+
+            elif word_idx != previous_word_idx:  
+                target_ids.append(1)
+                label_ids.append(label[word_idx])
+
+            else:
+                target_ids.append(0)
+                label_ids.append(-100)
+
+            previous_word_idx = word_idx
+        targets.append(target_ids)
+        labels.append(label_ids)
+    
+    tokenized_inputs["labels"] = np.array(labels,dtype=np.int8)
+    
+    tokenized_inputs["targets"] = np.array(targets,dtype=np.int8)
+
+    output = {}
+    output["input_ids"] = tokenized_inputs["input_ids"].to(device = device) 
+    output["attention_mask"] = torch.tensor(tokenized_inputs["attention_mask"], dtype=torch.int8).to(device = device)
+    output["labels"] = torch.tensor(tokenized_inputs["labels"], dtype=torch.int8).to(device = device)
+    output["targets"] = torch.tensor(tokenized_inputs["targets"], dtype=torch.int8).to(device = device)
+    output["sentiment"] = torch.tensor(Y, dtype=torch.int8).to(device = device)
+    # print("SENTIMENT SIZE", len(output['sentiment']))
     return output

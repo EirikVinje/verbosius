@@ -1,8 +1,8 @@
-
-
-import verbosius.transformer.helper_functions as hf
+import os
 
 from transformers import TrainingArguments, Trainer
+
+import verbosius.exp_transformer.helper_functions as hf
 
 
 def transformer_pipeline(device, 
@@ -20,7 +20,8 @@ def transformer_pipeline(device,
                          label_names,
                          train_data,
                          test_data,
-                         tokenizer):
+                         tokenizer,
+                         save_model):
     
     model = hf.CustomModel()
     model = model.to(device = device)
@@ -52,3 +53,5 @@ def transformer_pipeline(device,
     trainer.train()
     res = trainer.evaluate()
     
+    if not save_model:
+        os.system(f"rm -rf {output_dir}")
