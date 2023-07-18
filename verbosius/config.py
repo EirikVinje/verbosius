@@ -36,4 +36,20 @@ STOPWORDS=None #"english"
 #TOKENSTUFF
 model_name_ = "distilroberta-base"
 tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True)
+
 device="cpu"
+
+input_dir = "/home/bigtech/data/verbosius/store_imdb_trainingdata/"
+output_dir = "/home/bigtech/data/verbosius/transf_output/"
+
+learning_rate = 2e-5
+per_device_train_batch_size = 16
+per_device_eval_batch_size = 16
+num_train_epochs = 1
+weight_decay = 0.01
+evaluation_strategy = "epoch"
+save_strategy = "epoch"
+warmup_steps = 500
+load_best_model_at_end = True
+eval_accumulation_steps = 16
+label_names = ["0", "1"]
