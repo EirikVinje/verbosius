@@ -23,9 +23,7 @@ def main(dataset : str, input : str, batchdist_n : int, output : str):
     n_batches = len(dir)
 
     print()
-    print(f"{dataset} batches from batchdist {batchdist_n}:")
-    for file in dir:
-        print(file)
+    print(f"Number of batches in {dataset} batchdist {batchdist_n}: {n_batches}")
     print()
 
     for n in tqdm(range(n_batches)):
@@ -43,15 +41,12 @@ def main(dataset : str, input : str, batchdist_n : int, output : str):
         formated_train_data = gen_data.Dataset(**tokenized_train_data)
         formated_test_data = gen_data.Dataset(**tokenized_test_data)
         
-        data = {"train": formated_train_data, "test": formated_test_data, "distributer" : dataset, "n_classes" : data["n_classes"]}
+        data = {"train": formated_train_data, 
+                "test": formated_test_data, 
+                "distributer" : dataset, 
+                "n_classes" : data["n_classes"]}
         
-        path = os.path.join(output, f"{dataset}_batchdist_{batchdist_n}")
-
-        if not os.path.exists(path):
-            os.mkdir(path)
-
-        file = open(os.path.join(path, f"ready_{dataset}_batch_{n}.pkl"), "wb")
-        pickle.dump(data, file)
+        gen_data.write_data(data, output, dataset, batchdist_n, n)
 
 
 

@@ -1,6 +1,7 @@
 from collections import Counter
 from copy import deepcopy
 import pickle
+import os
 
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
@@ -10,8 +11,51 @@ import green_tsetlin as gt
 import config as config
 
 
+class Dataset(torch.utils.data.Dataset):
+    def __init__(self, input_ids, attention_mask, labels, targets, sentiment):
+        self.input_ids = input_ids
+        self.attention_mask = attention_mask
+        self.labels = labels
+        self.targets = targets
+        self.sentiment = sentiment
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, idx):
+        input_ids = self.input_ids[idx]
+        attention_mask = self.attention_mask[idx]
+        labels = self.labels[idx]
+        targets = self.targets[idx]
+        sentiment = self.sentiment[idx]
+        return {
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            'labels': labels,
+            'targets': targets,
+            'sentiment': sentiment
+        }
+
+
 def rulemaker(data):
     
+    """
+    Trains the Tsetlin Machine and creates a RulePredictor from the trained Tsetlin Machine that is used to
+    weight the tokens in the data.
+
+    Parameters:
+    -----------
+    data : dict("train" : [...], "test" : [...], "distributer" : str, "n_classes" : int)
+
+    Returns:
+    --------
+    rp : RulePredictor
+        RulePredictor created from the trained Tsetlin Machine
+    
+    """
+
+
+
     train_x = [instance["lemmas"] for instance in data["train"]]
     train_y = [instance["label"] for instance in data["train"]]
     test_x = [instance["lemmas"] for instance in data["test"]]
@@ -66,6 +110,9 @@ def rulemaker(data):
 
 def weight_tokens(lemmas, tokens, vocabulary, token_map):
     """
+
+    Weights each token separated by a space in the text based on the weights of the n-grams in the vocabulary.
+
     Parameters:
     -----------
     lemmas : list
@@ -86,9 +133,6 @@ def weight_tokens(lemmas, tokens, vocabulary, token_map):
         List of weights for new tokens
     
     """
-
-
-
 
     weights = np.zeros(len(lemmas))
     for i, lemma in enumerate(lemmas):
@@ -121,6 +165,30 @@ def weight_tokens(lemmas, tokens, vocabulary, token_map):
 
 
 def connect_tokens(tokens, weights, token_map):
+    """
+    Converts the lemma tokens to the original tokens and connects the tokens that are connected by the same id.
+
+    Parameters:
+    -----------
+    tokens : list
+        List of tokens
+
+    weights : list
+        List of weights for each token
+    
+    token_map : list
+        List of token ids
+    
+    Returns:
+    --------
+    new_toks : list
+        List of original tokens with weights connected
+    
+    new_weights : list
+        List of weights for new tokens
+    """
+
+
 
     new_toks = []
     new_weights = []
@@ -177,6 +245,28 @@ def label_tokens(sentiment, weights, threshold : float = 0.0):
 
 
 def do_weighting(data, feature_names, rm):
+    """
+    
+    Applies the weighting of tokens to the data and returns the new data.
+
+    Parameters:
+    -----------
+    data : list
+        list of dicts with the data
+    
+    feature_names : list
+        list of feature names
+    
+    rm : RulePredictor
+        RulePredictor used to weight the tokens, generated from the Tsetlin Machine
+
+    Returns:
+    --------
+    all_x : list
+        list of dicts with the new data
+    
+    """
+
 
     all_x = []
 
@@ -268,30 +358,15 @@ def tokenize_and_align_labels(data, tokenizer, device):
     return output
 
 
-class Dataset(torch.utils.data.Dataset):
-    def __init__(self, input_ids, attention_mask, labels, targets, sentiment):
-        self.input_ids = input_ids
-        self.attention_mask = attention_mask
-        self.labels = labels
-        self.targets = targets
-        self.sentiment = sentiment
+def write_data(data, output, dataset, batchdist_n, n):
+    
+    path = os.path.join(output, f"{dataset}_batchdist_{batchdist_n}")
 
-    def __len__(self):
-        return len(self.labels)
+    if not os.path.exists(path):
+        os.mkdir(path)
 
-    def __getitem__(self, idx):
-        input_ids = self.input_ids[idx]
-        attention_mask = self.attention_mask[idx]
-        labels = self.labels[idx]
-        targets = self.targets[idx]
-        sentiment = self.sentiment[idx]
-        return {
-            'input_ids': input_ids,
-            'attention_mask': attention_mask,
-            'labels': labels,
-            'targets': targets,
-            'sentiment': sentiment
-        }
+    file = open(os.path.join(path, f"ready_{dataset}_batch_{n}.pkl"), "wb")
+    pickle.dump(data, file)
 
 
 if __name__ == "__main__":
