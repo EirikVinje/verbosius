@@ -34,15 +34,9 @@ def main(dataset : str, input : str, batchdist_n : int, output : str):
     
         train_data = gen_data.do_weighting(data["train"], feature_names, rm)
         test_data = gen_data.do_weighting(data["test"], feature_names, rm)
-
-        tokenized_train_data = gen_data.tokenize_and_align_labels(train_data, tokenizer, device)
-        tokenized_test_data = gen_data.tokenize_and_align_labels(test_data, tokenizer, device)
         
-        formated_train_data = gen_data.Dataset(**tokenized_train_data)
-        formated_test_data = gen_data.Dataset(**tokenized_test_data)
-        
-        data = {"train": formated_train_data, 
-                "test": formated_test_data, 
+        data = {"train": train_data, 
+                "test": test_data, 
                 "distributer" : dataset, 
                 "n_classes" : data["n_classes"]}
         
