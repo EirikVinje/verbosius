@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from tqdm import tqdm
 
-import trainingdata.generate_trainingdata as gen_data
+import generate_trainingdata as gen_data
 import config as config
 
 

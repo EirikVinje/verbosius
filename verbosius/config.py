@@ -1,22 +1,25 @@
 from transformers import AutoTokenizer
-
+import os
 
 # *************** PREPROSESSING *************** 
-preproc_input_path="/home/bigtech/data/verbosius/imdb/"
-preproc_output_path="/home/bigtech/data/verbosius/store_imdb_pickle/"
+
+root = os.path.expanduser("~/data/verbosius")
+preproc_input_path= os.path.join(root, "imdb_raw")
+preproc_output_path= os.path.join(root, "imdb/preprocess")
 
 dataset="imdb"
-batch_size=100
-batch_amount=2
+batch_size=500
+batch_amount=4
 use_test_set=True
-batch_size_test = 100
+batch_size_test = 250
 shuffle=True
 seed=42
 
 
 # *************** GENERATE TRAINING DATA ***************
-traindat_input_path="/home/bigtech/data/verbosius/store_imdb_pickle/"
-traindat_output_path="/home/bigtech/data/verbosius/store_imdb_trainingdata/"
+
+traindat_input_path= os.path.join(root, "imdb/preprocess")
+traindat_output_path= os.path.join(root, "imdb/trainingdata")
 
 batchdist_n=0
 
@@ -33,14 +36,16 @@ TM_EPOCHS=1
 EARLY_STOP_ACC=0.86
 STOPWORDS=None #"english"
 
-#TOKENSTUFF
-model_name_ = "distilroberta-base"
-tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True)
+
+# *************** TRANSFORMER ***************
 
 device="cpu"
+model_name_ = "distilroberta-base"
+tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True, device=device)
 
-final_input_dir = "/home/bigtech/data/verbosius/store_imdb_trainingdata/"
-final_output_dir = "/home/bigtech/data/verbosius/imdb_final_output/"
+batchdist_range = (0,5)
+final_input_dir = os.path.join(root, "imdb/trainingdata")
+final_output_dir = os.path.join(root, "imdb/models")
 
 learning_rate = 2e-5
 per_device_train_batch_size = 16
@@ -57,5 +62,3 @@ neutral_weight = 0.5
 loss_weight = 0.5
 num_labels = 3
 num_seq_labels = 2
-
-# *************** TRAINING ***************

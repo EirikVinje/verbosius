@@ -129,20 +129,20 @@ def save_checker(save_model):
         raise argparse.ArgumentTypeError(f'Invalid save_model, "{save_model}" is not "true" or "false"')
 
 
-def n_batch_dist_checker(n_batch_dist):
+def n_batch_dist_checker(batchdist_range):
     
     regex = re.compile(r"\((\d+),(\d+)\)")
 
-    match = regex.match(n_batch_dist)
+    match = regex.match(batchdist_range)
 
     if match is None:
         raise argparse.ArgumentTypeError(f"Invalid n_batch_dist, must be tuple interval, e.g (0,-1) is all batchdistros and on the exact form (int,int)")
 
-    n_batch_dist = tuple(map(int, n_batch_dist.strip("()").split(",")))
-    if n_batch_dist[0] < 0 or n_batch_dist[1] < 0:
+    batchdist_range = tuple(map(int, batchdist_range.strip("()").split(",")))
+    if batchdist_range[0] < 0 or batchdist_range[1] < 0:
         raise argparse.ArgumentTypeError(f"Invalid n_batch_dist, must be tuple interval, e.g (0,-1) is all batchdistros")
     
-    return n_batch_dist
+    return batchdist_range
 
     
 if __name__ == "__main__":
@@ -161,12 +161,12 @@ if __name__ == "__main__":
     parser.add_argument("--save_model", type=save_checker, nargs="?", default="false",
                         help="Save model or not, either 'true' or 'false'.")
     
-    parser.add_argument("--n_batchdist", type=n_batch_dist_checker,
+    parser.add_argument("--batchdist_range", type=n_batch_dist_checker,
                         help="Number of batchdistros to use, must use tuple interval, e.g (0,-1) is all batchdistros")
 
     args = parser.parse_args()
 
-    batchdist_checker(args.n_batchdist, args.input, args.dataset)
+    batchdist_checker(args.batchdist_range, args.input, args.dataset)
 
-    main(args.dataset, args.input, args.output, args.save_model, args.n_batchdist)
+    main(args.dataset, args.input, args.output, args.save_model, args.batchdist_range)
     
