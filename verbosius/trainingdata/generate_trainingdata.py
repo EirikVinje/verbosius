@@ -6,10 +6,10 @@ import os
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 import torch
+import green_tsetlin as gt
 
 import config as config
 
-import green_tsetlin as gt
 
 def rulemaker(data):
     
@@ -80,8 +80,6 @@ def rulemaker(data):
 
     rp = gt.RulePredictor()
     fm = list(range(train_x_bin.shape[1]))
-
-    print("tm.get_state() : ", tm.get_state())
 
     rp.create_from_state(tm.get_state(), fm)
     

@@ -10,34 +10,13 @@ import exp_transformer.transformer as tf
 
 def main(dataset : str, input : str, output : str, save_model : str, batchdist_n : tuple):
     
-    tokenizer = config.tokenizer
-    device = config.device
-    learning_rate = config.learning_rate
-    per_device_train_batch_size = config.per_device_train_batch_size
-    per_device_eval_batch_size = config.per_device_eval_batch_size
-    num_train_epochs = config.num_train_epochs
-    weight_decay = config.weight_decay
-    evaluation_strategy = config.evaluation_strategy
-    save_strategy = config.save_strategy
-    warmup_steps = config.warmup_steps
-    load_best_model_at_end = config.load_best_model_at_end
-    eval_accumulation_steps = config.eval_accumulation_steps
-    label_names = config.label_names
-
-    neutral_weight = config.neutral_weight
-    loss_weight = config.loss_weight
-    num_labels = config.num_labels
-    num_seq_labels = config.num_seq_labels
-
-    model = hf.CustomModel(num_labels, num_seq_labels, neutral_weight, loss_weight)
-    model = model.to(device = device)
-
-    
     dists = os.listdir(input)
     batch_dists = dists[batchdist_n[0]:batchdist_n[1]]
 
-    train_data = []
-    test_data = []
+    train_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
+    test_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
+    
+    tokenizer = config.tokenizer
 
     for dist in batch_dists:
 
@@ -49,36 +28,16 @@ def main(dataset : str, input : str, output : str, save_model : str, batchdist_n
             
             data = pickle.load(open(f"{path}/batch_{n}.pkl", "rb"))
             
-            train_data.extend(data["train"])
-            test_data.extend(data["test"])
+            new_train_batch = hf.tokenize_and_align_labels(data["train"], tokenizer) 
+            new_test_batch = hf.tokenize_and_align_labels(data["test"], tokenizer)
 
-    train_data = hf.tokenize_and_align_labels(train_data, tokenizer, device)
-    test_data = hf.tokenize_and_align_labels(test_data, tokenizer, device)
-        
+            train_data = hf.extend_data(train_data, new_train_batch)
+            test_data = hf.extend_data(test_data, new_test_batch)
+
     train_data = hf.Dataset(**train_data)
-    test_data = hf.Dataset(**test_data)
-
-    tf.transformer_pipeline(device, 
-                         output, 
-                         learning_rate, 
-                         per_device_train_batch_size, 
-                         per_device_eval_batch_size, 
-                         num_train_epochs, 
-                         weight_decay, 
-                         evaluation_strategy, 
-                         save_strategy,
-                         warmup_steps, 
-                         load_best_model_at_end, 
-                         eval_accumulation_steps, 
-                         label_names,
-                         train_data,
-                         test_data,
-                         tokenizer,
-                         save_model,
-                         model)
-
-    if not save_model:
-        pass
+    test_data = hf.Dataset(**test_data)    
+    
+    tf.transformer_pipeline(output, train_data, test_data, save_model, tokenizer)
 
 
 def dataset_checker(dataset):
