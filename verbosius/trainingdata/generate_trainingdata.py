@@ -7,9 +7,9 @@ import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 import torch
 
-import green_tsetlin as gt
 import config as config
 
+import green_tsetlin as gt
 
 def rulemaker(data):
     
@@ -62,10 +62,13 @@ def rulemaker(data):
 
     for i in range(len(data["train"])):
         data["train"][i]["bin"] = train_x_bin[i]
+        
+    for i in range(len(data["test"])):
         data["test"][i]["bin"] = test_x_bin[i]
 
-    tm.set_train_data(train_x_bin[:1:], train_y[:1:])
+    tm.set_train_data(train_x_bin, train_y)
     tm.set_test_data(test_x_bin, test_y)
+    
     trainer = gt.Trainer(config.T, 
                          n_epochs=config.TM_EPOCHS, 
                          seed=32, 
@@ -77,6 +80,9 @@ def rulemaker(data):
 
     rp = gt.RulePredictor()
     fm = list(range(train_x_bin.shape[1]))
+
+    print("tm.get_state() : ", tm.get_state())
+
     rp.create_from_state(tm.get_state(), fm)
     
     return rp, feature_names
