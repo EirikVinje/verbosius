@@ -4,8 +4,8 @@ import os
 # *************** PREPROSESSING *************** 
 
 root = os.path.expanduser("~/data/verbosius")
-preproc_input_path= os.path.join(root, "imdb_raw")
-preproc_output_path= os.path.join(root, "imdb/preprocess")
+preproc_input_path= os.path.join(root, "imdb")
+preproc_output_path= os.path.join(root, "store_imdb_pickle")
 
 dataset="imdb"
 batch_size=100
@@ -18,10 +18,10 @@ seed=42
 
 # *************** GENERATE TRAINING DATA ***************
 
-traindat_input_path= os.path.join(root, "imdb/preprocess")
-traindat_output_path= os.path.join(root, "imdb/trainingdata")
+traindat_input_path= os.path.join(root, "store_imdb_pickle")
+traindat_output_path= os.path.join(root, "store_imdb_trainingdata")
 
-batchdist_n=1
+batchdist_n=4
 
 # TM PARAMS
 MAX_DF=0.5263
@@ -46,8 +46,8 @@ tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True, de
 save_model = True
 
 batchdist_range = "\(1,2\)"
-final_input_dir = os.path.join(root, "imdb/trainingdata")
-final_output_dir = os.path.join(root, "imdb/models")
+final_input_dir = os.path.join(root, "store_imdb_trainingdata")
+final_output_dir = os.path.join(root, "imdb_final_output")
 
 learning_rate = 2e-5
 per_device_train_batch_size = 4

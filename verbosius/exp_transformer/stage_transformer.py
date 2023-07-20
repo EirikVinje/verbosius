@@ -17,22 +17,21 @@ def main(dataset : str, input : str, output : str, save_model : str, batchdist_n
     test_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
     
     tokenizer = config.tokenizer
-
+    
     for dist in batch_dists:
 
         path = os.path.join(input, dist)
         dir = os.listdir(path)
         n_batches = len(dir)
-
         for n in range(n_batches):
             
             data = pickle.load(open(f"{path}/batch_{n}.pkl", "rb"))
-            
             new_train_batch = hf.tokenize_and_align_labels(data["train"], tokenizer) 
             new_test_batch = hf.tokenize_and_align_labels(data["test"], tokenizer)
 
             train_data = hf.extend_data(train_data, new_train_batch)
             test_data = hf.extend_data(test_data, new_test_batch)
+
 
     train_data = hf.Dataset(**train_data)
     test_data = hf.Dataset(**test_data)    
