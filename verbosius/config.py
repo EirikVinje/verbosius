@@ -1,24 +1,27 @@
 from transformers import AutoTokenizer
-
+import os
 
 # *************** PREPROSESSING *************** 
-preproc_input_path="/home/bigtech/data/verbosius/imdb/"
-preproc_output_path="/home/bigtech/data/verbosius/store_imdb_pickle/"
+
+root = os.path.expanduser("~/data/verbosius")
+preproc_input_path= os.path.join(root, "imdb")
+preproc_output_path= os.path.join(root, "store_imdb_pickle")
 
 dataset="imdb"
 batch_size=100
-batch_amount=2
+batch_amount=3
 use_test_set=True
-batch_size_test = 100
+batch_size_test = 30
 shuffle=True
 seed=42
 
 
 # *************** GENERATE TRAINING DATA ***************
-traindat_input_path="/home/bigtech/data/verbosius/store_imdb_pickle/"
-traindat_output_path="/home/bigtech/data/verbosius/store_imdb_trainingdata/"
 
-batchdist_n=0
+traindat_input_path= os.path.join(root, "store_imdb_pickle")
+traindat_output_path= os.path.join(root, "store_imdb_trainingdata")
+
+batchdist_n=4
 
 
 # TM PARAMS
@@ -34,20 +37,24 @@ TM_EPOCHS=1
 EARLY_STOP_ACC=0.86
 STOPWORDS=None #"english"
 
-#TOKENSTUFF
-model_name_ = "distilroberta-base"
-tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True)
+
+# *************** TRANSFORMER ***************
 
 device="cpu"
+model_name_ = "distilroberta-base"
+tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True, device=device)
 
-final_input_dir = "/home/bigtech/data/verbosius/store_imdb_trainingdata/"
-final_output_dir = "/home/bigtech/data/verbosius/imdb_final_output/"
+save_model = True
 
-learning_rate = 2e-5 #
-per_device_train_batch_size = 16
-per_device_eval_batch_size = 16
-num_train_epochs = 1 #
-weight_decay = 0.01 #lavere
+batchdist_range = "\(1,2\)"
+final_input_dir = os.path.join(root, "store_imdb_trainingdata")
+final_output_dir = os.path.join(root, "imdb_final_output")
+
+learning_rate = 2e-5
+per_device_train_batch_size = 4
+per_device_eval_batch_size = 4
+num_train_epochs = 1
+weight_decay = 0.01
 evaluation_strategy = "epoch"
 save_strategy = "epoch"
 warmup_steps = 500
@@ -58,5 +65,3 @@ neutral_weight = 0.5 #
 loss_weight = 0.5 #
 num_labels = 3
 num_seq_labels = 2
-
-# *************** TRAINING ***************

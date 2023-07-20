@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from tqdm import tqdm
 
-import trainingdata.generate_trainingdata as gen_data
+import generate_trainingdata as gen_data
 import config as config
 
 
@@ -39,7 +39,7 @@ def main(dataset : str, input : str, batchdist_n : int, output : str):
                 "test": test_data, 
                 "distributer" : dataset, 
                 "n_classes" : data["n_classes"]}
-        
+        print(len(data["train"]))
         gen_data.write_data(data, output, dataset, batchdist_n, n)
 
 

@@ -26,6 +26,8 @@ traindat_output_path="$(python -c 'import config; print(config.traindat_output_p
 
 batchdist_n="$(python -c 'import config; print(config.batchdist_n)')"
 
+batchdist_range="$(python -c 'import config; print(config.batchdist_range)')"
 
 final_input_path="$(python -c 'import config; print(config.final_input_dir)')"
 final_output_path="$(python -c 'import config; print(config.final_output_dir)')"
+save_model="$(python -c 'import config; print(config.save_model)')"

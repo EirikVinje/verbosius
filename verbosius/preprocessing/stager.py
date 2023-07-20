@@ -3,6 +3,8 @@ import os
 import argparse
 
 import numpy as np
+from tqdm import tqdm
+
 import preprocessing.preprocess as preprocess
 import preprocessing.datasource as datasource
 import preprocessing.stage as stage
@@ -36,7 +38,8 @@ def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, outpu
     else:
         assert False, f"Directory {new_batchdist} already exists, please remove it before continuing" 
 
-    for train_x, train_y, test_x, test_y in zip(batched_data[0], batched_data[1], batched_data[2], batched_data[3]):
+    print(f"Preprocessing {dataset} batchdist {n} with {batch_amount_per_mix} batches of size {batch_size}")
+    for (train_x, train_y, test_x, test_y) in tqdm(zip(batched_data[0], batched_data[1], batched_data[2], batched_data[3])):
 
         # clean the data from unwanted symbols and such
         cleaned_train_x = preprocess.clean_text(train_x)
