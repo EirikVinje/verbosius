@@ -31,7 +31,7 @@ def objective(trial, train_x, train_y, test_x, test_y, n_jobs):
     num_clauses = trial.suggest_int("num_clauses", 4000, 10000)
     s = trial.suggest_float("s", 3, 10)
     threshold = 9225
-    literal_budget = trial.suggest_int("literal_budget", 5, 15)
+    literal_budget = 
     max_df = 0.5232
     min_df = 21
     ngram_range = (1,2)
@@ -49,9 +49,6 @@ def objective(trial, train_x, train_y, test_x, test_y, n_jobs):
 
     train_x = vectorizer.fit_transform([" ".join(x) for x in train_x_store])
     test_x = vectorizer.transform([" ".join(x) for x in test_x_store])
-
-    # train_x = np.asarray(train_x)
-    # test_x = np.asarray(test_x)
 
 
     SKB = SelectKBest(mutual_info_classif, k=5000)

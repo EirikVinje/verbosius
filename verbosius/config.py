@@ -20,6 +20,7 @@ traindat_output_path="/home/bigtech/data/verbosius/store_imdb_trainingdata/"
 
 batchdist_n=0
 
+
 # TM PARAMS
 MAX_DF=0.5263
 MIN_DF=21
@@ -42,19 +43,19 @@ device="cpu"
 final_input_dir = "/home/bigtech/data/verbosius/store_imdb_trainingdata/"
 final_output_dir = "/home/bigtech/data/verbosius/imdb_final_output/"
 
-learning_rate = 2e-5
+learning_rate = 2e-5 #
 per_device_train_batch_size = 16
 per_device_eval_batch_size = 16
-num_train_epochs = 1
-weight_decay = 0.01
+num_train_epochs = 1 #
+weight_decay = 0.01 #lavere
 evaluation_strategy = "epoch"
 save_strategy = "epoch"
 warmup_steps = 500
 load_best_model_at_end = True
 eval_accumulation_steps = 16
 label_names = ['labels', 'sentiment']
-neutral_weight = 0.5
-loss_weight = 0.5
+neutral_weight = 0.5 #
+loss_weight = 0.5 #
 num_labels = 3
 num_seq_labels = 2
 

@@ -31,12 +31,12 @@ class Objective:
         test_y_store = test_y
         
         
-        num_clauses = trial.suggest_int("num_clauses", 4000, 10000)
+        num_clauses = trial.suggest_int("num_clauses", 8000, 10000)
         s = trial.suggest_float("s", 3, 10)
-        threshold = 9225
+        threshold = trial.suggest_int("threshold", 7000, 11000) #9225
         literal_budget = trial.suggest_int("literal_budget", 5, 15)
-        max_df = 0.5232
-        min_df = 21
+        max_df = 0.6
+        min_df = 17
         ngram_range = (1,2)
         stop_words = None
 
@@ -227,13 +227,18 @@ def do_objective(dataset, batch_dist, n_trials, n_jobs, data_amount):
     train_y = np.array(train_y, dtype=np.uint32)
     test_y = np.array(test_y, dtype=np.uint32)
 
-    
+    objective = Objective()
+
     obj_func = lambda trial: objective(trial, train_x, train_y, test_x, test_y, args.n_jobs)
 
     study = optuna.create_study(study_name="imdb_hp_3_tms_pipe", direction="maximize", storage="sqlite:///imdb_tm_pipe.db", load_if_exists=True)
-    study.optimize(obj_func, n_trials=args.n_trials, show_progress_bar=True)
+    study.optimize(obj_func, n_trials=args.n_trials, show_progress_bar=True, callbacks=[objective.callback])
 
-    return best_model, best_vocabulary
+    print(study.best_params)
+    print(study.best_value)
+    print(objective.best_rp)
+
+    return objective.best_rp, objective.best_vocabulary
 
 
 

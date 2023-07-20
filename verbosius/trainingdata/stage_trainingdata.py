@@ -30,7 +30,7 @@ def main(dataset : str, input : str, batchdist_n : int, output : str):
         
         data = pickle.load(open(f"{path}/batch_{n}.pkl", "rb"))
         
-        rm, feature_names = gen_data.rulemaker(data)    
+        rm, feature_names = gen_data.rulemaker(data)
     
         train_data = gen_data.do_weighting(data["train"], feature_names, rm)
         test_data = gen_data.do_weighting(data["test"], feature_names, rm)

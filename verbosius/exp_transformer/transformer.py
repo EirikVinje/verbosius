@@ -53,3 +53,6 @@ def transformer_pipeline(device,
     
     if not save_model:
         os.system(f"rm -rf {output_dir}")
+
+
+    return  res["eval_sequence_accuracy"] + res["eval_token_accuracy"]
