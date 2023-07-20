@@ -6,7 +6,7 @@ import os
 import numpy as np
 import green_tsetlin as gt
 
-from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.feature_selection import SelectKBest, chi2, mutual_info_classif
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 from collections import Counter
@@ -31,7 +31,7 @@ def objective(trial, train_x, train_y, test_x, test_y, n_jobs):
     num_clauses = trial.suggest_int("num_clauses", 4000, 10000)
     s = trial.suggest_float("s", 3, 10)
     threshold = 9225
-    literal_budget = trial.suggest_int("literal_budget", 5, 20)
+    literal_budget = trial.suggest_int("literal_budget", 5, 15)
     max_df = 0.5232
     min_df = 21
     ngram_range = (1,2)
@@ -47,15 +47,19 @@ def objective(trial, train_x, train_y, test_x, test_y, n_jobs):
     
 
 
-    train_x = vectorizer.fit_transform([" ".join(x) for x in train_x_store]).todense()
-    test_x = vectorizer.transform([" ".join(x) for x in test_x_store]).todense()
+    train_x = vectorizer.fit_transform([" ".join(x) for x in train_x_store])
+    test_x = vectorizer.transform([" ".join(x) for x in test_x_store])
+
+    # train_x = np.asarray(train_x)
+    # test_x = np.asarray(test_x)
 
 
-    SKB = SelectKBest(chi2, k=5000)
+    SKB = SelectKBest(mutual_info_classif, k=5000)
     SKB.fit(train_x, train_y)
     selected_features = SKB.get_support(indices=True)
     train_x = SKB.transform(train_x).toarray()
     test_x = SKB.transform(test_x).toarray()
+
 
     
 
@@ -64,12 +68,12 @@ def objective(trial, train_x, train_y, test_x, test_y, n_jobs):
                            n_classes=2,
                            s=s,
                            n_literal_budget=literal_budget)
-    
+
     tm.set_train_data(train_x, train_y)
     tm.set_test_data(test_x, test_y)
 
     trainer = gt.Trainer(threshold=threshold, 
-                         n_epochs=7, # turned down from 10, as all the good results were found in the first 7 epochs in the first run
+                         n_epochs=5, # turned down from 10, as all the good results were found in the first 7 epochs in the first run
                          n_jobs=n_jobs,
                          early_exit_acc=1.0)
     
@@ -121,7 +125,7 @@ if __name__ == '__main__':
     
     obj_func = lambda trial: objective(trial, train_x, train_y, test_x, test_y, args.n_jobs)
 
-    study = optuna.create_study(study_name="imdb_hp_1_tm_selectkbest", direction="maximize", storage="sqlite:///imdb_tm_skb.db", load_if_exists=True)
+    study = optuna.create_study(study_name="test_imdb_hp_1_tm_selectkbest_mutual_info_classif", direction="maximize", storage="sqlite:///imdb_tm_skb.db", load_if_exists=True)
     study.optimize(obj_func, n_trials=args.n_trials, show_progress_bar=True)
 
     print(study.best_params)
