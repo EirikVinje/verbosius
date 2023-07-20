@@ -4,6 +4,7 @@ import torch
 import numpy as np
 
 from torch import nn
+from torch.nn.utils.rnn import pad_sequence
 from transformers.modeling_outputs import TokenClassifierOutput
 from transformers import AutoModel
 from transformers import DataCollatorWithPadding
@@ -214,31 +215,55 @@ def extend_data(data, new_batch):
     return data
 
 
+#def custom_data_collator(batch_input):
+#
+#    max_len = max([len(batch["input_ids"]) for batch in batch_input])
+#
+#    for i, inst in enumerate(batch_input):
+#
+#        inst["input_ids"].extend(np.ones(max_len - len(inst["input_ids"]), dtype=np.int64))
+#
+#        inst["attention_mask"].extend(np.zeros(max_len - len(inst["attention_mask"]), dtype=np.int64))
+#        
+#        inst["labels"].extend(np.zeros(max_len - len(inst["labels"]), dtype=np.int64))
+#
+#        inst["targets"].extend(np.zeros(max_len - len(inst["targets"]), dtype=np.int64))
+#        
+#        assert len(inst["input_ids"]) == max_len
+#        assert len(inst["attention_mask"]) == max_len
+#        assert len(inst["labels"]) == max_len
+#        assert len(inst["targets"]) == max_len
+#
+#    new_batch_input = {
+#        "input_ids": torch.tensor([inst["input_ids"] for inst in batch_input]).to(config.device),
+#        "attention_mask": torch.tensor([inst["attention_mask"] for inst in batch_input]).to(config.device),
+#        "labels": torch.tensor([inst["labels"] for inst in batch_input]).to(config.device),
+#        "targets": torch.tensor([inst["targets"] for inst in batch_input]).to(config.device),
+#        "sentiment": torch.tensor([inst["sentiment"] for inst in batch_input]).to(config.device)
+#    }
+#
+#    return new_batch_input
+
+
 def custom_data_collator(batch_input):
+    
+    input_ids = [torch.tensor(inst["input_ids"], dtype=torch.long) for inst in batch_input]
+    attention_mask = [torch.tensor(inst["attention_mask"], dtype=torch.long) for inst in batch_input]
+    labels = [torch.tensor(inst["labels"], dtype=torch.long) for inst in batch_input]
+    targets = [torch.tensor(inst["targets"], dtype=torch.long) for inst in batch_input]
+    sentiment = [torch.tensor(inst["sentiment"], dtype=torch.long) for inst in batch_input]
 
-    max_len = max([len(batch["input_ids"]) for batch in batch_input])
-
-    for i, inst in enumerate(batch_input):
-
-        inst["input_ids"].extend(np.ones(max_len - len(inst["input_ids"]), dtype=np.int64))
-
-        inst["attention_mask"].extend(np.zeros(max_len - len(inst["attention_mask"]), dtype=np.int64))
-        
-        inst["labels"].extend(np.zeros(max_len - len(inst["labels"]), dtype=np.int64))
-
-        inst["targets"].extend(np.zeros(max_len - len(inst["targets"]), dtype=np.int64))
-        
-        assert len(inst["input_ids"]) == max_len
-        assert len(inst["attention_mask"]) == max_len
-        assert len(inst["labels"]) == max_len
-        assert len(inst["targets"]) == max_len
+    input_ids = pad_sequence(input_ids, batch_first=True, padding_value=1)
+    attention_mask = pad_sequence(attention_mask, batch_first=True, padding_value=0)
+    labels = pad_sequence(labels, batch_first=True, padding_value=-100)
+    targets = pad_sequence(targets, batch_first=True, padding_value=0)
 
     new_batch_input = {
-        "input_ids": torch.tensor([inst["input_ids"] for inst in batch_input]).to(config.device),
-        "attention_mask": torch.tensor([inst["attention_mask"] for inst in batch_input]).to(config.device),
-        "labels": torch.tensor([inst["labels"] for inst in batch_input]).to(config.device),
-        "targets": torch.tensor([inst["targets"] for inst in batch_input]).to(config.device),
-        "sentiment": torch.tensor([inst["sentiment"] for inst in batch_input]).to(config.device)
+        "input_ids": input_ids.to(config.device),
+        "attention_mask": attention_mask.to(config.device),
+        "labels": labels.to(config.device),
+        "targets": targets.to(config.device),
+        "sentiment": torch.stack(sentiment).to(config.device)
     }
 
     return new_batch_input
