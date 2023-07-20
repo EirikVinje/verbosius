@@ -49,6 +49,9 @@ def dataset_checker(dataset):
 
 def batchdist_checker(n_batchdist, input, dataset):
 
+    if n_batchdist[0] > n_batchdist[1]:
+        raise argparse.ArgumentTypeError(f"Invalid interval, {n_batchdist[0]} is larger than {n_batchdist[1]}")
+
     if n_batchdist[1] != -1:
 
         for i in range(n_batchdist[0], n_batchdist[1]):
@@ -89,6 +92,8 @@ def save_checker(save_model):
 
 
 def n_batch_dist_checker(batchdist_range):
+
+    print(type(batchdist_range))
     
     regex = re.compile(r"\((\d+),(\d+)\)")
 
@@ -99,7 +104,7 @@ def n_batch_dist_checker(batchdist_range):
 
     batchdist_range = tuple(map(int, batchdist_range.strip("()").split(",")))
     if batchdist_range[0] < 0 or batchdist_range[1] < 0:
-        raise argparse.ArgumentTypeError(f"Invalid n_batch_dist, must be tuple interval, e.g (0,-1) is all batchdistros")
+        raise argparse.ArgumentTypeError(f"Invalid intervals in n_batch_dist")
     
     return batchdist_range
 

@@ -38,8 +38,7 @@ def clean_text(textdata):
     _no_multiple_quotes_pattern = re.compile(r"'+")
     _no_multiple_spaces_pattern = re.compile(r"  +")
 
-    print("Cleaning text...")
-    for i in tqdm(range(len(textdata))):
+    for i in range(len(textdata)):
     
         textdata[i] = strip_html(textdata[i])
         textdata[i] = textdata[i].lower()
@@ -49,7 +48,6 @@ def clean_text(textdata):
         textdata[i] = _no_multiple_spaces_pattern.sub(" ", textdata[i])
         textdata[i] = textdata[i].strip()
 
-    print()
     return textdata
 
 
@@ -78,7 +76,7 @@ def lemmatize(texts : list, cores:int = 4, lemmatizer : str = "en_core_web_sm"):
     labels : list
         List of labels to each document
     """
-    print("Lemmatizing text...")
+    
     nlp = spacy.load(lemmatizer)
     docs = nlp.pipe(texts, n_process=cores) 
 
@@ -86,12 +84,11 @@ def lemmatize(texts : list, cores:int = 4, lemmatizer : str = "en_core_web_sm"):
     tokens = []
     lemmas = []
 
-    for doc in tqdm(docs):
+    for doc in docs:
 
         tokens.append([token.text for token in doc])
         lemmas.append([token.lemma_.lower() for token in doc])
 
-    print()
     return texts, tokens, lemmas
 
 
@@ -115,8 +112,7 @@ def map_tokens(stexts : list, tokens : list):
 
     ids = []
 
-    print("Mapping tokens...")
-    for i in tqdm(range(len(stexts))):
+    for i in range(len(stexts)):
         
         id = []
         topw = 0
@@ -154,7 +150,6 @@ def map_tokens(stexts : list, tokens : list):
 
         ids.append(id)
 
-    print()
     return ids
 
 

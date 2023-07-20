@@ -8,10 +8,10 @@ preproc_input_path= os.path.join(root, "imdb_raw")
 preproc_output_path= os.path.join(root, "imdb/preprocess")
 
 dataset="imdb"
-batch_size=500
-batch_amount=4
+batch_size=100
+batch_amount=3
 use_test_set=True
-batch_size_test = 250
+batch_size_test = 30
 shuffle=True
 seed=42
 
@@ -21,7 +21,7 @@ seed=42
 traindat_input_path= os.path.join(root, "imdb/preprocess")
 traindat_output_path= os.path.join(root, "imdb/trainingdata")
 
-batchdist_n=0
+batchdist_n=1
 
 # TM PARAMS
 MAX_DF=0.5263
@@ -43,7 +43,9 @@ device="cpu"
 model_name_ = "distilroberta-base"
 tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True, device=device)
 
-batchdist_range = (0,5)
+save_model = True
+
+batchdist_range = "\(1,2\)"
 final_input_dir = os.path.join(root, "imdb/trainingdata")
 final_output_dir = os.path.join(root, "imdb/models")
 
