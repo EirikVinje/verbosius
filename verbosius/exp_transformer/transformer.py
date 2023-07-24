@@ -2,7 +2,7 @@ import os
 
 from transformers import TrainingArguments, Trainer
 
-import helper_functions as hf
+import exp_transformer.helper_functions as hf
 import config as config
 
 def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenizer):
@@ -34,7 +34,6 @@ def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenize
         per_device_train_batch_size = per_device_train_batch_size,
         per_device_eval_batch_size = per_device_eval_batch_size,
         num_train_epochs = num_train_epochs,
-        weight_decay = weight_decay,
         evaluation_strategy = evaluation_strategy,
         save_strategy = save_strategy,
         warmup_steps = warmup_steps,
@@ -58,4 +57,4 @@ def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenize
         os.system(f"rm -rf {output_dir}")
 
 
-    return  res["eval_sequence_accuracy"] + res["eval_token_accuracy"]
+    return  res["eval_sequence_accuracy"], res["eval_token_accuracy"]

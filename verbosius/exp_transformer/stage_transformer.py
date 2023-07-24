@@ -10,20 +10,20 @@ import exp_transformer.transformer as tf
 
 def main(dataset : str, input : str, output : str, save_model : str, batchdist_n : tuple):
     
-    dists = os.listdir(input)
+    dists = sorted(os.listdir(input))
     batch_dists = dists[batchdist_n[0]:batchdist_n[1]]
 
     train_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
     test_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
     
     tokenizer = config.tokenizer
-    
+
     for dist in batch_dists:
 
         path = os.path.join(input, dist)
         dir = os.listdir(path)
         n_batches = len(dir)
-        for n in range(n_batches):
+        for n in range(n_batches): 
             
             data = pickle.load(open(f"{path}/batch_{n}.pkl", "rb"))
             new_train_batch = hf.tokenize_and_align_labels(data["train"], tokenizer) 
@@ -36,7 +36,8 @@ def main(dataset : str, input : str, output : str, save_model : str, batchdist_n
     train_data = hf.Dataset(**train_data)
     test_data = hf.Dataset(**test_data)    
     
-    tf.transformer_pipeline(output, train_data, test_data, save_model, tokenizer)
+    seq_acc, tok_acc = tf.transformer_pipeline(output, train_data, test_data, save_model, tokenizer)
+    return seq_acc, tok_acc
 
 
 def dataset_checker(dataset):

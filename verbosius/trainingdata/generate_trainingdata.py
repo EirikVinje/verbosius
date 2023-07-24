@@ -5,6 +5,7 @@ import os
 
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_selection import SelectKBest, chi2, mutual_info_classif
 import torch
 import green_tsetlin as gt
 
@@ -38,7 +39,7 @@ def rulemaker(data):
     train_y = np.array(train_y, dtype=np.uint32)
     test_y = np.array(test_y, dtype=np.uint32)
 
-    vectorizer = CountVectorizer(max_features=config.MAX_FEATURES,
+    vectorizer = CountVectorizer(max_features=config.MAX_FEATURES*6,
                                  max_df=config.MAX_DF, 
                                  min_df=config.MIN_DF,
                                  ngram_range=config.N_GRAM_RANGE,
@@ -48,17 +49,25 @@ def rulemaker(data):
     
     train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x])
     test_x_bin = vectorizer.transform([" ".join(x) for x in test_x])
-    feature_names = vectorizer.get_feature_names_out()
+    _feature_names = vectorizer.get_feature_names_out()
+
+    SKB = SelectKBest(chi2, k=config.MAX_FEATURES)
+    SKB.fit(train_x_bin, train_y)
+    feature_names = SKB.get_feature_names_out(input_features=_feature_names)
+    assert feature_names.all() == _feature_names[SKB.get_support(indices=True)].all()
+
+    train_x_bin = SKB.transform(train_x_bin).toarray()
+    test_x_bin = SKB.transform(test_x_bin).toarray()
 
 
     tm = gt.TsetlinMachine(n_literals=train_x_bin.shape[1], 
                            n_clauses=config.NUMBER_OF_CLAUSES, 
                            n_classes=data["n_classes"],
-                           s=config.S, 
+                           s=config.S,
                            n_literal_budget=config.LITERAL_BUDGET)
 
-    train_x_bin = train_x_bin.todense()
-    test_x_bin = test_x_bin.todense()
+    # train_x_bin = train_x_bin.todense()
+    # test_x_bin = test_x_bin.todense()
 
     for i in range(len(data["train"])):
         data["train"][i]["bin"] = train_x_bin[i]
@@ -71,8 +80,8 @@ def rulemaker(data):
     
     trainer = gt.Trainer(config.T, 
                          n_epochs=config.TM_EPOCHS, 
-                         seed=32, 
-                         n_jobs=6, 
+                         seed=42, 
+                         n_jobs=config.N_JOBS, 
                          early_exit_acc=config.EARLY_STOP_ACC,
                          progress_bar=False)
 

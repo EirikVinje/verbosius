@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from tqdm import tqdm
 
-import generate_trainingdata as gen_data
+import trainingdata.generate_trainingdata as gen_data
 import config as config
 
 
@@ -31,6 +31,7 @@ def main(dataset : str, input : str, batchdist_n : int, output : str):
         data = pickle.load(open(f"{path}/batch_{n}.pkl", "rb"))
         
         rm, feature_names = gen_data.rulemaker(data)
+        
     
         train_data = gen_data.do_weighting(data["train"], feature_names, rm)
         test_data = gen_data.do_weighting(data["test"], feature_names, rm)
@@ -41,7 +42,6 @@ def main(dataset : str, input : str, batchdist_n : int, output : str):
                 "n_classes" : data["n_classes"]}
         print(len(data["train"]))
         gen_data.write_data(data, output, dataset, batchdist_n, n)
-
 
 
 def dataset_checker(dataset):
