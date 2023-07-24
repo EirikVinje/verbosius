@@ -188,6 +188,7 @@ def tokenize_and_align_labels(data, tokenizer):
                 label_ids.append(-100)
 
             previous_word_idx = word_idx
+
         targets.append(target_ids)
         labels.append(label_ids)
     
@@ -215,34 +216,38 @@ def extend_data(data, new_batch):
     return data
 
 
-#def custom_data_collator(batch_input):
-#
-#    max_len = max([len(batch["input_ids"]) for batch in batch_input])
-#
-#    for i, inst in enumerate(batch_input):
-#
-#        inst["input_ids"].extend(np.ones(max_len - len(inst["input_ids"]), dtype=np.int64))
-#
-#        inst["attention_mask"].extend(np.zeros(max_len - len(inst["attention_mask"]), dtype=np.int64))
-#        
-#        inst["labels"].extend(np.zeros(max_len - len(inst["labels"]), dtype=np.int64))
-#
-#        inst["targets"].extend(np.zeros(max_len - len(inst["targets"]), dtype=np.int64))
-#        
-#        assert len(inst["input_ids"]) == max_len
-#        assert len(inst["attention_mask"]) == max_len
-#        assert len(inst["labels"]) == max_len
-#        assert len(inst["targets"]) == max_len
-#
-#    new_batch_input = {
-#        "input_ids": torch.tensor([inst["input_ids"] for inst in batch_input]).to(config.device),
-#        "attention_mask": torch.tensor([inst["attention_mask"] for inst in batch_input]).to(config.device),
-#        "labels": torch.tensor([inst["labels"] for inst in batch_input]).to(config.device),
-#        "targets": torch.tensor([inst["targets"] for inst in batch_input]).to(config.device),
-#        "sentiment": torch.tensor([inst["sentiment"] for inst in batch_input]).to(config.device)
-#    }
-#
-#    return new_batch_input
+def tokenize_to_model(data, tokenizer, device):
+    
+
+    tokenized_inputs = tokenizer([data], 
+                                 truncation=True, 
+                                 padding="longest", 
+                                 return_tensors='pt',
+                                 max_length=512,
+                                 )
+    
+    word_ids = tokenized_inputs.word_ids(batch_index=0)  
+    previous_word_idx = None
+    target_ids = []
+    
+    for word_idx in word_ids:  
+        
+        if word_idx is None:
+            target_ids.append(0)
+
+        elif word_idx != previous_word_idx: 
+            target_ids.append(1)
+
+        else:
+            target_ids.append(0)
+
+        previous_word_idx = word_idx
+    
+    tokenized_inputs["targets"] = torch.tensor([target_ids]).to(device = device)
+    tokenized_inputs["input_ids"]= tokenized_inputs["input_ids"].to(device = device) 
+    tokenized_inputs["attention_mask"] = tokenized_inputs["attention_mask"].to(device = device) 
+    
+    return tokenized_inputs
 
 
 def custom_data_collator(batch_input):
