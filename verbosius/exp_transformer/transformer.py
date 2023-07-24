@@ -1,6 +1,7 @@
 import os
 
 from transformers import TrainingArguments, Trainer
+import torch
 
 import helper_functions as hf
 import config as config
@@ -56,3 +57,7 @@ def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenize
     
     if not save_model:
         os.system(f"rm -rf {output_dir}")
+
+    else:
+        os.system(f"rm -rf {output_dir}")
+        torch.save(model, output_dir)
