@@ -3,9 +3,9 @@ import pickle
 import os
 import re
 
-import config as config
-import exp_transformer.helper_functions as hf
-import exp_transformer.transformer as tf
+import verbosius.config as config
+import verbosius.xai_transformer.helper_functions as hf
+import verbosius.xai_transformer.transformer as tf
 
 
 def main(dataset : str, input : str, output : str, save_model : str, batchdist_n : tuple):

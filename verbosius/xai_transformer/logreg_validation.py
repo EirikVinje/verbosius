@@ -5,13 +5,12 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 
-
-import preprocessing.datasource as datasource
-import preprocessing.preprocess as preprocess
-import preprocessing.stage as stage
-import trainingdata.generate_trainingdata as gen_data
-import exp_transformer.helper_functions as hf
-import config as config
+import verbosius.preprocessing.datasource as datasource
+import verbosius.preprocessing.preprocess as preprocess
+import verbosius.preprocessing.stage as stage
+import verbosius.trainingdata.generate_trainingdata as gen_data
+import verbosius.xai_transformer.helper_functions as hf
+import verbosius.config as config
 
 
 def make_vocabulary(token_predictions, input_ids, attention_mask, tokenizer):
@@ -106,6 +105,8 @@ def validate():
     test_x_cleaned = preprocess.clean_text(test_x)
 
     model = torch.load("/home/kolla/data/verbosius/imdb/models/imdb_model_0")
+
+    print("Model loaded")
 
     token_preds = []
     input_ids = []
