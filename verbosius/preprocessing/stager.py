@@ -5,9 +5,9 @@ import argparse
 import numpy as np
 from tqdm import tqdm
 
-import verbosius.preprocessing.preprocess as preprocess
-import verbosius.preprocessing.datasource as datasource
-import verbosius.preprocessing.stage as stage
+import preprocessing.preprocess as preprocess
+import preprocessing.datasource as datasource
+import preprocessing.stage as stage
 
 
 def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, output:str, test:bool, test_size:float, use_test_set:bool, batch_size_test:int, batch_amount_test:int, seed:int, shuffle:bool):

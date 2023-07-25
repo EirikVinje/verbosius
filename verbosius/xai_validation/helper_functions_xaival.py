@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import datasets
+from tqdm import tqdm
 
 import config as config
 
@@ -77,7 +78,7 @@ def get_prediction_outputs(model, x, batch_size_pred):
     with torch.no_grad():
         
         j = 0
-        for i in range(batch_size_pred, len(x), batch_size_pred):
+        for i in tqdm(range(batch_size_pred, len(x), batch_size_pred)):
             
             if i + batch_size_pred > len(x):
                 i = -1

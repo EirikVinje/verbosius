@@ -3,8 +3,10 @@ import os
 from transformers import TrainingArguments, Trainer
 import torch
 
-import helper_functions as hf
 import config as config
+import xai_transformer.xai_model as xm
+import xai_transformer.helper_functions as hf
+
 
 def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenizer):
     
@@ -26,7 +28,7 @@ def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenize
     num_labels = config.num_labels
     num_seq_labels = config.num_seq_labels
 
-    model = hf.CustomModel(num_labels, num_seq_labels, neutral_weight, loss_weight)
+    model = xm.CustomModel(num_labels, num_seq_labels, neutral_weight, loss_weight)
     model = model.to(device = device)
 
     training_args = TrainingArguments(
@@ -53,7 +55,6 @@ def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenize
         data_collator=hf.custom_data_collator)
 
     trainer.train()
-    res = trainer.evaluate()
     
     if not save_model:
         os.system(f"rm -rf {output_dir}")
