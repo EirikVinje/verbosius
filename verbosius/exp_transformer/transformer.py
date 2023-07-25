@@ -1,4 +1,5 @@
 import os
+import torch
 
 from transformers import TrainingArguments, Trainer
 
@@ -28,6 +29,8 @@ def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenize
     model = hf.CustomModel(num_labels, num_seq_labels, neutral_weight, loss_weight)
     model = model.to(device = device)
 
+    
+
     training_args = TrainingArguments(
         output_dir = output_dir,
         learning_rate = learning_rate,
@@ -41,6 +44,8 @@ def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenize
         eval_accumulation_steps = eval_accumulation_steps,
         label_names = label_names)
 
+    training_args = training_args.set_dataloader(pin_memory=False)
+
     trainer = Trainer(
         model=model,
         args=training_args,
@@ -51,6 +56,7 @@ def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenize
         data_collator=hf.custom_data_collator)
 
     trainer.train()
+    
     res = trainer.evaluate()
     
     if not save_model:

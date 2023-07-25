@@ -28,8 +28,8 @@ def objective(trial):
     literal_budget = 8
 
     lr = trial.suggest_float("lr", 1e-5, 5e-5)
-    neutral_w = trial.suggest_float("neutral_w", 0, 0.6)
-    loss_w = trial.suggest_float("loss_w", 0, 0.6)
+    neutral_w = trial.suggest_float("neutral_w", 0.1, 0.6)
+    loss_w = trial.suggest_float("loss_w", 0.1, 0.6)
     
     config.NUMBER_OF_CLAUSES = num_clauses
     config.S = s
@@ -50,13 +50,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Hyperparameter optimization for IMDB dataset on complete pipeline")
     parser.add_argument("--n_trials", type=int, default=100, help="Number of trials to run")
     parser.add_argument("--n_jobs", type=int, default=1, help="Number of jobs to run in parallel")
-    parser.add_argument("--device", type=str, default="cpu", help="Device to run on, either 'cpu' or 'cuda'")
+    parser.add_argument("--device", type=str, default="cuda", help="Device to run on, either 'cpu' or 'cuda'")
     
     config.device = parser.parse_args().device
 
     config.N_JOBS = parser.parse_args().n_jobs
-
-    study = optuna.create_study(study_name="complete_pipeline_hp_split_output", directions=["maximize", "maximize"], storage="sqlite:///imdb_tm_pipe.db", load_if_exists=True)
+    config.batchdist_n = 2
+    study = optuna.create_study(study_name="complete_pipeline_hp_split_output_TEST", directions=["maximize", "maximize"], storage="sqlite:///imdb_tm_pipe.db", load_if_exists=True)
     study.optimize(objective, n_trials=parser.parse_args().n_trials, show_progress_bar=True)
     print(study.best_params)
     print(study.best_value)

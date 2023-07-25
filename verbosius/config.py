@@ -41,7 +41,7 @@ N_JOBS = 5
 
 # *************** TRANSFORMER ***************
 
-device="cpu"
+device="cuda"
 model_name_ = "distilroberta-base"
 tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True, device=device)
 
@@ -52,8 +52,8 @@ final_input_dir = os.path.join(root, "store_imdb_trainingdata")
 final_output_dir = os.path.join(root, "imdb_final_output")
 
 learning_rate = 2e-5
-per_device_train_batch_size = 4
-per_device_eval_batch_size = 4
+per_device_train_batch_size = 16
+per_device_eval_batch_size = 8
 num_train_epochs = 5
 weight_decay = 0.01
 evaluation_strategy = "epoch"
