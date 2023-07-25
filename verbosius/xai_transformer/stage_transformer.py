@@ -4,19 +4,30 @@ import os
 import re
 
 import config as config
-import exp_transformer.helper_functions as hf
-import exp_transformer.transformer as tf
+import xai_transformer.helper_functions as hf
+import xai_transformer.transformer as tf
 
 
 def main(dataset : str, input : str, output : str, save_model : str, batchdist_n : tuple):
-    
-    dists = sorted(os.listdir(input))
-    batch_dists = dists[batchdist_n[0]:batchdist_n[1]]
+
+    path = os.path.join(output, f"{dataset}_model_{len(os.listdir(output))}")
+    if not os.path.exists(path):
+        os.mkdir(path)
+    output = path
+
+    dists = os.listdir(input)
+
+    batch_dists = dists[batchdist_n[0]:batchdist_n[1]] if batchdist_n[1] != -1 else dists[batchdist_n[0]:]
 
     train_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
     test_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
     
     tokenizer = config.tokenizer
+
+    print("Batchdistros: ")
+    for dist in batch_dists:
+        print(dist)
+    print()
 
     for dist in batch_dists:
 
@@ -33,6 +44,9 @@ def main(dataset : str, input : str, output : str, save_model : str, batchdist_n
             test_data = hf.extend_data(test_data, new_test_batch)
 
 
+    print("Train size: ", len(train_data["input_ids"]))
+    print("Test size: ", len(test_data["input_ids"]))
+
     train_data = hf.Dataset(**train_data)
     test_data = hf.Dataset(**test_data)    
     
@@ -47,25 +61,22 @@ def dataset_checker(dataset):
     return dataset.lower()
 
 
-def batchdist_checker(n_batchdist, input, dataset):
+def batchdist_checker(batchdist_range, input, dataset):
 
-    if n_batchdist[0] > n_batchdist[1]:
-        raise argparse.ArgumentTypeError(f"Invalid interval, {n_batchdist[0]} is larger than {n_batchdist[1]}")
+    if batchdist_range[1] != -1:
 
-    if n_batchdist[1] != -1:
-
-        for i in range(n_batchdist[0], n_batchdist[1]):
+        for i in range(batchdist_range[0], batchdist_range[1]):
             if not os.path.exists(os.path.join(input, f"{dataset}_batchdist_{i}")):
                 raise argparse.ArgumentTypeError(f"Invalid batch dist, batch dist {i} does not exist")
 
-    elif n_batchdist[1] == -1:
+    elif batchdist_range[1] == -1:
         
         dir = os.listdir(input)
         n = len(dir)
 
-        for i in range(n_batchdist[0], n):
+        for i in range(batchdist_range[0], n):
             if not os.path.exists(os.path.join(input, f"{dataset}_batchdist_{i}")):
-                raise argparse.ArgumentTypeError(f"Invalid batch dist, batch dist {n_batchdist[0]} does not exist")
+                raise argparse.ArgumentTypeError(f"Invalid batch dist, batch dist {batchdist_range[0]} does not exist")
 
 
 def input_checker(input):
@@ -93,9 +104,7 @@ def save_checker(save_model):
 
 def n_batch_dist_checker(batchdist_range):
 
-    print(type(batchdist_range))
-    
-    regex = re.compile(r"\((\d+),(\d+)\)")
+    regex = re.compile(r"\((\d+),(-?\d+)\)")
 
     match = regex.match(batchdist_range)
 
@@ -103,8 +112,11 @@ def n_batch_dist_checker(batchdist_range):
         raise argparse.ArgumentTypeError(f"Invalid n_batch_dist, must be tuple interval, e.g (0,-1) is all batchdistros and on the exact form (int,int)")
 
     batchdist_range = tuple(map(int, batchdist_range.strip("()").split(",")))
-    if batchdist_range[0] < 0 or batchdist_range[1] < 0:
+    if batchdist_range[0] < 0:
         raise argparse.ArgumentTypeError(f"Invalid intervals in n_batch_dist")
+    
+    if batchdist_range[0] > batchdist_range[1] and batchdist_range[1] != -1:
+        raise argparse.ArgumentTypeError(f"Invalid interval, {batchdist_range[0]} is larger than {batchdist_range[1]}")
     
     return batchdist_range
 
