@@ -7,8 +7,8 @@ import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from tqdm import tqdm
 
-import verbosius.trainingdata.generate_trainingdata as gen_data
-import verbosius.config as config
+import trainingdata.generate_trainingdata as gen_data
+import config as config
 
 
 def main(dataset : str, input : str, batchdist_n : int, output : str):
