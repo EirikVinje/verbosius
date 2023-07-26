@@ -41,13 +41,20 @@ def main(model_path : str, model_name : str, batch_size_pred : int):
     train_x_bin = vectorizer.fit_transform(train_x_cleaned)
     test_x_bin = vectorizer.transform(test_x_cleaned)
 
-    logreg = LogisticRegression()
+    logreg = LogisticRegression(verbose=1, 
+                                max_iter=1000, 
+                                penalty='l2', 
+                                random_state=42, 
+                                C=0.092705530127623, 
+                                tol=0.748258213506498)
     logreg.fit(train_x_bin, train_y)
     log_res =  accuracy_score(test_y, logreg.predict(test_x_bin))
     
     print("-----------------------------------------------------------")
     print("accuracy / explanation score: ", round(log_res, 4))
     print("-----------------------------------------------------------")
+
+    return log_res
 
 
 def input_checker(input):

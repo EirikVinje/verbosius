@@ -52,6 +52,7 @@ def rulemaker(data):
     _feature_names = vectorizer.get_feature_names_out()
 
     SKB = SelectKBest(chi2, k=config.MAX_FEATURES)
+
     SKB.fit(train_x_bin, train_y)
     feature_names = SKB.get_feature_names_out(input_features=_feature_names)
     assert feature_names.all() == _feature_names[SKB.get_support(indices=True)].all()

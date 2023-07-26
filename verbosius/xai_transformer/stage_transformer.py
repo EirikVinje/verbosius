@@ -15,7 +15,7 @@ def main(dataset : str, input : str, output : str, save_model : str, batchdist_n
         os.mkdir(path)
     output = path
 
-    dists = os.listdir(input)
+    dists = sorted(os.listdir(input))
 
     batch_dists = dists[batchdist_n[0]:batchdist_n[1]] if batchdist_n[1] != -1 else dists[batchdist_n[0]:]
 
