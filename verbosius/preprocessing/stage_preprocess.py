@@ -63,11 +63,15 @@ def stage_preprocess(dataset:str, batch_size:int, batch_amount_per_mix:int, inpu
                                                     n_batches_per_mix = batch_amount_per_mix,
                                                     batch_size = batch_size,
                                                     path = input,
-                                                    test = test,
+                                                    validation = True,
                                                     use_test_set=use_test_set,
                                                     test_batch_size=batch_size_test,
                                                     test_batches_per_mix=batch_amount_test,
                                                     test_size=test_size,
+                                                    use_val_set=False,
+                                                    val_batch_size=-1,
+                                                    val_batches_per_mix=-1,
+                                                    val_size=.5,
                                                     shuffle=shuffle,
                                                     seed=seed)
     

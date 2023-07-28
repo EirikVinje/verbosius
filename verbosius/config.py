@@ -3,56 +3,60 @@ import os
 
 # *************** PREPROSESSING *************** 
 
-root = os.path.expanduser("~/data/verbosius")
-preproc_input_path= os.path.join(root, "imdb_raw")
-preproc_output_path= os.path.join(root, "imdb/preprocess")
 
-dataset="imdb"
-batch_size=100
-batch_amount=3
+dataset="sst5"
+root = os.path.expanduser("~/data/verbosius")
+preproc_input_path= os.path.join(root, f"{dataset}/{dataset}_raw")
+preproc_output_path= os.path.join(root, f"{dataset}/preprocess")
+
+batch_size=8544
+batch_amount=1
 use_test_set=True
-batch_size_test = 30
+batch_size_test = 2210
 shuffle=True
 seed=42
 
 
 # *************** GENERATE TRAINING DATA ***************
 
-traindat_input_path= os.path.join(root, "imdb/preprocess")
-traindat_output_path= os.path.join(root, "imdb/trainingdata")
+traindat_input_path= os.path.join(root, f"{dataset}/preprocess")
+traindat_output_path= os.path.join(root, f"{dataset}/trainingdata")
 
-batchdist_n=4
+batchdist_n=0
+
 
 # TM PARAMS
-MAX_DF=0.5263
-MIN_DF=21
-MAX_FEATURES=5000
-N_GRAM_RANGE=(1, 3)
-NUMBER_OF_CLAUSES=500 #5853
+MAX_DF=0.6
+MIN_DF=15
+MAX_FEATURES=1400
+N_GRAM_RANGE=(1, 2)
+NUMBER_OF_CLAUSES=9000 #5853
 LITERAL_BUDGET=8
 S=3.4606
 T=9225
-TM_EPOCHS=1
+TM_EPOCHS=4
 EARLY_STOP_ACC=0.86
 STOPWORDS=None #"english"
+N_JOBS = 5
 
 
 # *************** TRANSFORMER ***************
 
-device="cpu"
+device="cuda:0"
 model_name_ = "distilroberta-base"
 tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True, device=device)
 
 save_model = True
 
 batchdist_range = "\(1,2\)"
-final_input_dir = os.path.join(root, "imdb/trainingdata")
-final_output_dir = os.path.join(root, "imdb/models")
+final_input_dir = os.path.join(root, f"{dataset}/trainingdata")
+final_output_dir = os.path.join(root, f"{dataset}/models")
 
-learning_rate = 2e-5
-per_device_train_batch_size = 4
-per_device_eval_batch_size = 4
-num_train_epochs = 1
+
+learning_rate = 1.539e-5
+per_device_train_batch_size = 16
+per_device_eval_batch_size = 16
+num_train_epochs = 5
 weight_decay = 0.01
 evaluation_strategy = "epoch"
 save_strategy = "epoch"
@@ -60,7 +64,7 @@ warmup_steps = 500
 load_best_model_at_end = True
 eval_accumulation_steps = 16
 label_names = ['labels', 'sentiment']
-neutral_weight = 0.5
-loss_weight = 0.5
+neutral_weight = 0.3897 #
+loss_weight = 0.4154 #
 num_labels = 3
-num_seq_labels = 2
+num_seq_labels = 5

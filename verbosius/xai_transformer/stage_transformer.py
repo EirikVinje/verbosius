@@ -38,7 +38,7 @@ def stage_transformer(dataset : str, input : str, output : str, save_model : str
         os.mkdir(path)
     output = path
 
-    dists = os.listdir(input)
+    dists = sorted(os.listdir(input))
 
     batch_dists = dists[batchdist_n[0]:batchdist_n[1]] if batchdist_n[1] != -1 else dists[batchdist_n[0]:]
 
@@ -77,8 +77,8 @@ def stage_transformer(dataset : str, input : str, output : str, save_model : str
     train_data = hf.Dataset(**train_data)
     val_data = hf.Dataset(**val_data) if val_data != None else None
     
-    tf.transformer_pipeline(output, train_data, test_data, save_model, tokenizer, val_data)
-
+    seq_acc, tok_acc = tf.transformer_pipeline(output, train_data, test_data, save_model, tokenizer, val_data)
+    return seq_acc, tok_acc
 
 def dataset_checker(dataset):
     valid_datasets = ['imdb', 'rottentomatoes', 'amazon']
