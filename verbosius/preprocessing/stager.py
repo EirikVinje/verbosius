@@ -54,11 +54,16 @@ def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, outpu
         token_ids_test_x = preprocess.map_tokens(split_test_x, token_test_x)
 
         # stage data
-        train_data = stage.stage_data(cleaned_train_x, split_train_x, token_train_x, lemma_train_x, token_ids_train_x, train_y)
-        test_data = stage.stage_data(cleaned_test_x, split_test_x, token_test_x, lemma_test_x, token_ids_test_x, test_y)
+        train_data = stage.stage_data(cleaned_train_x, split_train_x, token_train_x, lemma_train_x, token_ids_train_x, train_y, ds.train_all_labels)
+        test_data = stage.stage_data(cleaned_test_x, split_test_x, token_test_x, lemma_test_x, token_ids_test_x, test_y, ds.test_all_labels)
+
+       
 
         # write data
-        data = {"train": train_data, "test": test_data, "distributer" : dataset, "n_classes" : n_classes}
+        if n_classes == 2:
+            data = {"train": train_data, "test": test_data, "distributer" : dataset, "n_classes" : n_classes}
+        else:
+            data = {"train": train_data, "test": test_data, "distributer" : dataset, "n_classes" : n_classes}
         stage.write_data(data=data, path=new_batchdist)
         
     

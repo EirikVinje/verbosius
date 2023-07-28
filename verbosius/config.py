@@ -3,31 +3,32 @@ import os
 
 # *************** PREPROSESSING *************** 
 
-root = os.path.expanduser("~/data/verbosius")
-preproc_input_path= os.path.join(root, "imdb")
-preproc_output_path= os.path.join(root, "store_imdb_pickle")
 
-dataset="imdb"
-batch_size=100
-batch_amount=3
+dataset="sst5"
+root = os.path.expanduser("~/data/verbosius")
+preproc_input_path= os.path.join(root, f"{dataset}/{dataset}_raw")
+preproc_output_path= os.path.join(root, f"{dataset}/preprocess")
+
+batch_size=8544
+batch_amount=1
 use_test_set=True
-batch_size_test = 30
+batch_size_test = 2210
 shuffle=True
 seed=42
 
 
 # *************** GENERATE TRAINING DATA ***************
 
-traindat_input_path= os.path.join(root, "store_imdb_pickle")
-traindat_output_path= os.path.join(root, "store_imdb_trainingdata")
+traindat_input_path= os.path.join(root, f"{dataset}/preprocess")
+traindat_output_path= os.path.join(root, f"{dataset}/trainingdata")
 
-batchdist_n=2
+batchdist_n=0
 
 
 # TM PARAMS
 MAX_DF=0.6
 MIN_DF=15
-MAX_FEATURES=5000
+MAX_FEATURES=1400
 N_GRAM_RANGE=(1, 2)
 NUMBER_OF_CLAUSES=9000 #5853
 LITERAL_BUDGET=8
@@ -48,8 +49,8 @@ tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True, de
 save_model = True
 
 batchdist_range = "\(1,2\)"
-final_input_dir = os.path.join(root, "store_imdb_trainingdata")
-final_output_dir = os.path.join(root, "imdb_final_output")
+final_input_dir = os.path.join(root, f"{dataset}/trainingdata")
+final_output_dir = os.path.join(root, f"{dataset}/models")
 
 
 learning_rate = 1.539e-5
@@ -66,4 +67,4 @@ label_names = ['labels', 'sentiment']
 neutral_weight = 0.3897 #
 loss_weight = 0.4154 #
 num_labels = 3
-num_seq_labels = 2
+num_seq_labels = 5

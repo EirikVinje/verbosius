@@ -77,9 +77,12 @@ def compute_metrics(eval_preds):
     return output
 
 
-def tokenize_and_align_labels(data, tokenizer):
+def tokenize_and_align_labels(data, tokenizer, orig_labels:bool = False):
     
-    Y = np.array([i['sentiment'] for i in data])
+    if orig_labels:
+        Y = np.array([i['orig_label'] for i in data])
+    else:
+        Y = np.array([i['sentiment'] for i in data])
 
     tokenized_inputs = tokenizer([inst["tokens"] for inst in data], truncation=True, padding=False, is_split_into_words=True)
     

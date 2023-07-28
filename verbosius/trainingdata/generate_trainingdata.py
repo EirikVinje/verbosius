@@ -38,7 +38,7 @@ def rulemaker(data):
     
     train_y = np.array(train_y, dtype=np.uint32)
     test_y = np.array(test_y, dtype=np.uint32)
-
+    
     vectorizer = CountVectorizer(max_features=config.MAX_FEATURES*6,
                                  max_df=config.MAX_DF, 
                                  min_df=config.MIN_DF,
@@ -51,7 +51,7 @@ def rulemaker(data):
     test_x_bin = vectorizer.transform([" ".join(x) for x in test_x])
     _feature_names = vectorizer.get_feature_names_out()
 
-    SKB = SelectKBest(chi2, k=config.MAX_FEATURES)
+    SKB = SelectKBest(chi2, k='all')#config.MAX_FEATURES)
 
     SKB.fit(train_x_bin, train_y)
     feature_names = SKB.get_feature_names_out(input_features=_feature_names)
@@ -265,6 +265,7 @@ def do_weighting(data, feature_names, rm):
         lemmas_x = inst["lemmas"]
         tokens_x = inst["tokens"]
         tokenmap_x = inst["token_ids"]
+        orig_label = inst["orig_label"]
 
         prediction, expl = rm.predict(bin_x, explain=True)
 
@@ -277,10 +278,11 @@ def do_weighting(data, feature_names, rm):
             labels = label_tokens(y, weights_x)
 
             new_x = {"tokens" : newtokens_x,
-                     "weights" : weights_x,
-                     "text" : " ".join(newtokens_x),
-                     "sentiment" : y,
-                     "labels" : labels}
+                        "weights" : weights_x,
+                        "text" : " ".join(newtokens_x),
+                        "sentiment" : y,
+                        "labels" : labels,
+                        "orig_label" : orig_label}
 
             all_x.append(new_x)
 
