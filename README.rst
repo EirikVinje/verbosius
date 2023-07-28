@@ -2,27 +2,33 @@
 verbosius
 =========
 
+PREPROCESSING:
 
-ALLIGNING NGRAMS WEIGHTED FROM THE TM:
+The preprocessing module is used to preprocess the data. It is used to create the
+data in a format that is usable for the rest of the program. Checkpoints that the 
+data is passed through are:
 
-When alligning the ngrams, e.g we have the text "The cats were dancing all night".
-This may be converted to a row of ngrams like : ["the cats", "were", "dancing all night"] depending
-on what ngrams the countvectorizer captured. To each feature/ngram, a weight is made from the 
-"local weights" method from our thesis report. The feature "the cats" may have the weight 0.5 or any
-other number between -1.0 and 1.0. We always want to capture the largest ngram, so if there is a feature
-"the" and "cats", we rather take "the cats" if "the cats" is a feature. However, the weight from "the" and "cats" 
-is added to weight to "the cats".
+1. Reading the data from the source
 
-When converting to ngrams, we may end up with ngrams beeing intertwined, like : 
-["the cats", "cats were dancing", "were dancing all", "all night"]. 
+2. Batching it to a specific size and number
 
-Scenario 1, two bigrams next to eachother:
+3. Cleaning the text like removing punctuation, special characters, etc. which
+    results in the text being on lowercase and with words seperated by spaces.
 
-When we have two bigrams next to eachother where the last word of the first bigram is the first word
-in the second bigram, e.g [... "the cats", "cats were" ...], we convert it to a trigram, 
-e.g : [... "the cats were" ...]
+4. Lemmatizing the text, which results in the text being transformed to lemma form, e.g the word 
+    'running' becomes 'run' and the word 'havent' becomes 'have' 'not'.
 
-Scenario 2, intertwined trigram:
+5. Making a map of the words in a text, so we are able to backtrack and find e.g the two words 
+    [..."have", "not"....] belongs to the same word, namely "havent". 
+
+6. Staging the data, which means that the data is stored in a specific format, e.g. a pickle file
+    or a csv file. This is done to make it easier to load the data later on.
+
+
+TRAININGDATA:
+
+
+
 
 
 BATCHING DATA:
