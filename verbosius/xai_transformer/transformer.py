@@ -70,3 +70,6 @@ def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenize
     else:
         os.system(f"rm -rf {output_dir}")
         torch.save(model, output_dir)
+
+
+ 
