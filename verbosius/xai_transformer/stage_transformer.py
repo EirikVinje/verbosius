@@ -20,8 +20,9 @@ def main(dataset : str, input : str, output : str, save_model : str, batchdist_n
     batch_dists = dists[batchdist_n[0]:batchdist_n[1]] if batchdist_n[1] != -1 else dists[batchdist_n[0]:]
 
     train_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
-    test_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
-    
+    val_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
+    test_data = []
+
     tokenizer = config.tokenizer
 
     print("Batchdistros: ")
@@ -34,25 +35,27 @@ def main(dataset : str, input : str, output : str, save_model : str, batchdist_n
         path = os.path.join(input, dist)
         dir = os.listdir(path)
         n_batches = len(dir)
-        for n in range(n_batches): 
+        
+        for n in range(n_batches):
             
             data = pickle.load(open(f"{path}/batch_{n}.pkl", "rb"))
             new_train_batch = hf.tokenize_and_align_labels(data["train"], tokenizer) 
-            new_test_batch = hf.tokenize_and_align_labels(data["test"], tokenizer)
+            new_val_batch = hf.tokenize_and_align_labels(data["validation"], tokenizer) if data["validation"] != None else None
 
             train_data = hf.extend_data(train_data, new_train_batch)
-            test_data = hf.extend_data(test_data, new_test_batch)
+            val_data = hf.extend_data(val_data, new_val_batch) if data["validation"] != None else None
+            test_data.extend(data["test"])
 
 
     print("Train size: ", len(train_data["input_ids"]))
-    print("Test size: ", len(test_data["input_ids"]))
+    print("Test size: ", len(test_data))
+    print("Validation size: ", len(val_data["input_ids"])) if val_data["input_ids"] != [] else None
 
     train_data = hf.Dataset(**train_data)
-    test_data = hf.Dataset(**test_data)    
+    val_data = hf.Dataset(**val_data) if val_data != None else None
     
-    seq_acc, tok_acc = tf.transformer_pipeline(output, train_data, test_data, save_model, tokenizer)
+    seq_acc, tok_acc = tf.transformer_pipeline(output, train_data, test_data, save_model, tokenizer, val_data)
     return seq_acc, tok_acc
-
 
 def dataset_checker(dataset):
     valid_datasets = ['imdb', 'rottentomatoes', 'amazon']
