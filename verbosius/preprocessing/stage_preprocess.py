@@ -10,7 +10,52 @@ import preprocessing.datasource as datasource
 import preprocessing.stage as stage
 
 
-def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, output:str, test:bool, test_size:float, use_test_set:bool, batch_size_test:int, batch_amount_test:int, seed:int, shuffle:bool):
+def stage_preprocess(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, output:str, test:bool, test_size:float, use_test_set:bool, batch_size_test:int, batch_amount_test:int, seed:int, shuffle:bool):
+
+    """
+    Stage data for training
+
+    Parameters
+    ----------
+    dataset : str
+        Name of dataset to stage trainingdata for
+    
+    chuck_size : int
+        Set size for individual batch.
+    
+    chunk_amount : int
+        Set amount of batches to stage at a time. Minimum value is 1. Default value is 1.
+
+    input : str
+        Path to input data, must be the absolute path to a valid directory where the datafiles are located.
+    
+    output : str
+        Path to output data, must be a path to a directory that exists and is writable.
+    
+    test : bool
+        Set whether or not test data should also be prepared. Default value is true.
+    
+    test_size : float
+        Set the percentage size of the test data. If not sat test and train sizes will be equal.
+    
+    use_test_set : bool
+        Set whether or not your data has its own test set already, if test==True and use_test_set==False test data is extracted from the training data. Default value is false. If sat test_size will be ignored, and test batched will be extracted from the test set with same size and amount as for the training set. To change this set batch_size_test and batch_amount_test.
+    
+    chunk_size_test : int
+        Set size for individual batch, must be greater than 0. If sat test_size argument will be ignored.
+    
+    chunk_amount_test : int
+        Set amount of batches to stage at a time. Minimum value is 1.
+    
+    seed : int
+        Set seed for all randomizxation in batching. Default value is a random seed.
+    
+    shuffle : bool
+        Set whether or not to shuffle the data. Default value is true.
+        
+    """
+
+
 
     ds = datasource.dataset(dataset)
     ds = ds(two_cat=True)
@@ -185,4 +230,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
 
-    main(args.dataset, args.batch_size, args.batch_amount, args.input, args.output, args.test, args.test_size, args.use_test_set, args.batch_size_test, args.batch_amount_test, args.seed, args.shuffle)
+    stage_preprocess(args.dataset, args.batch_size, args.batch_amount, args.input, args.output, args.test, args.test_size, args.use_test_set, args.batch_size_test, args.batch_amount_test, args.seed, args.shuffle)

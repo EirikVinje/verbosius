@@ -8,7 +8,30 @@ import xai_transformer.helper_functions as hf
 import xai_transformer.transformer as tf
 
 
-def main(dataset : str, input : str, output : str, save_model : str, batchdist_n : tuple):
+def stage_transformer(dataset : str, input : str, output : str, save_model : str, batchdist_n : tuple):
+
+    """
+    
+    Train transformer on staged trainingdata
+
+    Parameters
+    ----------
+    dataset : str
+        Name of dataset to stage trainingdata for
+    
+    input : str
+        Path to batchdistros of dataset, must be the absolute path to a valid directory where the datafiles are located.
+    
+    output : str
+        Path to output model, must be a path to a directory that exists and is writable.
+    
+    save_model : str
+        Save model or not, either 'true' or 'false'.
+    
+    batchdist_n : tuple
+        Batchdist_n to stage trainingdata for, must use tuple interval, e.g (0,-1) is all batchdistros
+
+    """
 
     path = os.path.join(output, f"{dataset}_model_{len(os.listdir(output))}")
     if not os.path.exists(path):
