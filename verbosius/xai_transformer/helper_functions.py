@@ -77,9 +77,12 @@ def compute_metrics(eval_preds):
     return output
 
 
-def tokenize_and_align_labels(data, tokenizer):
+def tokenize_and_align_labels(data, tokenizer, orig_labels:bool = False):
     
-    Y = np.array([i['sentiment'] for i in data])
+    if orig_labels:
+        Y = np.array([i['orig_label'] for i in data])
+    else:
+        Y = np.array([i['sentiment'] for i in data])
 
     tokenized_inputs = tokenizer([inst["tokens"] for inst in data], truncation=True, padding=False, is_split_into_words=True)
     
@@ -184,6 +187,14 @@ def custom_data_collator(batch_input):
     attention_mask = pad_sequence(attention_mask, batch_first=True, padding_value=0)
     labels = pad_sequence(labels, batch_first=True, padding_value=-100)
     targets = pad_sequence(targets, batch_first=True, padding_value=0)
+    # print(input_ids.dtype, type(input_ids), input_ids.shape, input_ids.is_sparse, input_ids.get_device())
+    # print(attention_mask.dtype, type(attention_mask), attention_mask.shape, attention_mask.is_sparse, attention_mask.get_device())
+    # print(labels.dtype, type(labels), labels.shape, labels.is_sparse, labels.get_device())
+    # print(targets.dtype, type(targets), targets.shape, targets.is_sparse, targets.get_device())
+    
+    
+
+    
 
     new_batch_input = {
         "input_ids": input_ids.to(config.device),

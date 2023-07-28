@@ -26,7 +26,8 @@ def main(dataset : str, input : str, batchdist_n : int, output : str):
         
         data = pickle.load(open(f"{path}/batch_{n}.pkl", "rb"))
         
-        rm, feature_names = gen_data.rulemaker(data)    
+        rm, feature_names = gen_data.rulemaker(data)
+        
     
         train_data = gen_data.do_weighting(data["train"], feature_names, rm)
         val_data = gen_data.do_weighting(data["validation"], feature_names, rm) if data["validation"] != None else None
@@ -38,7 +39,6 @@ def main(dataset : str, input : str, batchdist_n : int, output : str):
                 "n_classes" : data["n_classes"]}
         
         gen_data.write_data(data, output, dataset, batchdist_n, n)
-
 
 
 def dataset_checker(dataset):

@@ -1,7 +1,7 @@
 import pickle
 import os
 
-def stage_data(cleaned_x, split_x, token_x, lemma_x, token_ids_x, y):
+def stage_data(cleaned_x, split_x, token_x, lemma_x, token_ids_x, y, orig_labels):
 
     data_dicts = []
     for i in range(len(y)):
@@ -11,7 +11,8 @@ def stage_data(cleaned_x, split_x, token_x, lemma_x, token_ids_x, y):
                     "tokens": token_x[i],
                     "lemmas": lemma_x[i],
                     "token_ids": token_ids_x[i],
-                    "label": y[i]}
+                    "label": y[i],
+                    "orig_label": orig_labels[i]}
 
         data_dicts.append(instance)
 

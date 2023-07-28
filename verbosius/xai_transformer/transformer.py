@@ -1,4 +1,5 @@
 import os
+import torch
 
 from transformers import TrainingArguments, Trainer
 import torch
@@ -32,13 +33,14 @@ def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenize
     model = xm.CustomModel(num_labels, num_seq_labels, neutral_weight, loss_weight)
     model = model.to(device = device)
 
+    
+
     training_args = TrainingArguments(
         output_dir = output_dir,
         learning_rate = learning_rate,
         per_device_train_batch_size = per_device_train_batch_size,
         per_device_eval_batch_size = per_device_eval_batch_size,
         num_train_epochs = num_train_epochs,
-        weight_decay = weight_decay,
         evaluation_strategy = evaluation_strategy,
         save_strategy = save_strategy,
         warmup_steps = warmup_steps,
@@ -46,6 +48,8 @@ def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenize
         eval_accumulation_steps = eval_accumulation_steps,
         label_names = label_names,
         )
+
+    training_args = training_args.set_dataloader(pin_memory=False)
 
     trainer = Trainer(
         model=model,
@@ -57,6 +61,7 @@ def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenize
         data_collator=hf.custom_data_collator)
 
     trainer.train()
+    res = trainer.evaluate()
 
     preds = trainer.predict(test_data)
 
@@ -66,7 +71,9 @@ def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenize
     
     if not save_model:
         os.system(f"rm -rf {output_dir}")
-
     else:
         os.system(f"rm -rf {output_dir}")
         torch.save(model, output_dir)
+
+
+    return  res["eval_sequence_accuracy"], res["eval_token_accuracy"]
