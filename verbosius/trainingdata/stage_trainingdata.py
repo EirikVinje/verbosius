@@ -2,7 +2,6 @@ import os
 import pickle 
 import argparse
 
-import green_tsetlin as gt
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from tqdm import tqdm
@@ -12,9 +11,6 @@ import config as config
 
 
 def main(dataset : str, input : str, batchdist_n : int, output : str):
-
-    tokenizer = config.tokenizer
-    device = config.device
 
     path = os.path.join(input, f"{dataset}_batchdist_{batchdist_n}")
 
@@ -33,10 +29,11 @@ def main(dataset : str, input : str, batchdist_n : int, output : str):
         rm, feature_names = gen_data.rulemaker(data)    
     
         train_data = gen_data.do_weighting(data["train"], feature_names, rm)
-        test_data = gen_data.do_weighting(data["test"], feature_names, rm)
+        val_data = gen_data.do_weighting(data["validation"], feature_names, rm) if data["validation"] != None else None
         
         data = {"train": train_data, 
-                "test": test_data, 
+                "validation": val_data,
+                "test": data["test"], 
                 "distributer" : dataset, 
                 "n_classes" : data["n_classes"]}
         

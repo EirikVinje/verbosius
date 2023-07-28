@@ -39,26 +39,34 @@ def main(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, outpu
         assert False, f"Directory {new_batchdist} already exists, please remove it before continuing" 
 
     print(f"Preprocessing {dataset} batchdist {n} with {batch_amount_per_mix} batches of size {batch_size}")
-    for (train_x, train_y, test_x, test_y) in tqdm(zip(batched_data[0], batched_data[1], batched_data[2], batched_data[3])):
+    
+    for (train_x, train_y, test_x, test_y, val_x, val_y) in tqdm(zip(batched_data[0], batched_data[1], batched_data[2], batched_data[3], batched_data[4], batched_data[5])):
 
         # clean the data from unwanted symbols and such
         cleaned_train_x = preprocess.clean_text(train_x)
-        cleaned_test_x = preprocess.clean_text(test_x)
+        cleaned_val_x = preprocess.clean_text(val_x) if val_x != None else None
 
         # lemmatize the data
         split_train_x, token_train_x, lemma_train_x = preprocess.lemmatize(cleaned_train_x, lemmatizer="en_core_web_sm")
-        split_test_x, token_test_x, lemma_test_x = preprocess.lemmatize(cleaned_test_x, lemmatizer="en_core_web_sm")
+        split_val_x, token_val_x, lemma_val_x = preprocess.lemmatize(cleaned_val_x, lemmatizer="en_core_web_sm") if val_x != None else None
 
         # get token maps
         token_ids_train_x = preprocess.map_tokens(split_train_x, token_train_x)
-        token_ids_test_x = preprocess.map_tokens(split_test_x, token_test_x)
+        token_ids_val_x = preprocess.map_tokens(split_val_x, token_val_x) if val_x != None else None
 
         # stage data
         train_data = stage.stage_data(cleaned_train_x, split_train_x, token_train_x, lemma_train_x, token_ids_train_x, train_y)
-        test_data = stage.stage_data(cleaned_test_x, split_test_x, token_test_x, lemma_test_x, token_ids_test_x, test_y)
+        val_data = stage.stage_data(cleaned_val_x, split_val_x, token_val_x, lemma_val_x, token_ids_val_x, val_y) if val_x != None else None
+
+        test_data = [{"text" : text, "label" : label} for text, label in zip(train_x, train_y)]
 
         # write data
-        data = {"train": train_data, "test": test_data, "distributer" : dataset, "n_classes" : n_classes}
+        data = {"train": train_data, 
+                "validation": val_data,
+                "test" : test_data,
+                "distributer" : dataset, 
+                "n_classes" : n_classes}
+        
         stage.write_data(data=data, path=new_batchdist)
         
     
