@@ -170,5 +170,5 @@ if __name__ == "__main__":
 
     batchdist_checker(args.batchdist_range, args.input, args.dataset)
 
-    main(args.dataset, args.input, args.output, args.save_model, args.batchdist_range)
+    stage_transformer(args.dataset, args.input, args.output, args.save_model, args.batchdist_range)
     

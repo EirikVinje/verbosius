@@ -296,7 +296,7 @@ def batch_data_multiclass(dataset,
 
 
 
-    un_batched_mix = dataset.load_data(path, test=test, test_size=test_size)
+    un_batched_mix = dataset.load_data(path, test=True, test_size=test_size)
     train_data, test_data, val_data = un_batched_mix
 
 
@@ -386,7 +386,7 @@ def batch_data_multiclass(dataset,
     else:
         train_x_split, train_y_split, test_x_split, test_y_split = [], [], [], []
         for i in range(n_batches_per_mix):
-            train_x_temp, train_y_temp, test_x_temp, test_y_temp = train_test_split(train_x[i], train_y[i], test_size=test_size, random_state=seed)
+            train_x_temp, test_x_temp, train_y_temp, test_y_temp = train_test_split(train_x[i], train_y[i], test_size=test_size, random_state=seed)
             train_x_split.append(train_x_temp)
             train_y_split.append(train_y_temp)
             test_x_split.append(test_x_temp)
@@ -438,7 +438,7 @@ def batch_data_multiclass(dataset,
     elif validation:
         test_x_split, test_y_split, val_x_split, val_y_split = [], [], [], []
         for i in range(n_batches_per_mix):
-            test_x_temp, test_y_temp, val_x_temp, val_y_temp = train_test_split(test_x[i], test_y[i], test_size=val_size, random_state=seed)
+            test_x_temp, val_x_temp, test_y_temp, val_y_temp = train_test_split(test_x[i], test_y[i], test_size=val_size, random_state=seed)
             test_x_split.append(test_x_temp)
             test_y_split.append(test_y_temp)
             val_x_split.append(val_x_temp)
@@ -448,6 +448,7 @@ def batch_data_multiclass(dataset,
         test_y = test_y_split
         val_x = val_x_split
         val_y = val_y_split
+
         return train_x, train_y, test_x, test_y, val_x, val_y, n_classes
         
 

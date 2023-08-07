@@ -10,7 +10,7 @@ import preprocessing.datasource as datasource
 import preprocessing.stage as stage
 
 
-def stage_preprocess(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, output:str, test:bool, test_size:float, use_test_set:bool, batch_size_test:int, batch_amount_test:int, seed:int, shuffle:bool):
+def stage_preprocess(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, output:str, test_size:float, use_test_set:bool, batch_size_test:int, batch_amount_test:int, seed:int, shuffle:bool):
 
     """
     Stage data for training
@@ -63,11 +63,11 @@ def stage_preprocess(dataset:str, batch_size:int, batch_amount_per_mix:int, inpu
                                                     n_batches_per_mix = batch_amount_per_mix,
                                                     batch_size = batch_size,
                                                     path = input,
-                                                    validation = True,
                                                     use_test_set=use_test_set,
                                                     test_batch_size=batch_size_test,
                                                     test_batches_per_mix=batch_amount_test,
                                                     test_size=test_size,
+                                                    validation = True,
                                                     use_val_set=False,
                                                     val_batch_size=-1,
                                                     val_batches_per_mix=-1,
@@ -89,11 +89,31 @@ def stage_preprocess(dataset:str, batch_size:int, batch_amount_per_mix:int, inpu
 
     print(f"Preprocessing {dataset} batchdist {n} with {batch_amount_per_mix} batches of size {batch_size}")
     
-    for (train_x, train_y, test_x, test_y, val_x, val_y) in tqdm(zip(batched_data[0], batched_data[1], batched_data[2], batched_data[3], batched_data[4], batched_data[5])):
+    print(f"Train : {len(batched_data[0])} | Test : {len(batched_data[2])} | Val : {len(batched_data[4])}")
+    
+    assert False, "Stop here"
+
+
+    for i, _ in enumerate(tqdm(range(len(batched_data[0])))):
+
+        train_x = batched_data[0][i]
+        train_y = batched_data[1][i]
+        test_x = batched_data[2][i]
+        test_y = batched_data[3][i]
+        val_x = batched_data[4][i]
+        val_y = batched_data[5][i]
+
+        
+
+    
+    
+        print("val x: ", val_x)
 
         # clean the data from unwanted symbols and such
         cleaned_train_x = preprocess.clean_text(train_x)
-        cleaned_val_x = preprocess.clean_text(val_x) if val_x != None else None
+        cleaned_val_x = preprocess.clean_text(val_x)
+
+        assert False, "Stop here"
 
         # lemmatize the data
         split_train_x, token_train_x, lemma_train_x = preprocess.lemmatize(cleaned_train_x, lemmatizer="en_core_web_sm")
@@ -107,7 +127,7 @@ def stage_preprocess(dataset:str, batch_size:int, batch_amount_per_mix:int, inpu
         train_data = stage.stage_data(cleaned_train_x, split_train_x, token_train_x, lemma_train_x, token_ids_train_x, train_y)
         val_data = stage.stage_data(cleaned_val_x, split_val_x, token_val_x, lemma_val_x, token_ids_val_x, val_y) if val_x != None else None
 
-        test_data = [{"text" : text, "label" : label} for text, label in zip(train_x, train_y)]
+        test_data = [{"text" : text, "label" : label} for text, label in zip(test_x, test_y)]
 
         # write data
         data = {"train": train_data, 
