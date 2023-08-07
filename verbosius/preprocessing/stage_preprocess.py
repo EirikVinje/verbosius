@@ -59,7 +59,7 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
     ds = datasource.dataset(dataset)
     ds = ds(two_cat=True)
     chunked_data = datasource.chunk_data_multiclass(dataset = ds,
-                                                    n_chunks_per_mix = chunk_amount_per_mix,
+                                                    n_chunks_per_mix=chunk_amount_per_mix,
                                                     chunk_size = chunk_size,
                                                     path = input,
                                                     use_test_set=use_test_set,
@@ -86,28 +86,20 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
 
     print(f"Preprocessing {dataset} chunkdist {n} with {chunk_amount_per_mix} chunks of size {chunk_size}")
     
+    print(f"Train : {len(chunked_data[0])} | Test : {len(chunked_data[2])} | Val : {len(chunked_data[4])}")
     print(len(chunked_data[0]), len(chunked_data[0][0]))
     print(len(chunked_data[2]), len(chunked_data[2][0]))
     print(len(chunked_data[4]), len(chunked_data[4][0]))
 
     
-    print(f"Train : {len(batched_data[0])} | Test : {len(batched_data[2])} | Val : {len(batched_data[4])}")
-    
-    assert False, "Stop here"
+    for i, _ in enumerate(tqdm(range(len(chunked_data[0])))):
 
-
-    for i, _ in enumerate(tqdm(range(len(batched_data[0])))):
-
-        train_x = batched_data[0][i]
-        train_y = batched_data[1][i]
-        test_x = batched_data[2][i]
-        test_y = batched_data[3][i]
-        val_x = batched_data[4][i]
-        val_y = batched_data[5][i]
-
-        
-
-    
+        train_x = chunked_data[0][i]
+        train_y = chunked_data[1][i]
+        test_x = chunked_data[2][i]
+        test_y = chunked_data[3][i]
+        val_x = chunked_data[4][i]
+        val_y = chunked_data[5][i]
     
         print("val x: ", val_x)
 
@@ -115,19 +107,19 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
         cleaned_train_x = preprocess.clean_text(train_x)
         cleaned_val_x = preprocess.clean_text(val_x)
 
-        assert False, "Stop here"
+        #assert False, "Stop here"
 
         # lemmatize the data
         split_train_x, token_train_x, lemma_train_x = preprocess.lemmatize(cleaned_train_x, lemmatizer="en_core_web_sm")
-        split_val_x, token_val_x, lemma_val_x = preprocess.lemmatize(cleaned_val_x, lemmatizer="en_core_web_sm") if val_x != None else None
+        split_val_x, token_val_x, lemma_val_x = preprocess.lemmatize(cleaned_val_x, lemmatizer="en_core_web_sm") 
 
         # get token maps
         token_ids_train_x = preprocess.map_tokens(split_train_x, token_train_x)
-        token_ids_val_x = preprocess.map_tokens(split_val_x, token_val_x) if val_x != None else None
+        token_ids_val_x = preprocess.map_tokens(split_val_x, token_val_x)
 
         # stage data
         train_data = stage.stage_data(cleaned_train_x, split_train_x, token_train_x, lemma_train_x, token_ids_train_x, train_y)
-        val_data = stage.stage_data(cleaned_val_x, split_val_x, token_val_x, lemma_val_x, token_ids_val_x, val_y) if val_x != None else None
+        val_data = stage.stage_data(cleaned_val_x, split_val_x, token_val_x, lemma_val_x, token_ids_val_x, val_y)
 
         test_data = [{"text" : text, "label" : label} for text, label in zip(test_x, test_y)]
 
