@@ -10,7 +10,7 @@ import trainingdata.generate_trainingdata as gen_data
 import config as config
 
 
-def main(dataset : str, input : str, batchdist_n : int, output : str):
+def stage_trainingdata(dataset : str, input : str, batchdist_n : int, output : str):
 
     path = os.path.join(input, f"{dataset}_batchdist_{batchdist_n}")
 
@@ -27,7 +27,6 @@ def main(dataset : str, input : str, batchdist_n : int, output : str):
         data = pickle.load(open(f"{path}/batch_{n}.pkl", "rb"))
         
         rm, feature_names = gen_data.rulemaker(data)
-        
     
         train_data = gen_data.do_weighting(data["train"], feature_names, rm)
         val_data = gen_data.do_weighting(data["validation"], feature_names, rm) if data["validation"] != None else None
@@ -98,4 +97,4 @@ if __name__ == "__main__":
 
     batchdist_n_checker(args.batchdist_n, args.input, args.dataset)
 
-    main(args.dataset, args.input, args.batchdist_n, args.output)
+    stage_trainingdata(args.dataset, args.input, args.batchdist_n, args.output)
