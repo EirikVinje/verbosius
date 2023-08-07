@@ -10,7 +10,11 @@ import preprocessing.datasource as datasource
 import preprocessing.stage as stage
 
 
+<<<<<<< HEAD
 def stage_preprocess(dataset:str, batch_size:int, batch_amount_per_mix:int, input:str, output:str, test_size:float, use_test_set:bool, batch_size_test:int, batch_amount_test:int, seed:int, shuffle:bool):
+=======
+def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, input:str, output:str, test:bool, test_size:float, use_test_set:bool, chunk_size_test:int, chunk_amount_test:int, seed:int, shuffle:bool):
+>>>>>>> f265d1ffc5e86ca56f46bbf73a97a413fc9acb8f
 
     """
     Stage data for training
@@ -21,10 +25,10 @@ def stage_preprocess(dataset:str, batch_size:int, batch_amount_per_mix:int, inpu
         Name of dataset to stage trainingdata for
     
     chuck_size : int
-        Set size for individual batch.
+        Set size for individual chunk.
     
     chunk_amount : int
-        Set amount of batches to stage at a time. Minimum value is 1. Default value is 1.
+        Set amount of chunks to stage at a time. Minimum value is 1. Default value is 1.
 
     input : str
         Path to input data, must be the absolute path to a valid directory where the datafiles are located.
@@ -39,16 +43,16 @@ def stage_preprocess(dataset:str, batch_size:int, batch_amount_per_mix:int, inpu
         Set the percentage size of the test data. If not sat test and train sizes will be equal.
     
     use_test_set : bool
-        Set whether or not your data has its own test set already, if test==True and use_test_set==False test data is extracted from the training data. Default value is false. If sat test_size will be ignored, and test batched will be extracted from the test set with same size and amount as for the training set. To change this set batch_size_test and batch_amount_test.
+        Set whether or not your data has its own test set already, if test==True and use_test_set==False test data is extracted from the training data. Default value is false. If sat test_size will be ignored, and test chunked will be extracted from the test set with same size and amount as for the training set. To change this set chunk_size_test and chunk_amount_test.
     
     chunk_size_test : int
-        Set size for individual batch, must be greater than 0. If sat test_size argument will be ignored.
+        Set size for individual chunk, must be greater than 0. If sat test_size argument will be ignored.
     
     chunk_amount_test : int
-        Set amount of batches to stage at a time. Minimum value is 1.
+        Set amount of chunks to stage at a time. Minimum value is 1.
     
     seed : int
-        Set seed for all randomizxation in batching. Default value is a random seed.
+        Set seed for all randomizxation in chunking. Default value is a random seed.
     
     shuffle : bool
         Set whether or not to shuffle the data. Default value is true.
@@ -59,35 +63,33 @@ def stage_preprocess(dataset:str, batch_size:int, batch_amount_per_mix:int, inpu
 
     ds = datasource.dataset(dataset)
     ds = ds(two_cat=True)
-    batched_data = datasource.batch_data_multiclass(dataset = ds,
-                                                    n_batches_per_mix = batch_amount_per_mix,
-                                                    batch_size = batch_size,
+    chunked_data = datasource.chunk_data_multiclass(dataset = ds,
+                                                    n_chunks_per_mix = chunk_amount_per_mix,
+                                                    chunk_size = chunk_size,
                                                     path = input,
                                                     use_test_set=use_test_set,
-                                                    test_batch_size=batch_size_test,
-                                                    test_batches_per_mix=batch_amount_test,
+                                                    test_chunk_size=chunk_size_test,
                                                     test_size=test_size,
                                                     validation = True,
                                                     use_val_set=False,
-                                                    val_batch_size=-1,
-                                                    val_batches_per_mix=-1,
+                                                    val_chunk_size=-1,
                                                     val_size=.5,
                                                     shuffle=shuffle,
                                                     seed=seed)
     
-    n_classes = batched_data[-1]
+    n_classes = chunked_data[-1]
     
     dir = os.listdir(output)
     n = len(dir)
-    new_batchdist = os.path.join(output, f"{dataset}_batchdist_{n}")
+    new_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{n}")
 
-    if not os.path.exists(new_batchdist):
-        os.mkdir(new_batchdist)
+    if not os.path.exists(new_chunkdist):
+        os.mkdir(new_chunkdist)
 
     else:
-        assert False, f"Directory {new_batchdist} already exists, please remove it before continuing" 
+        assert False, f"Directory {new_chunkdist} already exists, please remove it before continuing" 
 
-    print(f"Preprocessing {dataset} batchdist {n} with {batch_amount_per_mix} batches of size {batch_size}")
+    print(f"Preprocessing {dataset} chunkdist {n} with {chunk_amount_per_mix} chunks of size {chunk_size}")
     
     print(f"Train : {len(batched_data[0])} | Test : {len(batched_data[2])} | Val : {len(batched_data[4])}")
     
@@ -136,7 +138,7 @@ def stage_preprocess(dataset:str, batch_size:int, batch_amount_per_mix:int, inpu
                 "distributer" : dataset, 
                 "n_classes" : n_classes}
         
-        stage.write_data(data=data, path=new_batchdist)
+        stage.write_data(data=data, path=new_chunkdist)
         
     
 def dataset_checker(dataset):
@@ -146,22 +148,22 @@ def dataset_checker(dataset):
     return dataset.lower()
 
 
-def batch_size_checker(batch_size):
-    batch_size = int(batch_size)
+def chunk_size_checker(chunk_size):
+    chunk_size = int(chunk_size)
 
-    if batch_size <= 0:
-        raise argparse.ArgumentTypeError(f"Invalid batch size, batch size must be greater than 0")
+    if chunk_size <= 0:
+        raise argparse.ArgumentTypeError(f"Invalid chunk size, chunk size must be greater than 0")
 
-    return batch_size
+    return chunk_size
 
 
-def batch_amount_checker(batch_amount):
-    batch_amount = int(batch_amount)
+def chunk_amount_checker(chunk_amount):
+    chunk_amount = int(chunk_amount)
 
-    if batch_amount <= 0:
-        raise argparse.ArgumentTypeError(f"Invalid batch amount, batch amount must be greater than 0")
+    if chunk_amount <= 0:
+        raise argparse.ArgumentTypeError(f"Invalid chunk amount, chunk amount must be greater than 0")
     
-    return batch_amount
+    return chunk_amount
 
 
 def input_checker(input):
@@ -212,11 +214,11 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=dataset_checker, 
                         help="Dataset to stage")
     
-    parser.add_argument("--batch_size", type=batch_size_checker, nargs='?', default=10000,
-                        help="Set size for individual batch, must be greater than 0. Default value is 10000. If used together with a train/test - split this batch size will be split up into a train and test part accordingly. ")
+    parser.add_argument("--chunk_size", type=chunk_size_checker, nargs='?', default=10000,
+                        help="Set size for individual chunk, must be greater than 0. Default value is 10000. If used together with a train/test - split this chunk size will be split up into a train and test part accordingly. ")
     
-    parser.add_argument("--batch_amount", type=batch_amount_checker, nargs ='?', default=1,
-                        help="Set amount of batches to stage at a time. Minimum value is 1. Default value is 1.")
+    parser.add_argument("--chunk_amount", type=chunk_amount_checker, nargs ='?', default=1,
+                        help="Set amount of chunks to stage at a time. Minimum value is 1. Default value is 1.")
 
     parser.add_argument("--input", type=input_checker, 
                         help="Path to input data, must be the absolute path to a valid directory where the datafiles are located.")
@@ -231,16 +233,16 @@ if __name__ == "__main__":
                         help="Set the percentage size of the test data. If not sat test and train sizes will be equal.")
 
     parser.add_argument("--use_test_set", type=bool_checker, nargs='?', default=0,
-                        help="Set whether or not your data has its own test set already, if test==True and use_test_set==False test data is extracted from the training data. Default value is false. If sat test_size will be ignored, and test batched will be extracted from the test set with same size and amount as for the training set. To change this set batch_size_test and batch_amount_test.")
+                        help="Set whether or not your data has its own test set already, if test==True and use_test_set==False test data is extracted from the training data. Default value is false. If sat test_size will be ignored, and test chunked will be extracted from the test set with same size and amount as for the training set. To change this set chunk_size_test and chunk_amount_test.")
 
-    parser.add_argument("--batch_size_test", type=batch_size_checker, nargs='?', default=-1,
-                        help="Set size for individual batch, must be greater than 0. If sat test_size argument will be ignored.")
+    parser.add_argument("--chunk_size_test", type=chunk_size_checker, nargs='?', default=-1,
+                        help="Set size for individual chunk, must be greater than 0. If sat test_size argument will be ignored.")
 
-    parser.add_argument("--batch_amount_test", type=batch_amount_checker, nargs ='?', default=-1,
-                        help="Set amount of batches to stage at a time. Minimum value is 1.")
+    parser.add_argument("--chunk_amount_test", type=chunk_amount_checker, nargs ='?', default=-1,
+                        help="Set amount of chunks to stage at a time. Minimum value is 1.")
     
     parser.add_argument("--seed", type=int, nargs='?', default=np.random.randint(0, 99999999),
-                        help="Set seed for all randomizxation in batching. Default value is a random seed.")
+                        help="Set seed for all randomizxation in chunking. Default value is a random seed.")
     
     parser.add_argument("--shuffle", type=bool_checker, nargs='?', default=1,
                         help="Set whether or not to shuffle the data. Default value is true.")
@@ -250,4 +252,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
 
-    stage_preprocess(args.dataset, args.batch_size, args.batch_amount, args.input, args.output, args.test, args.test_size, args.use_test_set, args.batch_size_test, args.batch_amount_test, args.seed, args.shuffle)
+    stage_preprocess(args.dataset, args.chunk_size, args.chunk_amount, args.input, args.output, args.test, args.test_size, args.use_test_set, args.chunk_size_test, args.chunk_amount_test, args.seed, args.shuffle)
