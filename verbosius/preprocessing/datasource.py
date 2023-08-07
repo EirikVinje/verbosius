@@ -16,7 +16,8 @@ class IMDB:
     def __init__(self, two_cat : bool):
         
         self.two_cat = two_cat
-
+        self.exists_test_set = True
+        self.exists_validation_set = False
 
 
     def load_data(self, path: str, test: bool = False, test_size: float = 0.2):
@@ -63,6 +64,8 @@ class MNIST:
     """
     def __init__(self, two_cat : bool):
         self.two_cat = two_cat
+        self.exists_test_set = False
+        self.exists_validation_set = False
 
     def load_data(self, path: str, test: bool = False, test_size: float = 0.2):
         t0 = perf_counter()
@@ -102,6 +105,8 @@ class RottenTomatoes:
     def __init__(self, two_cat : bool):
         
         self.two_cat = two_cat
+        self.exists_test_set = True
+        self.exists_validation_set = True
 
     def load_data(self, path: str,test: bool = False, test_size: float = 0.2):
 
@@ -149,6 +154,8 @@ class SST5:
     def __init__(self, two_cat : bool):
         
         self.two_cat = two_cat
+        self.exists_test_set = True
+        self.exists_validation_set = True
 
     def load_data(self, path: str, test: bool = False, test_size: float = 0.2):
         dataset = ds.load_dataset("SetFit/sst5")
@@ -208,6 +215,8 @@ class Amazon:
     def __init__(self, two_cat : bool) -> None:
         
         self.two_cat = two_cat
+        self.exists_test_set = False
+        self.exists_validation_set = False
 
     def load_data(self, path: str):
 
@@ -243,10 +252,8 @@ def chunk_data_multiclass(dataset,
                           chunk_size : int, 
                           path : str, 
                           validation : bool = True,
-                          use_test_set: bool = False,
                           test_chunk_size: int = -1,
                           test_size: float = 0.2, 
-                          use_val_set: bool = False,
                           val_chunk_size: int = -1,
                           val_size: float = 0.5, shuffle : bool = True, seed : int = 42): # n_chunks_per_mix: int = -1, n_chunks_per_mix: int = -1, 
     
@@ -256,11 +263,11 @@ def chunk_data_multiclass(dataset,
     chunk_size : number of samples per chunk
     path : path to dataset
     test : whether to return test data
-    use_test_set : whether to use test set for training
+    dataset.exists_test_set : whether to use test set for training
     test_chunk_size : number of samples per test chunk, default is same as chunk_size but can be changed if you want different chunk size for the test data 
     
     test_size : size of test data, percentage of total data
-    use_val_set : whether to use validation set for training
+    dataset.exists_validation_set : whether to use validation set for training
     val_chunk_size : number of samples per validation chunk, default is same as chunk_size but can be changed if you want different chunk size for the validation data
     
     val_size : size of validation data if no set is provided and the sizes aren't specified. Using this variable will split the TEST DATA into two parts, one for validation and one for testing
@@ -272,7 +279,7 @@ def chunk_data_multiclass(dataset,
 
     orig_chunk_size = chunk_size
 
-    if not use_test_set and test_chunk_size == -1:        
+    if not dataset.exists_test_set and test_chunk_size == -1:        
         test_chunk_size = int(orig_chunk_size*test_size)
         chunk_size = chunk_size - test_chunk_size
     elif test_chunk_size == -1:
@@ -280,7 +287,7 @@ def chunk_data_multiclass(dataset,
 
 
 
-    if not use_val_set and val_chunk_size == -1:
+    if not dataset.exists_validation_set and val_chunk_size == -1:
         val_chunk_size = int(orig_chunk_size*val_size)
 
     elif val_chunk_size == -1:
@@ -349,7 +356,7 @@ def chunk_data_multiclass(dataset,
 
 
     # TEST DATA  vvvvvv
-    if use_test_set:
+    if dataset.exists_test_set:
         texts_test = test_data[:, 0]
         labels_test = test_data[:, 1]
 
@@ -405,7 +412,7 @@ def chunk_data_multiclass(dataset,
         test_y = test_y_split
 
         
-    if use_val_set:
+    if dataset.exists_validation_set and validation:
         texts_val = val_data[:, 0]
         labels_val = val_data[:, 1]
 

@@ -10,7 +10,7 @@ import preprocessing.datasource as datasource
 import preprocessing.stage as stage
 
 
-def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, input:str, output:str, test_size:float, use_test_set:bool, chunk_size_test:int, chunk_amount_test:int, seed:int, shuffle:bool):
+def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, input:str, output:str, test_size:float, validation:bool, chunk_size_test:int, seed:int, shuffle:bool):
 
     """
     Stage data for training
@@ -62,11 +62,9 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
                                                     n_chunks_per_mix = chunk_amount_per_mix,
                                                     chunk_size = chunk_size,
                                                     path = input,
-                                                    use_test_set=use_test_set,
                                                     test_chunk_size=chunk_size_test,
                                                     test_size=test_size,
-                                                    validation = True,
-                                                    use_val_set=False,
+                                                    validation = validation,
                                                     val_chunk_size=-1,
                                                     val_size=.5,
                                                     shuffle=shuffle,
@@ -91,19 +89,18 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
     print(len(chunked_data[4]), len(chunked_data[4][0]))
 
     
-    print(f"Train : {len(batched_data[0])} | Test : {len(batched_data[2])} | Val : {len(batched_data[4])}")
-    
-    assert False, "Stop here"
+    print(f"Train : {len(chunked_data[0])} | Test : {len(chunked_data[2])} | Val : {len(chunked_data[4])}")
 
 
-    for i, _ in enumerate(tqdm(range(len(batched_data[0])))):
 
-        train_x = batched_data[0][i]
-        train_y = batched_data[1][i]
-        test_x = batched_data[2][i]
-        test_y = batched_data[3][i]
-        val_x = batched_data[4][i]
-        val_y = batched_data[5][i]
+    for i, _ in enumerate(tqdm(range(len(chunked_data[0])))):
+
+        train_x = chunked_data[0][i]
+        train_y = chunked_data[1][i]
+        test_x = chunked_data[2][i]
+        test_y = chunked_data[3][i]
+        val_x = chunked_data[4][i]
+        val_y = chunked_data[5][i]
 
         
 
