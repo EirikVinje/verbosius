@@ -33,6 +33,9 @@ def clean_text(textdata):
 
     """
 
+    if type(textdata) == type(None):
+        return None
+
     _only_letters_pattern = re.compile(r"[^A-Za-z0-9']+")
     _no_long_numbers_pattern = re.compile(r'\d{3,}')
     _no_multiple_quotes_pattern = re.compile(r"'+")

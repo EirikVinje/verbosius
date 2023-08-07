@@ -33,8 +33,6 @@ def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenize
     model = xm.CustomModel(num_labels, num_seq_labels, neutral_weight, loss_weight)
     model = model.to(device = device)
 
-    
-
     training_args = TrainingArguments(
         output_dir = output_dir,
         learning_rate = learning_rate,
