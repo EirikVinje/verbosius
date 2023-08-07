@@ -84,7 +84,7 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
 
     print(f"Preprocessing {dataset} chunkdist {n} with {chunk_amount_per_mix} chunks of size {chunk_size}")
     
-    print(f"Train : {len(chunked_data[0])} | Test : {len(chunked_data[2])} | Val : {len(chunked_data[4])}")
+    print(f"Train : {len(chunked_data[0][0])} | Test : {len(chunked_data[2][0])} | Val : {len(chunked_data[4])}")
     print(len(chunked_data[0]), len(chunked_data[0][0]))
     print(len(chunked_data[2]), len(chunked_data[2][0]))
     print(len(chunked_data[4]), len(chunked_data[4][0]))
@@ -96,16 +96,12 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
         train_y = chunked_data[1][i]
         test_x = chunked_data[2][i]
         test_y = chunked_data[3][i]
-        val_x = chunked_data[4][i]
-        val_y = chunked_data[5][i]
-    
-        print("val x: ", val_x)
+        val_x = chunked_data[4][i] if chunked_data[4] is not None else None
+        val_y = chunked_data[5][i] if chunked_data[5] is not None else None
 
         # clean the data from unwanted symbols and such
         cleaned_train_x = preprocess.clean_text(train_x)
         cleaned_val_x = preprocess.clean_text(val_x)
-
-        #assert False, "Stop here"
 
         # lemmatize the data
         split_train_x, token_train_x, lemma_train_x = preprocess.lemmatize(cleaned_train_x, lemmatizer="en_core_web_sm")
@@ -242,4 +238,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
 
-    stage_preprocess(args.dataset, args.chunk_size, args.chunk_amount, args.input, args.output, args.test, args.test_size, args.use_test_set, args.chunk_size_test, args.chunk_amount_test, args.seed, args.shuffle)
+    stage_preprocess(args.dataset, args.chunk_size, args.chunk_amount, args.input, args.output, args.test, args.test_size, args.use_test_set, args.chunk_size_test, args.seed, args.shuffle)
