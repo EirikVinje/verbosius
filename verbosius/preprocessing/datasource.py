@@ -248,7 +248,7 @@ def chunk_data_multiclass(dataset,
                           test_size: float = 0.2, 
                           use_val_set: bool = False,
                           val_chunk_size: int = -1,
-                          val_size: float = 0.5, shuffle : bool = True, seed : int = 42): # test_chunks_per_mix: int = -1, val_chunks_per_mix: int = -1, 
+                          val_size: float = 0.5, shuffle : bool = True, seed : int = 42): # n_chunks_per_mix: int = -1, n_chunks_per_mix: int = -1, 
     
     """
     dataset : dataset class
@@ -258,11 +258,11 @@ def chunk_data_multiclass(dataset,
     test : whether to return test data
     use_test_set : whether to use test set for training
     test_chunk_size : number of samples per test chunk, default is same as chunk_size but can be changed if you want different chunk size for the test data 
-    test_chunks_per_mix : number of test chunks per mix, again default is same as n_chunks_per_mix but can be changed if you want different number of test chunks
+    
     test_size : size of test data, percentage of total data
     use_val_set : whether to use validation set for training
     val_chunk_size : number of samples per validation chunk, default is same as chunk_size but can be changed if you want different chunk size for the validation data
-    val_chunks_per_mix : number of validation chunks per mix, again default is same as n_chunks_per_mix but can be changed if you want different number of validation chunks
+    
     val_size : size of validation data if no set is provided and the sizes aren't specified. Using this variable will split the TEST DATA into two parts, one for validation and one for testing
     shuffle : whether to shuffle data
     seed : random seed
@@ -277,24 +277,19 @@ def chunk_data_multiclass(dataset,
         chunk_size = chunk_size - test_chunk_size
     elif test_chunk_size == -1:
         test_chunk_size = chunk_size
-    
 
-    if test_chunks_per_mix == -1:
-        test_chunks_per_mix = n_chunks_per_mix
 
 
     if not use_val_set and val_chunk_size == -1:
         val_chunk_size = int(orig_chunk_size*val_size)
-        chunk_size = chunk_size - val_chunk_size
+
     elif val_chunk_size == -1:
         val_chunk_size = test_chunk_size
 
-    if val_chunks_per_mix == -1:
-        val_chunks_per_mix = test_chunks_per_mix
 
 
 
-    un_chunked_mix = dataset.load_data(path, test=test, test_size=test_size)
+    un_chunked_mix = dataset.load_data(path, test_size=test_size)
     train_data, test_data, val_data = un_chunked_mix
 
 
@@ -315,12 +310,15 @@ def chunk_data_multiclass(dataset,
     # min_count = [3310, 1624, 3610]
     _bal_count = chunk_size//n_classes
     _min_count = Counter(labels_train)
-    if _bal_count < min(_min_count, key=_min_count.get):
-        min_count = _min_count
+    print(_bal_count)
+    print(_min_count[min(_min_count)])
+    if _bal_count < _min_count[min(_min_count)]:
+        print('yo')
         for i in unique_classes:
-            min_count[i] = _bal_count
-
-
+            _min_count[i] = _bal_count
+    min_count = _min_count
+    print(min_count)
+    
     if shuffle:
         rng = np.random.default_rng(seed)
         for indicies in indicies_class_train:
@@ -363,10 +361,10 @@ def chunk_data_multiclass(dataset,
 
         _bal_count = chunk_size//n_classes
         _min_count = Counter(labels_test)
-        if _bal_count < min(_min_count, key=_min_count.get):
-            min_count = _min_count
+        if _bal_count < _min_count[min(_min_count)]:
             for i in unique_classes:
-                min_count[i] = _bal_count
+                _min_count[i] = _bal_count
+        min_count = _min_count
 
         if shuffle:
             rng = np.random.default_rng(seed)
@@ -375,11 +373,11 @@ def chunk_data_multiclass(dataset,
 
         split_ind_test = []
         for index,  elem in enumerate(unique_classes):
-            split_ind_test.append(np.array_split(indicies_class_test[i][:min_count[elem]*test_chunks_per_mix], test_chunks_per_mix))
+            split_ind_test.append(np.array_split(indicies_class_test[i][:min_count[elem]*n_chunks_per_mix], n_chunks_per_mix))
 
         test_x = []
         test_y = []
-        for i in range(test_chunks_per_mix):
+        for i in range(n_chunks_per_mix):
             split_ind = np.array([], dtype=int)
             split_ind = np.concatenate((split_ind, split_ind_test[0][i]))
             for index in range(1, n_classes):
@@ -417,10 +415,11 @@ def chunk_data_multiclass(dataset,
 
         _bal_count = chunk_size//n_classes
         _min_count = Counter(labels_val)
-        if _bal_count < min(_min_count, key=_min_count.get):
-            min_count = _min_count
+        if _bal_count < _min_count[min(_min_count)]:
             for i in unique_classes:
-                min_count[i] = _bal_count
+                _min_count[i] = _bal_count
+        min_count = _min_count
+
 
         if shuffle:
             rng = np.random.default_rng(seed)
@@ -429,11 +428,11 @@ def chunk_data_multiclass(dataset,
 
         split_ind_val = []
         for index,  elem in enumerate(unique_classes):
-            split_ind_val.append(np.array_split(indicies_class_val[i][:min_count[elem]*val_chunks_per_mix], val_chunks_per_mix))
+            split_ind_val.append(np.array_split(indicies_class_val[i][:min_count[elem]*n_chunks_per_mix], n_chunks_per_mix))
 
         val_x = []
         val_y = []
-        for i in range(val_chunks_per_mix):
+        for i in range(n_chunks_per_mix):
             split_ind = np.array([], dtype=int)
             split_ind = np.concatenate((split_ind, split_ind_val[0][i]))
             for index in range(1, n_classes):
@@ -458,8 +457,6 @@ def chunk_data_multiclass(dataset,
             val_x_split.append(val_x_temp)
             val_y_split.append(val_y_temp)
         
-        test_x = test_x_split
-        test_y = test_y_split
         val_x = val_x_split
         val_y = val_y_split
         return train_x, train_y, test_x, test_y, val_x, val_y, n_classes

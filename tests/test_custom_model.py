@@ -1,17 +1,21 @@
-from verbosius.preprocessing.stage_preprocess import stage_preprocess
-from verbosius.trainingdata.stage_trainingdata import stage_trainingdata
-from verbosius.xai_transformer.stage_transformer import stage_transformer
+from preprocessing.stage_preprocess import stage_preprocess
+
 
 
 def test_custom_model():
     
     # Stage preprocess
-    stage_preprocess("sst2", "data/sst2", "data/sst2_preprocessed")
+    stage_preprocess(dataset="imdb", 
+                     chunk_size=100, 
+                     chunk_amount_per_mix=1, 
+                     input="", 
+                     output="/home/bigtech/data/verbosius/imdb/preprocess", 
+                     test_size=0.3, 
+                     use_test_set=True, 
+                     seed=42, 
+                     shuffle=True,
+                     chunk_size_test=-1,
+                     chunk_amount_test=-1,)
     
-    # Stage trainingdata
-    stage_trainingdata("sst2", "data/sst2_preprocessed", 0, "data/sst2_trainingdata")
-    
-    # Stage transformer
-    stage_transformer("sst2", "data/sst2_trainingdata", "data/sst2_transformer", "true", (0, -1))
-    
-    # Test transformer
+if __name__ == '__main__':
+    test_custom_model()

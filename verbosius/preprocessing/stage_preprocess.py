@@ -10,7 +10,7 @@ import preprocessing.datasource as datasource
 import preprocessing.stage as stage
 
 
-def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, input:str, output:str, test:bool, test_size:float, use_test_set:bool, chunk_size_test:int, chunk_amount_test:int, seed:int, shuffle:bool):
+def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, input:str, output:str, test_size:float, use_test_set:bool, chunk_size_test:int, chunk_amount_test:int, seed:int, shuffle:bool):
 
     """
     Stage data for training
@@ -56,7 +56,6 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
     """
 
 
-
     ds = datasource.dataset(dataset)
     ds = ds(two_cat=True)
     chunked_data = datasource.chunk_data_multiclass(dataset = ds,
@@ -87,6 +86,13 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
 
     print(f"Preprocessing {dataset} chunkdist {n} with {chunk_amount_per_mix} chunks of size {chunk_size}")
     
+    print(len(chunked_data[0]), len(chunked_data[0][0]))
+    print(len(chunked_data[2]), len(chunked_data[2][0]))
+    print(len(chunked_data[4]), len(chunked_data[4][0]))
+
+    
+    assert False
+
     for (train_x, train_y, test_x, test_y, val_x, val_y) in tqdm(zip(chunked_data[0], chunked_data[1], chunked_data[2], chunked_data[3], chunked_data[4], chunked_data[5])):
 
         # clean the data from unwanted symbols and such
