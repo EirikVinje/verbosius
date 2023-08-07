@@ -7,16 +7,16 @@ def test_custom_model():
     
     # Stage preprocess
     stage_preprocess(dataset="imdb", 
-                     batch_size=100, 
-                     batch_amount_per_mix=1, 
+                     chunk_size=100, 
+                     chunk_amount_per_mix=1, 
                      input="", 
                      output="/home/kolla/data/verbosius/imdb/preprocess", 
                      test_size=0.3, 
                      use_test_set=True, 
                      seed=42, 
                      shuffle=True,
-                     batch_size_test=-1,
-                     batch_amount_test=-1,)
+                     chunk_size_test=-1
+                     )
     
     assert False, "Stop here"
 
