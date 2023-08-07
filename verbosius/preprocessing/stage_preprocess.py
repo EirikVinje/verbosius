@@ -10,7 +10,7 @@ import preprocessing.datasource as datasource
 import preprocessing.stage as stage
 
 
-def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, input:str, output:str, use_test_set:bool, chunk_size_test:int, seed:int, shuffle:bool, test_size:float=0.0):
+def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, input:str, output:str, test_size:float, validation:bool, chunk_size_test:int, seed:int, shuffle:bool):
 
     """
     Stage data for training
@@ -62,11 +62,9 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
                                                     n_chunks_per_mix=chunk_amount_per_mix,
                                                     chunk_size = chunk_size,
                                                     path = input,
-                                                    use_test_set=use_test_set,
                                                     test_chunk_size=chunk_size_test,
                                                     test_size=test_size,
-                                                    validation = True,
-                                                    use_val_set=False,
+                                                    validation = validation,
                                                     val_chunk_size=-1,
                                                     val_size=.5,
                                                     shuffle=shuffle,
