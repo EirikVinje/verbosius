@@ -84,12 +84,6 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
 
     print(f"Preprocessing {dataset} chunkdist {n} with {chunk_amount_per_mix} chunks of size {chunk_size}")
     
-    print(f"Train : {len(chunked_data[0][0])} | Test : {len(chunked_data[2][0])} | Val : {len(chunked_data[4])}")
-    print(len(chunked_data[0]), len(chunked_data[0][0]))
-    print(len(chunked_data[2]), len(chunked_data[2][0]))
-    print(len(chunked_data[4]), len(chunked_data[4][0]))
-
-    
     for i, _ in enumerate(tqdm(range(len(chunked_data[0])))):
 
         train_x = chunked_data[0][i]
@@ -112,8 +106,8 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
         token_ids_val_x = preprocess.map_tokens(split_val_x, token_val_x)
 
         # stage data
-        train_data = stage.stage_data(cleaned_train_x, split_train_x, token_train_x, lemma_train_x, token_ids_train_x, train_y)
-        val_data = stage.stage_data(cleaned_val_x, split_val_x, token_val_x, lemma_val_x, token_ids_val_x, val_y)
+        train_data = stage.stage_data(cleaned_train_x, split_train_x, token_train_x, lemma_train_x, token_ids_train_x, train_y, ds.train_all_labels)
+        val_data = stage.stage_data(cleaned_val_x, split_val_x, token_val_x, lemma_val_x, token_ids_val_x, val_y, ds.val_all_labels)
 
         test_data = [{"text" : text, "label" : label} for text, label in zip(test_x, test_y)]
 
@@ -123,6 +117,10 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
                 "test" : test_data,
                 "distributer" : dataset, 
                 "n_classes" : n_classes}
+        
+        print(data)
+
+        assert False, "Stop here"
         
         stage.write_data(data=data, path=new_chunkdist)
         
