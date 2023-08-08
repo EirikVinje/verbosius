@@ -3,21 +3,44 @@ from trainingdata.stage_trainingdata import stage_trainingdata
 from xai_transformer.stage_transformer import stage_transformer
 
 
+
+
+
 def test_custom_model():
     
+    
+    
+    # Stage trainingdata
+    stage_trainingdata(dataset="imdb",
+                       input="/home/kolla/data/verbosius/imdb/preprocess",
+                       chunkdist_n=0,
+                       output="/home/kolla/data/verbosius/imdb/trainingdata",
+                       )
+    
+    assert False, "Stop here"
+
+    # Stage transformer
+    stage_transformer(dataset="imdb",
+                      input="/home/kolla/data/verbosius/imdb/trainingdata",
+                      output="/home/kolla/data/verbosius/imdb/models",
+                      save_model=False,
+                      chunkdist_n=(0,-1)
+                      )
+
+
+def ASDFA():
+
     # Stage preprocess
     stage_preprocess(dataset="imdb", 
-                     chunk_size=10, 
-                     chunk_amount_per_mix=1, 
+                     chunk_size=100, 
+                     chunk_amount_per_mix=3, 
                      input="", 
                      output="/home/kolla/data/verbosius/imdb/preprocess", 
                      test_size=0.4,
                      seed=42,
                      shuffle=True,
                      chunk_size_test=-1,
-                     validation=False)
-
-    assert False, "Stop here"
+                     validation=True)
 
     stage_preprocess(dataset="sst5", 
                      chunk_size=30, 
@@ -29,25 +52,6 @@ def test_custom_model():
                      shuffle=True,
                      chunk_size_test=-1,
                      validation=False)
-    
-    # Stage trainingdata
-    stage_trainingdata(dataset="imdb",
-                       input="/home/kolla/data/verbosius/imdb/preprocess",
-                       chunkdist_n=0,
-                       output="/home/kolla/data/verbosius/imdb/trainingdata",
-                       )
-    
-    
-    # Stage transformer
-    stage_transformer(dataset="imdb",
-                      input="/home/kolla/data/verbosius/imdb/trainingdata",
-                      output="/home/kolla/data/verbosius/imdb/models",
-                      save_model=False,
-                      chunkdist_n=(0,-1)
-                      )
-
-    
-
 
 
 if __name__ == "__main__":

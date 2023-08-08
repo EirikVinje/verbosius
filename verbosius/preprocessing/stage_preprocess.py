@@ -70,8 +70,11 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
                                                     shuffle=shuffle,
                                                     seed=seed)
     
+    print("\n----------------------------------------------------------------------------------------------------")
+    print(f"len train : {[len(chunk) for chunk in chunked_data[0]]}, len test : {[len(chunk) for chunk in chunked_data[2]]}, len val : {[len(chunk) for chunk in chunked_data[4]] if chunked_data[4] is not None else None}")
+    print("----------------------------------------------------------------------------------------------------\n")
+
     n_classes = chunked_data[-1]
-    
     dir = os.listdir(output)
     n = len(dir)
     new_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{n}")
@@ -83,16 +86,20 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
         assert False, f"Directory {new_chunkdist} already exists, please remove it before continuing" 
 
     print(f"Preprocessing {dataset} chunkdist {n} with {chunk_amount_per_mix} chunks of size {chunk_size}")
-    
     for i, _ in enumerate(tqdm(range(len(chunked_data[0])))):
 
         train_x = chunked_data[0][i]
         train_y = chunked_data[1][i]
-        test_x = chunked_data[2][i] if i < len(chunked_data[2]) else None
-        test_y = chunked_data[3][i] if i < len(chunked_data[3]) else None
-        val_x = chunked_data[4][i] if chunked_data[4] is not None and i < len(chunked_data[4]) else None
-        val_y = chunked_data[5][i] if chunked_data[5] is not None and i < len(chunked_data[5]) else None
+        test_x = chunked_data[2][i] 
+        test_y = chunked_data[3][i] 
+        
+        val_x = chunked_data[4][i] if chunked_data[4] is not None else None
+        val_y = chunked_data[5][i] if chunked_data[5] is not None else None
 
+        orig_train_y = chunked_data[6][i] if chunked_data[6] is not None else None
+        orig_test_y = chunked_data[7][i] if chunked_data[7] is not None else None 
+        orig_val_y = chunked_data[8][i] if chunked_data[8] is not None else None
+    
         # clean the data from unwanted symbols and such
         cleaned_train_x = preprocess.clean_text(train_x)
         cleaned_val_x = preprocess.clean_text(val_x)
@@ -106,11 +113,9 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
         token_ids_val_x = preprocess.map_tokens(split_val_x, token_val_x)
 
         # stage data
-        train_data = stage.stage_data(cleaned_train_x, split_train_x, token_train_x, lemma_train_x, token_ids_train_x, train_y, None)
-        
-        val_data = stage.stage_data(cleaned_val_x, split_val_x, token_val_x, lemma_val_x, token_ids_val_x, val_y, None)
-
-        test_data = [{"text" : text, "label" : label} for text, label in zip(test_x, test_y)]
+        train_data = stage.stage_data(cleaned_train_x, split_train_x, token_train_x, lemma_train_x, token_ids_train_x, train_y, orig_train_y)
+        val_data = stage.stage_data(cleaned_val_x, split_val_x, token_val_x, lemma_val_x, token_ids_val_x, val_y, orig_val_y)
+        test_data = [{"text" : text, "label" : label, "orig_labels" : orig_test_y} for text, label in zip(test_x, test_y)]
 
         # write data
         data = {"train": train_data, 
@@ -229,8 +234,6 @@ if __name__ == "__main__":
                         help="Set whether or not to shuffle the data. Default value is true.")
 
 
-
     args = parser.parse_args()
-
 
     stage_preprocess(args.dataset, args.chunk_size, args.chunk_amount, args.input, args.output, args.test, args.test_size, args.use_test_set, args.chunk_size_test, args.seed, args.shuffle)

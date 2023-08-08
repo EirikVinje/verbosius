@@ -10,21 +10,21 @@ import trainingdata.generate_trainingdata as gen_data
 import config as config
 
 
-def stage_trainingdata(dataset : str, input : str, batchdist_n : int, output : str):
+def stage_trainingdata(dataset : str, input : str, chunkdist_n : int, output : str):
 
-    path = os.path.join(input, f"{dataset}_batchdist_{batchdist_n}")
+    path = os.path.join(input, f"{dataset}_chunkdist_{chunkdist_n}")
 
     dir = os.listdir(path)
 
-    n_batches = len(dir)
+    n_chunks = len(dir)
 
     print()
-    print(f"Number of batches in {dataset} batchdist {batchdist_n}: {n_batches}")
+    print(f"Number of chunks in {dataset} chunkdist {chunkdist_n}: {n_chunks}")
     print()
 
-    for n in tqdm(range(n_batches)):
+    for n in tqdm(range(n_chunks)):
         
-        data = pickle.load(open(f"{path}/batch_{n}.pkl", "rb"))
+        data = pickle.load(open(f"{path}/chunk_{n}.pkl", "rb"))
         
         rm, feature_names = gen_data.rulemaker(data)
     
@@ -37,7 +37,7 @@ def stage_trainingdata(dataset : str, input : str, batchdist_n : int, output : s
                 "distributer" : data["distributer"], 
                 "n_classes" : data["n_classes"]}
         
-        gen_data.write_data(data, output, dataset, batchdist_n, n)
+        gen_data.write_data(data, output, dataset, chunkdist_n, n)
 
 
 def dataset_checker(dataset):
@@ -47,15 +47,15 @@ def dataset_checker(dataset):
     return dataset.lower()
 
 
-def batchdist_n_checker(batchdist_n, input, dataset):
+def chunkdist_n_checker(chunkdist_n, input, dataset):
 
-    if batchdist_n == None:
-        raise argparse.ArgumentTypeError(f"Invalid batch size, batch size must be greater than 0")
+    if chunkdist_n == None:
+        raise argparse.ArgumentTypeError(f"Invalid chunk size, chunk size must be greater than 0")
 
-    if not os.path.exists(os.path.join(input, f"{dataset}_batchdist_{batchdist_n}")):
-        raise argparse.ArgumentTypeError(f"Invalid batch dist, batch dist {batchdist_n} does not exist") 
+    if not os.path.exists(os.path.join(input, f"{dataset}_chunkdist_{chunkdist_n}")):
+        raise argparse.ArgumentTypeError(f"Invalid batch dist, chunk dist {chunkdist_n} does not exist") 
 
-    return batchdist_n
+    return chunkdist_n
 
 
 def input_checker(input):
@@ -85,7 +85,7 @@ if __name__ == "__main__":
                         help="Path to batchdistros of dataset, must be the absolute path to a valid directory where the datafiles are located.")
     
     
-    parser.add_argument("--batchdist_n", type=int,
+    parser.add_argument("--chunkdist_n", type=int,
                         help="Set size for individual batch, must be greater than 0. Default value is 10000")
     
     
@@ -95,6 +95,6 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    batchdist_n_checker(args.batchdist_n, args.input, args.dataset)
+    chunkdist_n_checker(args.chunkdist_n, args.input, args.dataset)
 
-    stage_trainingdata(args.dataset, args.input, args.batchdist_n, args.output)
+    stage_trainingdata(args.dataset, args.input, args.chunkdist_n, args.output)
