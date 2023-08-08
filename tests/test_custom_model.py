@@ -6,11 +6,11 @@ from xai_transformer.stage_transformer import stage_transformer
 def test_custom_model():
     
     # Stage preprocess
-    stage_preprocess(dataset="imdb", 
-                     chunk_size=100, 
+    stage_preprocess(dataset="sst5", 
+                     chunk_size=30, 
                      chunk_amount_per_mix=1, 
                      input="", 
-                     output="/home/bigtech/data/verbosius/imdb/preprocess", 
+                     output="/home/bigtech/data/verbosius/sst5/preprocess", 
                      test_size=0.3,
                      seed=42, 
                      shuffle=True,
