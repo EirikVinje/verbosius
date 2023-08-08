@@ -35,12 +35,14 @@ def ASDFA():
                      chunk_size=100, 
                      chunk_amount_per_mix=3, 
                      input="", 
-                     output="/home/kolla/data/verbosius/imdb/preprocess", 
+                     output="/home/bigtech/data/verbosius/imdb/preprocess", 
                      test_size=0.4,
                      seed=42,
                      shuffle=True,
                      chunk_size_test=-1,
                      validation=True)
+
+    assert False, "Stop here"
 
     stage_preprocess(dataset="sst5", 
                      chunk_size=30, 

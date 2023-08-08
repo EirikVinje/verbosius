@@ -371,7 +371,6 @@ def chunk_data_multiclass(dataset,
     _min_count = Counter(labels_train)
     
     if _bal_count < _min_count[min(_min_count)]:
-        #print('yo')
         for i in unique_classes:
             _min_count[i] = _bal_count
     min_count = _min_count
@@ -408,7 +407,6 @@ def chunk_data_multiclass(dataset,
             for i in unique_classes:
                 _min_count[i] = _bal_count
         min_count = _min_count
-        #print(min_count)
         
 
         if shuffle:
@@ -469,14 +467,16 @@ def chunk_data_multiclass(dataset,
 
 
     elif validation:
-        test_x_split, test_y_split, val_x_split, val_y_split = [], [], [], []
+        train_x_split, train_y_split, val_x_split, val_y_split = [], [], [], []
         for i in range(n_chunks_per_mix):
-            test_x_temp, val_x_temp, test_y_temp, val_y_temp = train_test_split(test_x[i], test_y[i], test_size=val_size, random_state=seed)
-            test_x_split.append(test_x_temp)
-            test_y_split.append(test_y_temp)
+            train_x_temp, val_x_temp, train_y_temp, val_y_temp = train_test_split(train_x[i], train_y[i], test_size=val_size, random_state=seed)
+            train_x_split.append(train_x_temp)
+            train_y_split.append(train_y_temp)
             val_x_split.append(val_x_temp)
             val_y_split.append(val_y_temp)
         
+        train_x = train_x_split
+        train_y = train_y_split
         val_x = val_x_split
         val_y = val_y_split
         val_y_orig = None
