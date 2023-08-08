@@ -5,8 +5,7 @@ import os
 
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_selection import SelectKBest, chi2, mutual_info_classif
-import torch
+from sklearn.feature_selection import SelectKBest, chi2
 import green_tsetlin as gt
 
 import config as config
@@ -31,11 +30,11 @@ def rulemaker(data):
 
     train_x = [instance["lemmas"] for instance in data["train"]]
     train_y = [instance["label"] for instance in data["train"]]
-    test_x = [instance["lemmas"] for instance in data["validation"]] if data["validation"] is not None else None
-    test_y = [instance["label"] for instance in data["validation"]] if data["validation"] is not None else None
+    valid_x = [instance["lemmas"] for instance in data["validation"]] if data["validation"] is not None else None
+    valid_y = [instance["label"] for instance in data["validation"]] if data["validation"] is not None else None
     
     train_y = np.array(train_y, dtype=np.uint32)
-    test_y = np.array(test_y, dtype=np.uint32)
+    valid_y = np.array(valid_y, dtype=np.uint32)
     
     vectorizer = CountVectorizer(max_features=config.MAX_FEATURES*6,
                                  max_df=config.MAX_DF, 
@@ -46,7 +45,7 @@ def rulemaker(data):
                                  stop_words = config.STOPWORDS)
     
     train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x])
-    test_x_bin = vectorizer.transform([" ".join(x) for x in test_x])
+    valid_x_bin = vectorizer.transform([" ".join(x) for x in valid_x])
     _feature_names = vectorizer.get_feature_names_out()
 
     SKB = SelectKBest(chi2, k='all')
@@ -56,8 +55,7 @@ def rulemaker(data):
     assert feature_names.all() == _feature_names[SKB.get_support(indices=True)].all()
 
     train_x_bin = SKB.transform(train_x_bin).toarray()
-    test_x_bin = SKB.transform(test_x_bin).toarray()
-
+    valid_x_bin = SKB.transform(valid_x_bin).toarray()
 
     tm = gt.TsetlinMachine(n_literals=train_x_bin.shape[1], 
                            n_clauses=config.NUMBER_OF_CLAUSES, 
@@ -65,19 +63,16 @@ def rulemaker(data):
                            s=config.S,
                            n_literal_budget=config.LITERAL_BUDGET)
 
-    # train_x_bin = train_x_bin.todense()
-    # test_x_bin = test_x_bin.todense()
-
     for i in range(len(data["train"])):
         data["train"][i]["bin"] = train_x_bin[i]
         
     for i in range(len(data["test"])):
-        data["test"][i]["bin"] = test_x_bin[i]
+        data["test"][i]["bin"] = valid_x_bin[i]
 
     tm.set_train_data(train_x_bin, train_y)
     
-    if test_x_bin is not None:
-        tm.set_test_data(test_x_bin, test_y) 
+    if valid_x_bin is not None:
+        tm.set_test_data(valid_x_bin, valid_y) 
     
     trainer = gt.Trainer(config.T, 
                          n_epochs=config.TM_EPOCHS, 

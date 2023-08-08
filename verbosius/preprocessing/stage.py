@@ -8,6 +8,9 @@ def stage_data(cleaned_x, split_x, token_x, lemma_x, token_ids_x, y, orig_labels
     if type(cleaned_x) == type(None):
         return None
     
+    
+
+
     for i in range(len(y)):
 
         instance = {"cleaned_text": cleaned_x[i],
@@ -28,7 +31,7 @@ def write_data(data, path):
     dir = os.listdir(path)
     n = len(dir)
         
-    with open(f"{path}/batch_{n}.pkl", "wb") as f:
+    with open(f"{path}/chunk_{n}.pkl", "wb") as f:
         pickle.dump(data, f)
 
 

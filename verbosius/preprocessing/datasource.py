@@ -348,8 +348,6 @@ def chunk_data_multiclass(dataset,
         val_chunk_size = test_chunk_size
 
 
-
-
     un_chunked_mix = dataset.load_data(path, test_size=test_size)
     train_data, test_data, val_data = un_chunked_mix
 
@@ -409,7 +407,6 @@ def chunk_data_multiclass(dataset,
             for i in unique_classes:
                 _min_count[i] = _bal_count
         min_count = _min_count
-
         
 
         if shuffle:
