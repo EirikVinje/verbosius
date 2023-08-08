@@ -66,8 +66,8 @@ def rulemaker(data):
     for i in range(len(data["train"])):
         data["train"][i]["bin"] = train_x_bin[i]
         
-    for i in range(len(data["test"])):
-        data["test"][i]["bin"] = valid_x_bin[i]
+    for i in range(len(data["validation"])):
+        data["validation"][i]["bin"] = valid_x_bin[i]
 
     tm.set_train_data(train_x_bin, train_y)
     
@@ -263,7 +263,7 @@ def do_weighting(data, feature_names, rm):
         lemmas_x = inst["lemmas"]
         tokens_x = inst["tokens"]
         tokenmap_x = inst["token_ids"]
-        orig_label = inst["orig_label"]
+        orig_label = inst["orig_labels"]
 
         prediction, expl = rm.predict(bin_x, explain=True)
 
@@ -289,12 +289,12 @@ def do_weighting(data, feature_names, rm):
 
 def write_data(data, output, dataset, batchdist_n, n):
     
-    path = os.path.join(output, f"{dataset}_batchdist_{batchdist_n}")
+    path = os.path.join(output, f"{dataset}_chunkdist_{batchdist_n}")
 
     if not os.path.exists(path):
         os.mkdir(path)
 
-    file = open(os.path.join(path, f"batch_{n}.pkl"), "wb")
+    file = open(os.path.join(path, f"chunk_{n}.pkl"), "wb")
     pickle.dump(data, file)
 
 

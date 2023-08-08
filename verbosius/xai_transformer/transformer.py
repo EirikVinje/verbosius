@@ -10,7 +10,7 @@ import xai_transformer.xai_model as xm
 import xai_transformer.helper_functions as hf
 
 
-def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenizer, val_data):
+def transformer_pipeline(output_dir, train_data, test_data, val_data):
     
     device = config.device
     learning_rate = config.learning_rate
@@ -24,6 +24,7 @@ def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenize
     load_best_model_at_end = config.load_best_model_at_end
     eval_accumulation_steps = config.eval_accumulation_steps
     label_names = config.label_names
+    tokenizer = config.tokenizer
 
     neutral_weight = config.neutral_weight
     loss_weight = config.loss_weight
@@ -32,6 +33,7 @@ def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenize
 
     model = xm.CustomModel(num_labels, num_seq_labels, neutral_weight, loss_weight)
     model = model.to(device = device)
+    save_model = config.save_model
 
     training_args = TrainingArguments(
         output_dir = output_dir,
@@ -59,14 +61,18 @@ def transformer_pipeline(output_dir, train_data, test_data, save_model, tokenize
         data_collator=hf.custom_data_collator)
 
     trainer.train()
-    res = trainer.evaluate()
-
+    
     preds = trainer.predict(test_data)
 
     print(preds)
     print(preds.predictions)
     print(preds.metrics)
     
+    res = hf.compute_metrics(preds.predictions)
+
+    print(res)
+
+
     if not save_model:
         os.system(f"rm -rf {output_dir}")
     else:

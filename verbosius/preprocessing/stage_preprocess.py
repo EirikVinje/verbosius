@@ -92,9 +92,10 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
 
         train_x = chunked_data[0][i]
         train_y = chunked_data[1][i]
+
         test_x = chunked_data[2][i] 
         test_y = chunked_data[3][i] 
-        
+
         val_x = chunked_data[4][i] if chunked_data[4] is not None else None
         val_y = chunked_data[5][i] if chunked_data[5] is not None else None
 
@@ -115,9 +116,23 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
         token_ids_val_x = preprocess.map_tokens(split_val_x, token_val_x)
 
         # stage data
-        train_data = stage.stage_data(cleaned_train_x, split_train_x, token_train_x, lemma_train_x, token_ids_train_x, train_y, orig_train_y)
-        val_data = stage.stage_data(cleaned_val_x, split_val_x, token_val_x, lemma_val_x, token_ids_val_x, val_y, orig_val_y)
-        test_data = [{"text" : text, "label" : label, "orig_labels" : orig_test_y} for text, label in zip(test_x, test_y)]
+        train_data = stage.stage_data(cleaned_x=cleaned_train_x, 
+                                      split_x=split_train_x, 
+                                      token_x=token_train_x, 
+                                      lemma_x=lemma_train_x, 
+                                      token_ids_x=token_ids_train_x, 
+                                      y=train_y, 
+                                      orig_labels=orig_train_y)
+                
+        val_data = stage.stage_data(cleaned_x=cleaned_val_x,
+                                    split_x=split_val_x,
+                                    token_x=token_val_x,
+                                    lemma_x=lemma_val_x,
+                                    token_ids_x=token_ids_val_x,
+                                    y=val_y,
+                                    orig_labels=orig_val_y)
+
+        test_data = [{"text" : text, "sentiment" : label, "orig_labels" : orig_test_y} for text, label in zip(test_x, test_y)]
 
         # write data
         data = {"train": train_data, 
