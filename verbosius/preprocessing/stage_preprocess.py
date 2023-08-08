@@ -66,7 +66,7 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
                                                     test_size=test_size,
                                                     validation = validation,
                                                     val_chunk_size=-1,
-                                                    val_size=.5,
+                                                    val_size=.2,
                                                     shuffle=shuffle,
                                                     seed=seed)
     
@@ -81,6 +81,8 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
 
     else:
         assert False, f"Directory {new_chunkdist} already exists, please remove it before continuing" 
+
+    
 
     print(f"Preprocessing {dataset} chunkdist {n} with {chunk_amount_per_mix} chunks of size {chunk_size}")
     
