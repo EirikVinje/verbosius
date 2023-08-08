@@ -29,12 +29,12 @@ def stage_trainingdata(dataset : str, input : str, batchdist_n : int, output : s
         rm, feature_names = gen_data.rulemaker(data)
     
         train_data = gen_data.do_weighting(data["train"], feature_names, rm)
-        val_data = gen_data.do_weighting(data["validation"], feature_names, rm) if data["validation"] != None else None
+        val_data = gen_data.do_weighting(data["validation"], feature_names, rm)
         
         data = {"train": train_data, 
                 "validation": val_data,
                 "test": data["test"], 
-                "distributer" : dataset, 
+                "distributer" : data["distributer"], 
                 "n_classes" : data["n_classes"]}
         
         gen_data.write_data(data, output, dataset, batchdist_n, n)

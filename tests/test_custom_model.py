@@ -17,8 +17,6 @@ def test_custom_model():
                      chunk_size_test=-1,
                      validation=False)
     
-    assert False, "Stop here"
-
     # Stage trainingdata
     stage_trainingdata(dataset="imdb",
                        input="/home/kolla/data/verbosius/imdb/preprocess",
@@ -26,6 +24,8 @@ def test_custom_model():
                        output="/home/kolla/data/verbosius/imdb/trainingdata",
                        )
     
+    assert False, "Stop here"
+
     # Stage transformer
     stage_transformer(dataset="imdb",
                       input="/home/kolla/data/verbosius/imdb/trainingdata",

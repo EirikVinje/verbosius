@@ -29,12 +29,10 @@ def rulemaker(data):
     
     """
 
-
-
     train_x = [instance["lemmas"] for instance in data["train"]]
     train_y = [instance["label"] for instance in data["train"]]
-    test_x = [instance["lemmas"] for instance in data["test"]]
-    test_y = [instance["label"] for instance in data["test"]]
+    test_x = [instance["lemmas"] for instance in data["validation"]] if data["validation"] is not None else None
+    test_y = [instance["label"] for instance in data["validation"]] if data["validation"] is not None else None
     
     train_y = np.array(train_y, dtype=np.uint32)
     test_y = np.array(test_y, dtype=np.uint32)
@@ -51,7 +49,7 @@ def rulemaker(data):
     test_x_bin = vectorizer.transform([" ".join(x) for x in test_x])
     _feature_names = vectorizer.get_feature_names_out()
 
-    SKB = SelectKBest(chi2, k='all')#config.MAX_FEATURES)
+    SKB = SelectKBest(chi2, k='all')
 
     SKB.fit(train_x_bin, train_y)
     feature_names = SKB.get_feature_names_out(input_features=_feature_names)
@@ -77,7 +75,9 @@ def rulemaker(data):
         data["test"][i]["bin"] = test_x_bin[i]
 
     tm.set_train_data(train_x_bin, train_y)
-    tm.set_test_data(test_x_bin, test_y)
+    
+    if test_x_bin is not None:
+        tm.set_test_data(test_x_bin, test_y) 
     
     trainer = gt.Trainer(config.T, 
                          n_epochs=config.TM_EPOCHS, 
@@ -254,6 +254,9 @@ def do_weighting(data, feature_names, rm):
         list of dicts with the new data
     
     """
+
+    if type(data) == type(None):
+        return None
 
 
     all_x = []

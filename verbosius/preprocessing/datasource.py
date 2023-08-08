@@ -18,7 +18,10 @@ class IMDB:
         self.two_cat = two_cat
         self.exists_test_set = True
         self.exists_validation_set = False
-
+        self.n_original_classes = 2
+        self.orig_labels_train = []
+        self.orig_labels_test = []
+        self.orig_labels_val = []
 
     def load_data(self, path: str, test: bool = False, test_size: float = 0.2):
 
@@ -69,7 +72,7 @@ class MNIST:
 
     def load_data(self, path: str, test: bool = False, test_size: float = 0.2):
         t0 = perf_counter()
-        X, y = fetch_openml('mnist_784', version=1, return_X_y=True, as_frame=False)
+        X, y = fetch_openml('mnist_784', version=1, return_X_y=True, as_frame=False, )
 
         if test:
             x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=42)
@@ -94,8 +97,6 @@ class MNIST:
             t1 = perf_counter()
             print(f"Time to load MNIST: {t1 - t0:.2f} seconds")
             return train_data, test_data
-        
-        
 
         return np.concatenate((X, y), axis=1), None, None
 
@@ -107,6 +108,10 @@ class RottenTomatoes:
         self.two_cat = two_cat
         self.exists_test_set = True
         self.exists_validation_set = True
+        self.n_original_classes = 2
+        self.orig_labels_train = []
+        self.orig_labels_test = []
+        self.orig_labels_val = []
 
     def load_data(self, path: str,test: bool = False, test_size: float = 0.2):
 
@@ -126,7 +131,6 @@ class RottenTomatoes:
         for i in range(len(val_data)):
             val_x.append(val_data[i]["text"])
             val_y.append(int(val_data[i]["label"]))
-
 
         train_x = np.asarray(train_x)
         train_y = np.asarray(train_y)
@@ -156,6 +160,8 @@ class SST5:
         self.two_cat = two_cat
         self.exists_test_set = True
         self.exists_validation_set = True
+        self.n_original_classes = 5
+        self.orig_labels = []
 
     def load_data(self, path: str, test: bool = False, test_size: float = 0.2):
         dataset = ds.load_dataset("SetFit/sst5")
