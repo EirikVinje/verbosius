@@ -84,11 +84,18 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
 
     print(f"Preprocessing {dataset} chunkdist {n} with {chunk_amount_per_mix} chunks of size {chunk_size}")
     
-    print(f"Train : {len(chunked_data[0][0])} | Test : {len(chunked_data[2][0])} | Val : {len(chunked_data[4])}")
+    #print(f"Train : {len(chunked_data[0][0])} | Test : {len(chunked_data[2][0])} | Val : {len(chunked_data[4])}")
     print(len(chunked_data[0]), len(chunked_data[0][0]))
+    print(len(chunked_data[1]), len(chunked_data[1][0]))
     print(len(chunked_data[2]), len(chunked_data[2][0]))
+    print(len(chunked_data[3]), len(chunked_data[3][0]))
     print(len(chunked_data[4]), len(chunked_data[4][0]))
-
+    print(len(chunked_data[5]), len(chunked_data[5][0]))
+    print(len(chunked_data[6]), len(chunked_data[6][0]))
+    print(len(chunked_data[7]), len(chunked_data[7][0]))
+    print(len(chunked_data[8]), len(chunked_data[8][0]))
+    
+    assert False, "Stop here"
     
     for i, _ in enumerate(tqdm(range(len(chunked_data[0])))):
 
