@@ -543,7 +543,7 @@ def chunk_data_multiclass(dataset,
         val_x, val_y, val_y_orig = None, None, None
         
 
-    return train_x, train_y, train_y_orig, test_x, test_y, test_y_orig, val_x, val_y, val_y_orig, n_classes
+    return train_x, train_y, test_x, test_y, val_x, val_y, train_y_orig, test_y_orig, val_y_orig, n_classes
 
 
 
