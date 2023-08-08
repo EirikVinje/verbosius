@@ -393,31 +393,7 @@ def chunk_data_multiclass(dataset,
 
 
     train_x, train_y, train_y_orig = chunk_data(n_chunks_per_mix, n_classes, split_ind_train, texts_train, labels_train, dataset, seed)
-    # train_x = []
-    # train_y = []
-    # train_y_orig = []
-    # for i in range(n_chunks_per_mix):
-    #     split_ind = np.array([], dtype=int)
-    #     split_ind = np.concatenate((split_ind, split_ind_train[0][i]))
-    #     for index in range(1, n_classes):
-    #         temp = split_ind_train[index][i]
-    #         split_ind = np.concatenate((split_ind, temp))
-
-    #     split_text = texts_train[split_ind]
-    #     split_label = labels_train[split_ind]
-        
-    #     if dataset.n_classes > 3:
-    #         split_label_orig = dataset.train_all_labels[split_ind]
-    #         split_text, split_label, split_label_orig = shuffle_unison([split_text, split_label, split_label_orig], seed)
-    #         train_x.append(split_text)
-    #         train_y.append(split_label)
-    #         train_y_orig.append(split_label_orig)
-
-    #     else:
-    #         split_text, split_label = shuffle_unison([split_text, split_label], seed)
-
-    #         train_x.append(split_text)
-    #         train_y.append(split_label)
+    
 
 
     # TEST DATA  vvvvvv
@@ -450,21 +426,7 @@ def chunk_data_multiclass(dataset,
             split_ind_test.append(np.array_split(indicies_class_test[index][:min_count[elem]*n_chunks_per_mix], n_chunks_per_mix))
 
         test_x, test_y, test_y_orig = chunk_data(n_chunks_per_mix, n_classes, split_ind_test, texts_test, labels_test, dataset, seed)
-        # test_x = []
-        # test_y = []
-        # for i in range(n_chunks_per_mix):
-        #     split_ind = np.array([], dtype=int)
-        #     split_ind = np.concatenate((split_ind, split_ind_test[0][i]))
-        #     for index in range(1, n_classes):
-        #         temp = split_ind_test[index][i]
-        #         split_ind = np.concatenate((split_ind, temp))
-        #     split_text = texts_test[split_ind]
-        #     split_label = labels_test[split_ind]
-
-        #     split_text, split_label = shuffle_unison(split_text, split_label, seed)
-
-        #     test_x.append(split_text)
-        #     test_y.append(split_label)
+        
     else:
         train_x_split, train_y_split, test_x_split, test_y_split = [], [], [], []
         for i in range(n_chunks_per_mix):
@@ -508,21 +470,7 @@ def chunk_data_multiclass(dataset,
 
 
         val_x, val_y, val_y_orig = chunk_data(n_chunks_per_mix, n_classes, split_ind_val, texts_val, labels_val, dataset, seed)
-        # val_x = []
-        # val_y = []
-        # for i in range(n_chunks_per_mix):
-        #     split_ind = np.array([], dtype=int)
-        #     split_ind = np.concatenate((split_ind, split_ind_val[0][i]))
-        #     for index in range(1, n_classes):
-        #         temp = split_ind_val[index][i]
-        #         split_ind = np.concatenate((split_ind, temp))
-        #     split_text = texts_val[split_ind]
-        #     split_label = labels_val[split_ind]
-
-        #     split_text, split_label = shuffle_unison(split_text, split_label, seed)
-
-        #     val_x.append(split_text)
-        #     val_y.append(split_label)
+        
 
 
     elif validation:
@@ -562,12 +510,64 @@ def chunk_data_multiclass(dataset,
 
 
 
+# train_x = []
+    # train_y = []
+    # train_y_orig = []
+    # for i in range(n_chunks_per_mix):
+    #     split_ind = np.array([], dtype=int)
+    #     split_ind = np.concatenate((split_ind, split_ind_train[0][i]))
+    #     for index in range(1, n_classes):
+    #         temp = split_ind_train[index][i]
+    #         split_ind = np.concatenate((split_ind, temp))
+
+    #     split_text = texts_train[split_ind]
+    #     split_label = labels_train[split_ind]
+        
+    #     if dataset.n_classes > 3:
+    #         split_label_orig = dataset.train_all_labels[split_ind]
+    #         split_text, split_label, split_label_orig = shuffle_unison([split_text, split_label, split_label_orig], seed)
+    #         train_x.append(split_text)
+    #         train_y.append(split_label)
+    #         train_y_orig.append(split_label_orig)
+
+    #     else:
+    #         split_text, split_label = shuffle_unison([split_text, split_label], seed)
+
+    #         train_x.append(split_text)
+    #         train_y.append(split_label)
+
+# test_x = []
+        # test_y = []
+        # for i in range(n_chunks_per_mix):
+        #     split_ind = np.array([], dtype=int)
+        #     split_ind = np.concatenate((split_ind, split_ind_test[0][i]))
+        #     for index in range(1, n_classes):
+        #         temp = split_ind_test[index][i]
+        #         split_ind = np.concatenate((split_ind, temp))
+        #     split_text = texts_test[split_ind]
+        #     split_label = labels_test[split_ind]
+
+        #     split_text, split_label = shuffle_unison(split_text, split_label, seed)
+
+        #     test_x.append(split_text)
+        #     test_y.append(split_label)
 
 
+# val_x = []
+        # val_y = []
+        # for i in range(n_chunks_per_mix):
+        #     split_ind = np.array([], dtype=int)
+        #     split_ind = np.concatenate((split_ind, split_ind_val[0][i]))
+        #     for index in range(1, n_classes):
+        #         temp = split_ind_val[index][i]
+        #         split_ind = np.concatenate((split_ind, temp))
+        #     split_text = texts_val[split_ind]
+        #     split_label = labels_val[split_ind]
 
+        #     split_text, split_label = shuffle_unison(split_text, split_label, seed)
 
-
-
+        #     val_x.append(split_text)
+        #     val_y.append(split_label)
 
 
 """
