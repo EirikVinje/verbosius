@@ -12,6 +12,19 @@ def test_custom_model():
                      input="", 
                      output="/home/kolla/data/verbosius/imdb/preprocess", 
                      test_size=0.4,
+                     seed=42,
+                     shuffle=True,
+                     chunk_size_test=-1,
+                     validation=False)
+
+    assert False, "Stop here"
+
+    stage_preprocess(dataset="sst5", 
+                     chunk_size=30, 
+                     chunk_amount_per_mix=1, 
+                     input="", 
+                     output="/home/bigtech/data/verbosius/sst5/preprocess", 
+                     test_size=0.3,
                      seed=42, 
                      shuffle=True,
                      chunk_size_test=-1,
@@ -24,8 +37,7 @@ def test_custom_model():
                        output="/home/kolla/data/verbosius/imdb/trainingdata",
                        )
     
-    assert False, "Stop here"
-
+    
     # Stage transformer
     stage_transformer(dataset="imdb",
                       input="/home/kolla/data/verbosius/imdb/trainingdata",
