@@ -79,6 +79,9 @@ def compute_metrics(eval_preds):
 
 def tokenize_and_align_labels(data, tokenizer, orig_labels:bool = False):
     
+    if type(data) == type(None):
+        return None
+
     if orig_labels:
         Y = np.array([i['orig_label'] for i in data])
     else:
@@ -130,49 +133,27 @@ def tokenize_and_align_labels(data, tokenizer, orig_labels:bool = False):
     return output
 
 
-def extend_data(data, new_batch):
+def extend_data(data, new_chunk):
 
-    data["input_ids"].extend(new_batch["input_ids"])
-    data["attention_mask"].extend(new_batch["attention_mask"])
-    data["labels"].extend(new_batch["labels"])
-    data["targets"].extend(new_batch["targets"])
-    data["sentiment"].extend(new_batch["sentiment"])
+    if type(data) == type(None):
+        return None
+
+    data["input_ids"].extend(new_chunk["input_ids"])
+    data["attention_mask"].extend(new_chunk["attention_mask"])
+    data["labels"].extend(new_chunk["labels"])
+    data["targets"].extend(new_chunk["targets"])
+    data["sentiment"].extend(new_chunk["sentiment"])
 
     return data
 
 
-def tokenize_to_model(data, tokenizer, device):
-    
+def extend_test(data, new_chunk):
 
-    tokenized_inputs = tokenizer([data], 
-                                 truncation=True, 
-                                 padding="longest", 
-                                 return_tensors='pt',
-                                 max_length=512,
-                                 )
-    
-    word_ids = tokenized_inputs.word_ids(batch_index=0)  
-    previous_word_idx = None
-    target_ids = []
-    
-    for word_idx in word_ids:  
-        
-        if word_idx is None:
-            target_ids.append(0)
+    data["input_ids"].extend(new_chunk["input_ids"])
+    data["attention_mask"].extend(new_chunk["attention_mask"])
+    data["targets"].extend(new_chunk["targets"])
 
-        elif word_idx != previous_word_idx: 
-            target_ids.append(1)
-
-        else:
-            target_ids.append(0)
-
-        previous_word_idx = word_idx
-    
-    tokenized_inputs["targets"] = torch.tensor([target_ids]).to(device = device)
-    tokenized_inputs["input_ids"]= tokenized_inputs["input_ids"].to(device = device) 
-    tokenized_inputs["attention_mask"] = tokenized_inputs["attention_mask"].to(device = device) 
-    
-    return tokenized_inputs
+    return data
 
 
 def custom_data_collator(batch_input):
@@ -186,15 +167,7 @@ def custom_data_collator(batch_input):
     input_ids = pad_sequence(input_ids, batch_first=True, padding_value=1)
     attention_mask = pad_sequence(attention_mask, batch_first=True, padding_value=0)
     labels = pad_sequence(labels, batch_first=True, padding_value=-100)
-    targets = pad_sequence(targets, batch_first=True, padding_value=0)
-    # print(input_ids.dtype, type(input_ids), input_ids.shape, input_ids.is_sparse, input_ids.get_device())
-    # print(attention_mask.dtype, type(attention_mask), attention_mask.shape, attention_mask.is_sparse, attention_mask.get_device())
-    # print(labels.dtype, type(labels), labels.shape, labels.is_sparse, labels.get_device())
-    # print(targets.dtype, type(targets), targets.shape, targets.is_sparse, targets.get_device())
-    
-    
-
-    
+    targets = pad_sequence(targets, batch_first=True, padding_value=0)    
 
     new_batch_input = {
         "input_ids": input_ids.to(config.device),

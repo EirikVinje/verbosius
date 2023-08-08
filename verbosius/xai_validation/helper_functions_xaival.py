@@ -115,7 +115,7 @@ def tokenize_to_model(data, tokenizer, device):
     
     for i in range(len(data)):
     
-        word_ids = tokenized_inputs.word_ids(batch_index=0)      
+        word_ids = tokenized_inputs.word_ids(batch_index=i)      
         previous_word_idx = None
         target_ids = []
         

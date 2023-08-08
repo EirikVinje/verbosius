@@ -253,7 +253,7 @@ def shuffle_unison(a: list, seed : int = 42):
     p = rng.permutation(len(a[0]))
     if len(a) == 3:
         return a[0][p], a[1][p], a[2][p]
-    return a[0][p], a[0][p]
+    return a[0][p], a[1][p]
 
 def chunk_data(n_chunks_per_mix, n_classes, split_ind_input, texts, labels, dataset, seed):
     train_x = []
