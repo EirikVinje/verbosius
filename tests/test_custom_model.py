@@ -6,6 +6,19 @@ from xai_transformer.stage_transformer import stage_transformer
 def test_custom_model():
     
     # Stage preprocess
+    stage_preprocess(dataset="imdb", 
+                     chunk_size=10, 
+                     chunk_amount_per_mix=1, 
+                     input="", 
+                     output="/home/kolla/data/verbosius/imdb/preprocess", 
+                     test_size=0.4,
+                     seed=42,
+                     shuffle=True,
+                     chunk_size_test=-1,
+                     validation=False)
+
+    assert False, "Stop here"
+
     stage_preprocess(dataset="sst5", 
                      chunk_size=30, 
                      chunk_amount_per_mix=1, 
@@ -15,16 +28,15 @@ def test_custom_model():
                      seed=42, 
                      shuffle=True,
                      chunk_size_test=-1,
-                     validation=True)
+                     validation=False)
     
-    assert False, "Stop here"
-
     # Stage trainingdata
     stage_trainingdata(dataset="imdb",
                        input="/home/kolla/data/verbosius/imdb/preprocess",
                        chunkdist_n=0,
                        output="/home/kolla/data/verbosius/imdb/trainingdata",
                        )
+    
     
     # Stage transformer
     stage_transformer(dataset="imdb",

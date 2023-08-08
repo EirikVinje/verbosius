@@ -4,6 +4,10 @@ import os
 def stage_data(cleaned_x, split_x, token_x, lemma_x, token_ids_x, y, orig_labels):
 
     data_dicts = []
+    
+    if type(cleaned_x) == type(None):
+        return None
+    
     for i in range(len(y)):
 
         instance = {"cleaned_text": cleaned_x[i],
@@ -12,7 +16,7 @@ def stage_data(cleaned_x, split_x, token_x, lemma_x, token_ids_x, y, orig_labels
                     "lemmas": lemma_x[i],
                     "token_ids": token_ids_x[i],
                     "label": y[i],
-                    "orig_label": orig_labels[i]}
+                    "orig_labels": orig_labels[i] if orig_labels is not None else None}
 
         data_dicts.append(instance)
 

@@ -71,7 +71,7 @@ class MNIST:
 
     def load_data(self, path: str, test: bool = False, test_size: float = 0.2):
         t0 = perf_counter()
-        X, y = fetch_openml('mnist_784', version=1, return_X_y=True, as_frame=False)
+        X, y = fetch_openml('mnist_784', version=1, return_X_y=True, as_frame=False, )
 
         if test:
             x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=42)
@@ -96,8 +96,6 @@ class MNIST:
             t1 = perf_counter()
             print(f"Time to load MNIST: {t1 - t0:.2f} seconds")
             return train_data, test_data
-        
-        
 
         return np.concatenate((X, y), axis=1), None, None
 
@@ -129,7 +127,6 @@ class RottenTomatoes:
         for i in range(len(val_data)):
             val_x.append(val_data[i]["text"])
             val_y.append(int(val_data[i]["label"]))
-
 
         train_x = np.asarray(train_x)
         train_y = np.asarray(train_y)

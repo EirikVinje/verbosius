@@ -84,27 +84,14 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
 
     print(f"Preprocessing {dataset} chunkdist {n} with {chunk_amount_per_mix} chunks of size {chunk_size}")
     
-    #print(f"Train : {len(chunked_data[0][0])} | Test : {len(chunked_data[2][0])} | Val : {len(chunked_data[4])}")
-    print(len(chunked_data[0]), len(chunked_data[0][0]))
-    print(len(chunked_data[1]), len(chunked_data[1][0]))
-    print(len(chunked_data[2]), len(chunked_data[2][0]))
-    print(len(chunked_data[3]), len(chunked_data[3][0]))
-    print(len(chunked_data[4]), len(chunked_data[4][0]))
-    print(len(chunked_data[5]), len(chunked_data[5][0]))
-    print(len(chunked_data[6]), len(chunked_data[6][0]))
-    print(len(chunked_data[7]), len(chunked_data[7][0]))
-    print(len(chunked_data[8]), len(chunked_data[8][0]))
-    
-    assert False, "Stop here"
-    
     for i, _ in enumerate(tqdm(range(len(chunked_data[0])))):
 
         train_x = chunked_data[0][i]
         train_y = chunked_data[1][i]
-        test_x = chunked_data[2][i]
-        test_y = chunked_data[3][i]
-        val_x = chunked_data[4][i] if chunked_data[4] is not None else None
-        val_y = chunked_data[5][i] if chunked_data[5] is not None else None
+        test_x = chunked_data[2][i] if i < len(chunked_data[2]) else None
+        test_y = chunked_data[3][i] if i < len(chunked_data[3]) else None
+        val_x = chunked_data[4][i] if chunked_data[4] is not None and i < len(chunked_data[4]) else None
+        val_y = chunked_data[5][i] if chunked_data[5] is not None and i < len(chunked_data[5]) else None
 
         # clean the data from unwanted symbols and such
         cleaned_train_x = preprocess.clean_text(train_x)
@@ -119,8 +106,9 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
         token_ids_val_x = preprocess.map_tokens(split_val_x, token_val_x)
 
         # stage data
-        train_data = stage.stage_data(cleaned_train_x, split_train_x, token_train_x, lemma_train_x, token_ids_train_x, train_y)
-        val_data = stage.stage_data(cleaned_val_x, split_val_x, token_val_x, lemma_val_x, token_ids_val_x, val_y)
+        train_data = stage.stage_data(cleaned_train_x, split_train_x, token_train_x, lemma_train_x, token_ids_train_x, train_y, None)
+        
+        val_data = stage.stage_data(cleaned_val_x, split_val_x, token_val_x, lemma_val_x, token_ids_val_x, val_y, None)
 
         test_data = [{"text" : text, "label" : label} for text, label in zip(test_x, test_y)]
 
@@ -130,7 +118,7 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
                 "test" : test_data,
                 "distributer" : dataset, 
                 "n_classes" : n_classes}
-        
+                
         stage.write_data(data=data, path=new_chunkdist)
         
     

@@ -80,6 +80,9 @@ def lemmatize(texts : list, cores:int = 4, lemmatizer : str = "en_core_web_sm"):
         List of labels to each document
     """
     
+    if type(texts) == type(None):
+        return None, None, None
+
     nlp = spacy.load(lemmatizer)
     docs = nlp.pipe(texts, n_process=cores) 
 
@@ -112,6 +115,9 @@ def map_tokens(stexts : list, tokens : list):
         List of ids correseponding to the tokens in the document
 
     """
+
+    if type(stexts) == type(None):
+        return None
 
     ids = []
 
