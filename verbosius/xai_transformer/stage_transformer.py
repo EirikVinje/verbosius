@@ -45,7 +45,7 @@ def stage_transformer(dataset : str, input : str, output : str, save_model : str
 
     train_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
     val_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
-    test_data = {"input_ids": [], "attention_mask": [], "targets": []}
+    test_x = {"input_ids": [], "attention_mask": [], "targets": []}
     test_y = []
     
     tokenizer = config.tokenizer
@@ -64,34 +64,32 @@ def stage_transformer(dataset : str, input : str, output : str, save_model : str
         for n in range(n_batches):
             
             data = pickle.load(open(f"{path}/chunk_{n}.pkl", "rb"))
+            
+            #print(f"Batch: {n} , [{len(data['train'])}, {len(data['validation'])}, {len(data['test'])}]")
+            
             new_train_batch = hf.tokenize_and_align_labels(data["train"], tokenizer) 
             new_val_batch = hf.tokenize_and_align_labels(data["validation"], tokenizer)
             train_data = hf.extend_data(train_data, new_train_batch)
             val_data = hf.extend_data(val_data, new_val_batch)  
             
             new_test_batch = hf_xaival.tokenize_to_model([ins["text"] for ins in data["test"]], tokenizer, config.device)
-            test_data = hf.extend_test(test_data, new_test_batch)
+            test_x = hf.extend_test(test_x, new_test_batch)
             test_y.extend([ins["sentiment"] for ins in data["test"]])
 
     print("Train size: ", len(train_data["input_ids"]))
-    print("Test size: ", len(test_data))
+    print("Test size: ", len(test_x["input_ids"]))
     print("Validation size: ", len(val_data["input_ids"])) if val_data["input_ids"] != [] else None
 
-    train_data = hf.Dataset(**train_data)
-    
-    if type(val_data) != type(None):
-        val_data = hf.Dataset(**val_data)
-    
-    else:
-        val_data = None
+    assert False
 
-    seq_acc, tok_acc = tf.transformer_pipeline(output_dir=output, 
+    seq_acc = tf.transformer_pipeline(output_dir=output, 
                                                train_data=train_data, 
                                                val_data=val_data, 
-                                               test_data=test_data 
-                                               )
+                                               test_x=test_x,
+                                               test_y=test_y)
+                                    
     
-    return seq_acc, tok_acc
+    return seq_acc
 
 def dataset_checker(dataset):
     valid_datasets = ['imdb', 'rottentomatoes', 'amazon']

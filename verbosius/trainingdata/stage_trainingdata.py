@@ -18,10 +18,7 @@ def stage_trainingdata(dataset : str, input : str, chunkdist_n : int, output : s
 
     n_chunks = len(dir)
 
-    print()
     print(f"Number of chunks in {dataset} chunkdist {chunkdist_n}: {n_chunks}")
-    print()
-
     for n in tqdm(range(n_chunks)):
         
         data = pickle.load(open(f"{path}/chunk_{n}.pkl", "rb"))

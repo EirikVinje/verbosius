@@ -4,13 +4,17 @@ import torch
 from transformers import TrainingArguments, Trainer
 import torch
 import numpy as np
+from sklearn.metrics import accuracy_score
 
 import config as config
 import xai_transformer.xai_model as xm
 import xai_transformer.helper_functions as hf
+import xai_transformer.transformer as tf
+import xai_validation.helper_functions_xaival as hf_xaival
 
 
-def transformer_pipeline(output_dir, train_data, test_data, val_data):
+
+def transformer_pipeline(output_dir, train_data, test_x, test_y, val_data):
     
     device = config.device
     learning_rate = config.learning_rate
@@ -34,6 +38,16 @@ def transformer_pipeline(output_dir, train_data, test_data, val_data):
     model = xm.CustomModel(num_labels, num_seq_labels, neutral_weight, loss_weight)
     model = model.to(device = device)
     save_model = config.save_model
+
+    train_data = hf.Dataset(**train_data)
+    test_x = hf.Test_Dataset(**test_x)
+
+    if type(val_data) != type(None):
+        val_data = hf.Dataset(**val_data)
+    
+    else:
+        val_data = None
+
 
     training_args = TrainingArguments(
         output_dir = output_dir,
@@ -62,16 +76,13 @@ def transformer_pipeline(output_dir, train_data, test_data, val_data):
 
     trainer.train()
     
-    preds = trainer.predict(test_data)
+    preds = trainer.predict(test_x)
+    seq_logits = preds[0][1]
+    seq_preds = np.argmax(seq_logits, axis=1)
 
-    print(preds)
-    print(preds.predictions)
-    print(preds.metrics)
-    
-    res = hf.compute_metrics(preds.predictions)
+    seq_acc = accuracy_score(test_y, seq_preds)
 
-    print(res)
-
+    print("Sequence accuracy: ", seq_acc)
 
     if not save_model:
         os.system(f"rm -rf {output_dir}")
@@ -80,4 +91,4 @@ def transformer_pipeline(output_dir, train_data, test_data, val_data):
         torch.save(model, output_dir)
 
 
-    return  res["eval_sequence_accuracy"], res["eval_token_accuracy"]
+    return  seq_acc

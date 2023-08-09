@@ -9,8 +9,8 @@ from xai_transformer.stage_transformer import stage_transformer
 def test_custom_model():
     
     stage_preprocess(dataset="imdb", 
-                     chunk_size=100, 
-                     chunk_amount_per_mix=3, 
+                     chunk_size=10, 
+                     chunk_amount_per_mix=1, 
                      input="", 
                      output="/home/kolla/data/verbosius/imdb/preprocess", 
                      test_size=0.4,
