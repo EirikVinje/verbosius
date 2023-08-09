@@ -12,7 +12,7 @@ def test_custom_model():
                      chunk_size=10, 
                      chunk_amount_per_mix=1, 
                      input="", 
-                     output="/home/kolla/data/verbosius/imdb/preprocess", 
+                     output="/home/bigtech/data/verbosius/imdb/preprocess", 
                      test_size=0.4,
                      seed=42,
                      shuffle=True,
@@ -20,15 +20,15 @@ def test_custom_model():
                      validation=True)
     
     stage_trainingdata(dataset="imdb",
-                       input="/home/kolla/data/verbosius/imdb/preprocess",
+                       input="/home/bigtech/data/verbosius/imdb/preprocess",
                        chunkdist_n=0,
-                       output="/home/kolla/data/verbosius/imdb/trainingdata",
+                       output="/home/bigtech/data/verbosius/imdb/trainingdata",
                        )
     
     stage_transformer(dataset="imdb",
-                      input="/home/kolla/data/verbosius/imdb/trainingdata",
-                      output="/home/kolla/data/verbosius/imdb/models",
-                      save_model=False,
+                      input="/home/bigtech/data/verbosius/imdb/trainingdata",
+                      output="/home/bigtech/data/verbosius/imdb/models",
+                      save_model=True,
                       chunkdist_n=(0,-1)
                       )
     
