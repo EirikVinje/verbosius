@@ -62,15 +62,15 @@ def transformer_pipeline(output_dir, train_data, test_data, val_data):
 
     trainer.train()
     
-    preds = trainer.predict(test_data)
+    # preds = trainer.predict(test_data)
 
-    print(preds)
-    print(preds.predictions)
-    print(preds.metrics)
+    # print(preds)
+    # print(preds.predictions)
+    # print(preds.metrics)
     
-    res = hf.compute_metrics(preds.predictions)
+    # res = hf.compute_metrics(preds.predictions)
 
-    print(res)
+    # print(res)
 
 
     if not save_model:
@@ -80,4 +80,5 @@ def transformer_pipeline(output_dir, train_data, test_data, val_data):
         torch.save(model, output_dir)
 
 
-    return  res["eval_sequence_accuracy"], res["eval_token_accuracy"]
+    # return  res["eval_sequence_accuracy"], res["eval_token_accuracy"]
+    return None, None

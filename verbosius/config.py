@@ -42,7 +42,7 @@ N_JOBS = 5
 
 # *************** TRANSFORMER ***************
 
-device="cpu"
+device="cuda"
 model_name_ = "distilroberta-base"
 tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True, device=device)
 
