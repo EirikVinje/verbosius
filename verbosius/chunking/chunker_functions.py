@@ -1,7 +1,3 @@
-import os
-import random
-import itertools
-
 import datasets as ds
 import pandas as pd
 import numpy as np
@@ -490,6 +486,9 @@ def chunk_data_multiclass(dataset,
     return train_x, train_y, test_x, test_y, val_x, val_y, train_y_orig, test_y_orig, val_y_orig, n_classes
 
 
+def write_chunks(chunkdata):
+
+    
 
 
 
@@ -505,126 +504,3 @@ def chunk_data_multiclass(dataset,
 
 
 
-
-# train_x = []
-    # train_y = []
-    # train_y_orig = []
-    # for i in range(n_chunks_per_mix):
-    #     split_ind = np.array([], dtype=int)
-    #     split_ind = np.concatenate((split_ind, split_ind_train[0][i]))
-    #     for index in range(1, n_classes):
-    #         temp = split_ind_train[index][i]
-    #         split_ind = np.concatenate((split_ind, temp))
-
-    #     split_text = texts_train[split_ind]
-    #     split_label = labels_train[split_ind]
-        
-    #     if dataset.n_classes > 3:
-    #         split_label_orig = dataset.train_all_labels[split_ind]
-    #         split_text, split_label, split_label_orig = shuffle_unison([split_text, split_label, split_label_orig], seed)
-    #         train_x.append(split_text)
-    #         train_y.append(split_label)
-    #         train_y_orig.append(split_label_orig)
-
-    #     else:
-    #         split_text, split_label = shuffle_unison([split_text, split_label], seed)
-
-    #         train_x.append(split_text)
-    #         train_y.append(split_label)
-
-# test_x = []
-        # test_y = []
-        # for i in range(n_chunks_per_mix):
-        #     split_ind = np.array([], dtype=int)
-        #     split_ind = np.concatenate((split_ind, split_ind_test[0][i]))
-        #     for index in range(1, n_classes):
-        #         temp = split_ind_test[index][i]
-        #         split_ind = np.concatenate((split_ind, temp))
-        #     split_text = texts_test[split_ind]
-        #     split_label = labels_test[split_ind]
-
-        #     split_text, split_label = shuffle_unison(split_text, split_label, seed)
-
-        #     test_x.append(split_text)
-        #     test_y.append(split_label)
-
-
-# val_x = []
-        # val_y = []
-        # for i in range(n_chunks_per_mix):
-        #     split_ind = np.array([], dtype=int)
-        #     split_ind = np.concatenate((split_ind, split_ind_val[0][i]))
-        #     for index in range(1, n_classes):
-        #         temp = split_ind_val[index][i]
-        #         split_ind = np.concatenate((split_ind, temp))
-        #     split_text = texts_val[split_ind]
-        #     split_label = labels_val[split_ind]
-
-        #     split_text, split_label = shuffle_unison(split_text, split_label, seed)
-
-        #     val_x.append(split_text)
-        #     val_y.append(split_label)
-
-
-"""
-def chunk_data(dataset, n_chunks_per_mix : int, chunk_size : int, path : str, test : bool = False, shuffle : bool = True, seed : int = 42):
-
-
-    un_chunked_mix = dataset.load_data(path)
-
-    train_data, test_data = un_chunked_mix
-
-    texts_train = train_data[:, 0]
-    labels_train = train_data[:, 1]
-
-    indices_class_0_train = np.where(labels_train==0)[0]
-    indices_class_1_train = np.where(labels_train==1)[0]
-
-    min_count = chunk_size//2 #min(num_elements_0, num_elements_1)
-
-    if shuffle:
-        rng = np.random.default_rng(seed)
-        rng.shuffle(indices_class_0_train)
-        rng.shuffle(indices_class_1_train)
-
-    split_ind_0_train = np.array_split(indices_class_0_train[:min_count*n_chunks_per_mix], n_chunks_per_mix)
-    split_ind_1_train = np.array_split(indices_class_1_train[:min_count*n_chunks_per_mix], n_chunks_per_mix)
-
-
-    train_x = []
-    train_y = []
-    for i in range(n_chunks_per_mix):
-        split_ind = np.concatenate((split_ind_0_train[i], split_ind_1_train[i]))
-        split_text = texts_train[split_ind]
-        split_label = labels_train[split_ind]
-
-        train_x.append(split_text)
-        train_y.append(split_label)
-
-
-    if test:
-        texts_test = test_data[:, 0]
-        labels_test = test_data[:, 1]
-        indices_class_0_test = np.where(labels_test==0)[0]
-        indices_class_1_test = np.where(labels_test==1)[0]
-
-        if shuffle:
-            rng = np.random.default_rng(seed)
-            rng.shuffle(indices_class_0_test)
-            rng.shuffle(indices_class_1_test)
-
-        split_ind_0_test = np.array_split(indices_class_0_test[:min_count*n_chunks_per_mix], n_chunks_per_mix)
-        split_ind_1_test = np.array_split(indices_class_1_test[:min_count*n_chunks_per_mix], n_chunks_per_mix)
-        test_x = []
-        test_y = []
-        for i in range(n_chunks_per_mix):
-            split_ind = np.concatenate((split_ind_0_test[i], split_ind_1_test[i]))
-            split_text = texts_test[split_ind]
-            split_label = labels_test[split_ind]
-
-            test_x.append(split_text)
-            test_y.append(split_label)
-
-        return train_x, train_y, test_x, test_y
-    return train_x, train_y, None, None
-"""
