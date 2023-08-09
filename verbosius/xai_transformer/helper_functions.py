@@ -32,6 +32,26 @@ class Dataset(torch.utils.data.Dataset):
         }
 
 
+class Test_Dataset(torch.utils.data.Dataset):
+    def __init__(self, input_ids, attention_mask, targets):
+        self.input_ids = input_ids
+        self.attention_mask = attention_mask
+        self.targets = targets
+
+    def __len__(self):
+        return len(self.targets)
+
+    def __getitem__(self, idx):
+        input_ids = self.input_ids[idx]
+        attention_mask = self.attention_mask[idx]
+        targets = self.targets[idx]
+        return {
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            'targets': targets
+        }
+
+
 def compute_metrics(eval_preds):
     metric = evaluate.load("accuracy")
     logits, labels = eval_preds
@@ -88,9 +108,14 @@ def tokenize_and_align_labels(data, tokenizer, orig_labels:bool = False):
         Y = np.array([i['sentiment'] for i in data])
 
     tokenized_inputs = tokenizer([inst["tokens"] for inst in data], truncation=True, padding=False, is_split_into_words=True)
-    
+
+    #print("Tokenized inputs: ", len(tokenized_inputs["input_ids"]))
+    #print("attention_mask: ", len(tokenized_inputs["attention_mask"]))
+
     labels = []
     targets = []
+
+    #print("Tokenized inputs: ", len(tokenized_inputs["input_ids"]))
     
     for i, label in enumerate([inst["labels"] for inst in data]):
         
@@ -129,6 +154,9 @@ def tokenize_and_align_labels(data, tokenizer, orig_labels:bool = False):
     output["labels"] = tokenized_inputs["labels"]
     output["targets"] = tokenized_inputs["targets"]
     output["sentiment"] = Y
+
+    #print("Tokenized inputs: ", len(output["input_ids"]))
+    #print("attention_mask: ", len(output["attention_mask"]))
     
     return output
 
@@ -160,14 +188,26 @@ def custom_data_collator(batch_input):
     
     input_ids = [torch.tensor(inst["input_ids"], dtype=torch.long) for inst in batch_input]
     attention_mask = [torch.tensor(inst["attention_mask"], dtype=torch.long) for inst in batch_input]
-    labels = [torch.tensor(inst["labels"], dtype=torch.long) for inst in batch_input]
     targets = [torch.tensor(inst["targets"], dtype=torch.long) for inst in batch_input]
-    sentiment = [torch.tensor(inst["sentiment"], dtype=torch.long) for inst in batch_input]
+    labels = [torch.tensor(inst["labels"], dtype=torch.long) for inst in batch_input] if "labels" in batch_input[0].keys() else None
+    sentiment = [torch.tensor(inst["sentiment"], dtype=torch.long) for inst in batch_input] if "sentiment" in batch_input[0].keys() else None
 
     input_ids = pad_sequence(input_ids, batch_first=True, padding_value=1)
     attention_mask = pad_sequence(attention_mask, batch_first=True, padding_value=0)
-    labels = pad_sequence(labels, batch_first=True, padding_value=-100)
-    targets = pad_sequence(targets, batch_first=True, padding_value=0)    
+    targets = pad_sequence(targets, batch_first=True, padding_value=0)
+    
+    if labels != None:
+        labels = pad_sequence(labels, batch_first=True, padding_value=-100) 
+
+    if sentiment == None and labels == None:
+        
+        new_batch_input = {
+        "input_ids": input_ids.to(config.device),
+        "attention_mask": attention_mask.to(config.device),
+        "targets": targets.to(config.device)
+        }
+
+        return new_batch_input
 
     new_batch_input = {
         "input_ids": input_ids.to(config.device),

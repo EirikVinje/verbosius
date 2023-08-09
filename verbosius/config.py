@@ -26,8 +26,8 @@ batchdist_n=0
 
 
 # TM PARAMS
-MAX_DF=0.6
-MIN_DF=15
+MAX_DF=0.9
+MIN_DF=1
 MAX_FEATURES=1400
 N_GRAM_RANGE=(1, 2)
 NUMBER_OF_CLAUSES=9000 #5853
@@ -56,7 +56,7 @@ final_output_dir = os.path.join(root, f"{dataset}/models")
 learning_rate = 1.539e-5
 per_device_train_batch_size = 16
 per_device_eval_batch_size = 16
-num_train_epochs = 5
+num_train_epochs = 1
 weight_decay = 0.01
 evaluation_strategy = "epoch"
 save_strategy = "epoch"
