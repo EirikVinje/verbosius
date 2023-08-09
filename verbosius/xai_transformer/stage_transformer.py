@@ -80,7 +80,7 @@ def stage_transformer(dataset : str, input : str, output : str, save_model : str
     print("Test size: ", len(test_x["input_ids"]))
     print("Validation size: ", len(val_data["input_ids"])) if val_data["input_ids"] != [] else None
 
-    assert False
+
 
     seq_acc = tf.transformer_pipeline(output_dir=output, 
                                                train_data=train_data, 

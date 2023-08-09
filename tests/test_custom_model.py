@@ -9,8 +9,8 @@ from xai_transformer.stage_transformer import stage_transformer
 def test_custom_model():
     
     stage_preprocess(dataset="imdb", 
-                     chunk_size=10, 
-                     chunk_amount_per_mix=1, 
+                     chunk_size=25000, 
+                     chunk_amount_per_mix=2, 
                      input="", 
                      output="/home/bigtech/data/verbosius/imdb/preprocess", 
                      test_size=0.4,
@@ -21,16 +21,14 @@ def test_custom_model():
     
     stage_trainingdata(dataset="imdb",
                        input="/home/bigtech/data/verbosius/imdb/preprocess",
-                       chunkdist_n=0,
-                       output="/home/bigtech/data/verbosius/imdb/trainingdata",
-                       )
+                       chunkdist_n=1,
+                       output="/home/bigtech/data/verbosius/imdb/trainingdata")
     
     stage_transformer(dataset="imdb",
                       input="/home/bigtech/data/verbosius/imdb/trainingdata",
                       output="/home/bigtech/data/verbosius/imdb/models",
                       save_model=True,
-                      chunkdist_n=(0,-1)
-                      )
+                      chunkdist_n=(1,2))
     
 
 if __name__ == "__main__":

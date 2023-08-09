@@ -67,4 +67,4 @@ label_names = ['labels', 'sentiment']
 neutral_weight = 0.3897 #
 loss_weight = 0.4154 #
 num_labels = 3
-num_seq_labels = 5
+num_seq_labels = 2
