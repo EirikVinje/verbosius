@@ -1,6 +1,8 @@
+import os
 import datasets as ds
 import pandas as pd
 import numpy as np
+import pickle
 
 from time import perf_counter
 from sklearn.datasets import fetch_openml
@@ -54,7 +56,6 @@ class IMDB:
         return train_data, test_data, None
 
             
-
 class MNIST:
     """
     Exists for testing purposes, not intended for use in the pipeline, will crash if used because not text data.
@@ -144,6 +145,7 @@ class RottenTomatoes:
         val_data = np.column_stack((val_x, val_y))
 
         return train_data, test_data, val_data
+
 
 class SST5:
 
@@ -241,9 +243,6 @@ def dataset(dataset : str):
         raise ValueError("No such dataset exists")
     
 
-
-
-
 def shuffle_unison(a: list, seed : int = 42):
     rng = np.random.default_rng(seed)
     p = rng.permutation(len(a[0]))
@@ -286,7 +285,6 @@ def chunk_data(n_chunks_per_mix, n_classes, split_ind_input, texts, labels, data
     return train_x, train_y, None
 
 
-
 def chunk_data_multiclass(dataset, 
                           n_chunks_per_mix : int, 
                           chunk_size : int, 
@@ -294,8 +292,10 @@ def chunk_data_multiclass(dataset,
                           validation : bool = True,
                           test_chunk_size: int = -1,
                           test_size: float = 0.2, 
-                          val_chunk_size: int = -1,
-                          val_size: float = 0.5, shuffle : bool = True, seed : int = 42): # n_chunks_per_mix: int = -1, n_chunks_per_mix: int = -1, 
+                          val_size: float = 0.5, 
+                          shuffle : bool = True, 
+                          seed : int = 42,
+                          val_chunk_size : int = -1):  
     
     """
     dataset : dataset class
@@ -325,8 +325,6 @@ def chunk_data_multiclass(dataset,
     val_y : validation labels, None if no val data
     val_y_orig : original validation labels, None if no original labels
     """
-
-
 
     orig_chunk_size = chunk_size
 
@@ -404,7 +402,6 @@ def chunk_data_multiclass(dataset,
             for i in unique_classes:
                 _min_count[i] = _bal_count
         min_count = _min_count
-        
 
         if shuffle:
             rng = np.random.default_rng(seed)
@@ -486,9 +483,15 @@ def chunk_data_multiclass(dataset,
     return train_x, train_y, test_x, test_y, val_x, val_y, train_y_orig, test_y_orig, val_y_orig, n_classes
 
 
-def write_chunks(chunkdata):
+def write_chunks(chunkdata, output, dataset, train_size, test_size, validation_size, n_chunks_per_mix):
 
-    
+    n = len(os.listdir(output))
+
+    with open(f"{output}/{dataset}_chunkdata_{n}_c{n_chunks_per_mix}_tr{train_size}_ts{test_size}_v{validation_size}.pkl", "wb") as f:
+        pickle.dump(chunkdata, f)
+
+
+
 
 
 

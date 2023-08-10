@@ -1,15 +1,9 @@
 import re
-from time import time, perf_counter
+import pickle
+import os
 
-import numpy as np
-import pandas as pd
 import spacy
-from tqdm import tqdm
-
 from bs4 import BeautifulSoup
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
 
 
 def strip_html(textdata):
@@ -162,10 +156,58 @@ def map_tokens(stexts : list, tokens : list):
     return ids
 
 
+def stage_data(cleaned_x, split_x, token_x, lemma_x, token_ids_x, y, orig_labels):
+
+    data_dicts = []
+    
+    if type(cleaned_x) == type(None):
+        return None
+    
+    for i in range(len(y)):
+
+        instance = {"cleaned_text": cleaned_x[i],
+                    "split_text": split_x[i],
+                    "tokens": token_x[i],
+                    "lemmas": lemma_x[i],
+                    "token_ids": token_ids_x[i],
+                    "label": y[i],
+                    "orig_labels": orig_labels[i] if orig_labels is not None else None}
+
+        data_dicts.append(instance)
+
+    return data_dicts
+
+
+def write_data(data, path):
+
+    dir = os.listdir(path)
+    n = len(dir)
+        
+    with open(f"{path}/chunk_{n}.pkl", "wb") as f:
+        pickle.dump(data, f)
+
+
+def load_chunk(dataset, chunk_n, dir):
+
+    reg = f"{dataset}_chunkdata_{chunk_n}_.*\.pkl"
+    regex = re.compile(reg)
+
+    listdir = os.listdir(dir)
+
+    path = None
+    for file in listdir:
+        if regex.match(file) is not None:
+            path = os.path.join(dir, file)
+    
+    if path is None:
+        assert False, f"{dataset} chunk {chunk_n} does not exist in {dir}"
+
+    with open(path, "rb") as f:
+        data = pickle.load(f)
+
+    return data
+
 
 if __name__ == "__main__":
 
-    sentence = ["I haven't seen this movie yet, but I will see it soon with my cat's."]
-
-    cleaned_sentence = clean_text(sentence)
-    print(cleaned_sentence)
+    print("Module")

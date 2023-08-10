@@ -1,83 +1,26 @@
 import pickle
 import os
 import argparse
+import re
 
 import numpy as np
 from tqdm import tqdm
 
-import preprocessing.preprocess as preprocess
-import preprocessing.datasource as datasource
-import preprocessing.stage as stage
+import preprocessing.preprocess_functions as preprocess_functions
+import preprocessing.preprocess_functions as pf
 
 
-def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, input:str, output:str, test_size:float, validation:bool, chunk_size_test:int, seed:int, shuffle:bool):
+def stage_preprocess(dataset:str, input:str, output:str, chunk_n : int):
 
-    """
-    Stage data for training
-
-    Parameters
-    ----------
-    dataset : str
-        Name of dataset to stage trainingdata for
-    
-    chuck_size : int
-        Set size for individual chunk.
-    
-    chunk_amount : int
-        Set amount of chunks to stage at a time. Minimum value is 1. Default value is 1.
-
-    input : str
-        Path to input data, must be the absolute path to a valid directory where the datafiles are located.
-    
-    output : str
-        Path to output data, must be a path to a directory that exists and is writable.
-    
-    test : bool
-        Set whether or not test data should also be prepared. Default value is true.
-    
-    test_size : float
-        Set the percentage size of the test data. If not sat test and train sizes will be equal.
-    
-    use_test_set : bool
-        Set whether or not your data has its own test set already, if test==True and use_test_set==False test data is extracted from the training data. Default value is false. If sat test_size will be ignored, and test chunked will be extracted from the test set with same size and amount as for the training set. To change this set chunk_size_test and chunk_amount_test.
-    
-    chunk_size_test : int
-        Set size for individual chunk, must be greater than 0. If sat test_size argument will be ignored.
-    
-    chunk_amount_test : int
-        Set amount of chunks to stage at a time. Minimum value is 1.
-    
-    seed : int
-        Set seed for all randomizxation in chunking. Default value is a random seed.
-    
-    shuffle : bool
-        Set whether or not to shuffle the data. Default value is true.
+    chunked_data = pf.load_chunk(dataset, chunk_n, input)         
         
-    """
-
-
-    ds = datasource.dataset(dataset)
-    ds = ds(two_cat=True)
-    chunked_data = datasource.chunk_data_multiclass(dataset = ds,
-                                                    n_chunks_per_mix=chunk_amount_per_mix,
-                                                    chunk_size = chunk_size,
-                                                    path = input,
-                                                    test_chunk_size=chunk_size_test,
-                                                    test_size=test_size,
-                                                    validation = validation,
-                                                    val_chunk_size=-1,
-                                                    val_size=.2,
-                                                    shuffle=shuffle,
-                                                    seed=seed)
-    
     print("\n----------------------------------------------------------------------------------------------------")
     print(f"len train : {[len(chunk) for chunk in chunked_data[0]]}, len test : {[len(chunk) for chunk in chunked_data[2]]}, len val : {[len(chunk) for chunk in chunked_data[4]] if chunked_data[4] is not None else None}")
     print("----------------------------------------------------------------------------------------------------\n")
 
     n_classes = chunked_data[-1]
-    dir = os.listdir(output)
-    n = len(dir)
-    new_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{n}")
+    
+    new_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{chunk_n}")
 
     if not os.path.exists(new_chunkdist):
         os.mkdir(new_chunkdist)
@@ -85,7 +28,6 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
     else:
         assert False, f"Directory {new_chunkdist} already exists, please remove it before continuing" 
 
-    print(f"Preprocessing {dataset} chunkdist {n} with {chunk_amount_per_mix} chunks of size {chunk_size}")
     for i, _ in enumerate(tqdm(range(len(chunked_data[0])))):
 
         train_x = chunked_data[0][i]
@@ -101,20 +43,16 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
         orig_test_y = chunked_data[7][i] if chunked_data[7] is not None else None 
         orig_val_y = chunked_data[8][i] if chunked_data[8] is not None else None
     
-        # clean the data from unwanted symbols and such
-        cleaned_train_x = preprocess.clean_text(train_x)
-        cleaned_val_x = preprocess.clean_text(val_x)
+        cleaned_train_x = preprocess_functions.clean_text(train_x)
+        cleaned_val_x = preprocess_functions.clean_text(val_x)
 
-        # lemmatize the data
-        split_train_x, token_train_x, lemma_train_x = preprocess.lemmatize(cleaned_train_x, lemmatizer="en_core_web_sm")
-        split_val_x, token_val_x, lemma_val_x = preprocess.lemmatize(cleaned_val_x, lemmatizer="en_core_web_sm") 
+        split_train_x, token_train_x, lemma_train_x = preprocess_functions.lemmatize(cleaned_train_x, lemmatizer="en_core_web_sm")
+        split_val_x, token_val_x, lemma_val_x = preprocess_functions.lemmatize(cleaned_val_x, lemmatizer="en_core_web_sm") 
 
-        # get token maps
-        token_ids_train_x = preprocess.map_tokens(split_train_x, token_train_x)
-        token_ids_val_x = preprocess.map_tokens(split_val_x, token_val_x)
+        token_ids_train_x = preprocess_functions.map_tokens(split_train_x, token_train_x)
+        token_ids_val_x = preprocess_functions.map_tokens(split_val_x, token_val_x)
 
-        # stage data
-        train_data = stage.stage_data(cleaned_x=cleaned_train_x, 
+        train_data = pf.stage_data(cleaned_x=cleaned_train_x, 
                                       split_x=split_train_x, 
                                       token_x=token_train_x, 
                                       lemma_x=lemma_train_x, 
@@ -122,7 +60,7 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
                                       y=train_y, 
                                       orig_labels=orig_train_y)
                 
-        val_data = stage.stage_data(cleaned_x=cleaned_val_x,
+        val_data = pf.stage_data(cleaned_x=cleaned_val_x,
                                     split_x=split_val_x,
                                     token_x=token_val_x,
                                     lemma_x=lemma_val_x,
@@ -132,14 +70,13 @@ def stage_preprocess(dataset:str, chunk_size:int, chunk_amount_per_mix:int, inpu
 
         test_data = [{"text" : text, "sentiment" : label, "orig_labels" : orig_test_y} for text, label in zip(test_x, test_y)]
 
-        # write data
         data = {"train": train_data, 
                 "validation": val_data,
                 "test" : test_data,
                 "distributer" : dataset, 
                 "n_classes" : n_classes}
                 
-        stage.write_data(data=data, path=new_chunkdist)
+        pf.write_data(data=data, path=new_chunkdist)
         
     
 def dataset_checker(dataset):
@@ -147,24 +84,6 @@ def dataset_checker(dataset):
     if dataset.lower() not in valid_datasets:
         raise argparse.ArgumentTypeError(f"Invalid dataset, available datasets are: {(i for i in valid_datasets)}")
     return dataset.lower()
-
-
-def chunk_size_checker(chunk_size):
-    chunk_size = int(chunk_size)
-
-    if chunk_size <= 0:
-        raise argparse.ArgumentTypeError(f"Invalid chunk size, chunk size must be greater than 0")
-
-    return chunk_size
-
-
-def chunk_amount_checker(chunk_amount):
-    chunk_amount = int(chunk_amount)
-
-    if chunk_amount <= 0:
-        raise argparse.ArgumentTypeError(f"Invalid chunk amount, chunk amount must be greater than 0")
-    
-    return chunk_amount
 
 
 def input_checker(input):
@@ -180,75 +99,22 @@ def output_checker(output):
     else:
         raise argparse.ArgumentTypeError(f'Invalid output path, "{output}" is not writable or is not a directory')
 
-def bool_checker(test):
-    if test.lower() == "true" or int(test) == 1:
-        return True
-    elif test.lower() == "false" or int(test) == 0:
-        return False
-    else:
-        raise argparse.ArgumentTypeError(f"Invalid value, {test} is not a valid value. Valid values are true and false")
-
-def test_size_checker(test_size):
-    test_size = float(test_size)
-
-    if test_size <= 0 or test_size >= 1:
-        raise argparse.ArgumentTypeError(f"Invalid test size, test size must be between 0 and 1")
-    
-    return test_size
-
-def use_test_set_checker(use_test_set):
-    if use_test_set.lower() == "true" or int(use_test_set) == 1:
-        return True
-    elif use_test_set.lower() == "false" or int(use_test_set) == 0:
-        return False
-    else:
-        raise argparse.ArgumentTypeError(f"Invalid value, {use_test_set} is not a valid value. Valid values are true and false")
-
-
-
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Stage data for training")
 
-
     parser.add_argument("--dataset", type=dataset_checker, 
                         help="Dataset to stage")
     
-    parser.add_argument("--chunk_size", type=chunk_size_checker, nargs='?', default=10000,
-                        help="Set size for individual chunk, must be greater than 0. Default value is 10000. If used together with a train/test - split this chunk size will be split up into a train and test part accordingly. ")
-    
-    parser.add_argument("--chunk_amount", type=chunk_amount_checker, nargs ='?', default=1,
-                        help="Set amount of chunks to stage at a time. Minimum value is 1. Default value is 1.")
-
     parser.add_argument("--input", type=input_checker, 
                         help="Path to input data, must be the absolute path to a valid directory where the datafiles are located.")
     
     parser.add_argument("--output", type=output_checker, 
                         help="Path to output data, must be a path to a directory that exists and is writable.")
     
-    parser.add_argument("--test", type=bool_checker, nargs='?', default=1,
-                        help="Set whether or not test data should also be prepared. Default value is true.")
-
-    parser.add_argument("--test_size", type=test_size_checker, nargs='?', default=0.5,
-                        help="Set the percentage size of the test data. If not sat test and train sizes will be equal.")
-
-    parser.add_argument("--use_test_set", type=bool_checker, nargs='?', default=0,
-                        help="Set whether or not your data has its own test set already, if test==True and use_test_set==False test data is extracted from the training data. Default value is false. If sat test_size will be ignored, and test chunked will be extracted from the test set with same size and amount as for the training set. To change this set chunk_size_test and chunk_amount_test.")
-
-    parser.add_argument("--chunk_size_test", type=chunk_size_checker, nargs='?', default=-1,
-                        help="Set size for individual chunk, must be greater than 0. If sat test_size argument will be ignored.")
-
-    parser.add_argument("--chunk_amount_test", type=chunk_amount_checker, nargs ='?', default=-1,
-                        help="Set amount of chunks to stage at a time. Minimum value is 1.")
-    
-    parser.add_argument("--seed", type=int, nargs='?', default=np.random.randint(0, 99999999),
-                        help="Set seed for all randomizxation in chunking. Default value is a random seed.")
-    
-    parser.add_argument("--shuffle", type=bool_checker, nargs='?', default=1,
-                        help="Set whether or not to shuffle the data. Default value is true.")
-
+    parser.add_argument("--chunk_n", type=int, help="Which chunk to stage")
 
     args = parser.parse_args()
 
-    stage_preprocess(args.dataset, args.chunk_size, args.chunk_amount, args.input, args.output, args.test, args.test_size, args.use_test_set, args.chunk_size_test, args.seed, args.shuffle)
+    stage_preprocess(args.dataset, args.input, args.output, args.chunk_n)

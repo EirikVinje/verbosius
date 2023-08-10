@@ -9,7 +9,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 import datasets
 
-import preprocessing.preprocess as preprocess
+import preprocessing.preprocess_functions as preprocess_functions
 import config as config
 import xai_validation.helper_functions_xaival as vf
 
@@ -26,8 +26,8 @@ def main(model_path : str, model_name : str, batch_size_pred : int):
     train_y = np.array(train_y).astype(int)
     test_y = np.array(test_y).astype(int)
     
-    train_x_cleaned = preprocess.clean_text(train_x)
-    test_x_cleaned = preprocess.clean_text(test_x)
+    train_x_cleaned = preprocess_functions.clean_text(train_x)
+    test_x_cleaned = preprocess_functions.clean_text(test_x)
     
     model_path = os.path.join(model_path, model_name)
     
