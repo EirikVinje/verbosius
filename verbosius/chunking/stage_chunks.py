@@ -6,7 +6,7 @@ import numpy as np
 import chunking.chunker_functions as chunker_functions
 
 
-def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : str, output : str, test_size : float, validation : bool, seed : int, shuffle : int):
+def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : str, output : str, test_size : float, validation : bool, seed : int, shuffle : int, return_data=False):
     
     ds = chunker_functions.dataset(dataset)
     ds = ds(two_cat=True)
@@ -23,7 +23,13 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
     test_size = len(chunked_data[2][0])
     validation_size = len(chunked_data[4][0]) if chunked_data[4] is not None else 0
     
-    chunker_functions.write_chunks(chunked_data, output, dataset, chunk_size, test_size, validation_size, chunk_amount)
+    if return_data:
+        return chunked_data
+
+    else:
+        chunker_functions.write_chunks(chunked_data, output, dataset, chunk_size, test_size, validation_size, chunk_amount)
+        return None
+
 
 
 def dataset_checker(dataset):

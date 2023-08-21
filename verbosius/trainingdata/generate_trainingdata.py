@@ -34,7 +34,7 @@ def rulemaker(data):
     valid_y = [instance["label"] for instance in data["validation"]] if data["validation"] is not None else None
     
     train_y = np.array(train_y, dtype=np.uint32)
-    valid_y = np.array(valid_y, dtype=np.uint32)
+    valid_y = np.array(valid_y, dtype=np.uint32) if valid_y is not None else None
     
     vectorizer = CountVectorizer(max_features=config.MAX_FEATURES*6,
                                  max_df=config.MAX_DF, 
@@ -45,7 +45,7 @@ def rulemaker(data):
                                  stop_words = config.STOPWORDS)
     
     train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x])
-    valid_x_bin = vectorizer.transform([" ".join(x) for x in valid_x])
+    valid_x_bin = vectorizer.transform([" ".join(x) for x in valid_x]) if valid_x is not None else None
     _feature_names = vectorizer.get_feature_names_out()
 
     SKB = SelectKBest(chi2, k='all')
@@ -55,31 +55,34 @@ def rulemaker(data):
     assert feature_names.all() == _feature_names[SKB.get_support(indices=True)].all()
 
     train_x_bin = SKB.transform(train_x_bin).toarray()
-    valid_x_bin = SKB.transform(valid_x_bin).toarray()
+    valid_x_bin = SKB.transform(valid_x_bin).toarray() if valid_x_bin is not None else None
 
     tm = gt.TsetlinMachine(n_literals=train_x_bin.shape[1], 
                            n_clauses=config.NUMBER_OF_CLAUSES, 
                            n_classes=data["n_classes"],
                            s=config.S,
-                           n_literal_budget=config.LITERAL_BUDGET)
+                           n_literal_budget=config.LITERAL_BUDGET, 
+                           )
 
     for i in range(len(data["train"])):
         data["train"][i]["bin"] = train_x_bin[i]
-        
-    for i in range(len(data["validation"])):
-        data["validation"][i]["bin"] = valid_x_bin[i]
 
+    if data["validation"] is not None:
+        for i in range(len(data["validation"])):
+            data["validation"][i]["bin"] = valid_x_bin[i]
+    
     tm.set_train_data(train_x_bin, train_y)
     
     if valid_x_bin is not None:
         tm.set_test_data(valid_x_bin, valid_y) 
+    
     
     trainer = gt.Trainer(config.T, 
                          n_epochs=config.TM_EPOCHS, 
                          seed=42, 
                          n_jobs=config.N_JOBS, 
                          early_exit_acc=config.EARLY_STOP_ACC,
-                         progress_bar=False)
+                         progress_bar=False,)
 
     trainer.train(tm)    
 
@@ -255,6 +258,7 @@ def do_weighting(data, feature_names, rm):
 
     all_x = []
     _bad_x = []
+    _bad_y = []
 
     for i, inst in enumerate(data):
         
@@ -287,8 +291,9 @@ def do_weighting(data, feature_names, rm):
         
         else:
             _bad_x.append(orig_x)
+            _bad_y.append(y)
 
-    return all_x, _bad_x
+    return all_x, _bad_x, _bad_y
 
 
 def write_data(data, output, dataset, batchdist_n, n):
@@ -302,15 +307,21 @@ def write_data(data, output, dataset, batchdist_n, n):
     pickle.dump(data, file)
 
 
-def write_bad_x(x, output, dataset, batchdist_n, n):
-    
-    path = os.path.join(output, f"{dataset}_chunkdist_{batchdist_n}")
+def write_bad_x(x, y, output, dataset, batchdist_n):
+
+    path = os.path.dirname(output)    
+    path = os.path.join(path, "bad_texts")
 
     if not os.path.exists(path):
         os.mkdir(path)
 
-    file = open(os.path.join(path, f"bad_x_{n}.pkl"), "wb")
-    pickle.dump(x, file)
+    print(f"number of bad texts: {len(x)}")
+
+    data = {"x" : x, "y" : y}
+
+    file = open(os.path.join(path, f"{dataset}_bad_x_{batchdist_n}.pkl"), "wb")
+
+    pickle.dump(data, file)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 import preprocessing.preprocess_functions as preprocess_functions
+import preprocessing.stage_preprocess as stage_preprocess
 
 
 def test_clean_text():
@@ -49,6 +50,10 @@ def test_map_tokens():
 
     assert ids[0] == [0, 1, 1, 2, 3, 4], ids[0]
     assert ids[1] == [0, 1, 1, 1, 1, 2, 2, 2, 2], ids[1]
+
+
+
+
 
         
 if __name__ == "__main__":

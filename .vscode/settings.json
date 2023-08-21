@@ -1,5 +1,6 @@
 {
     "python.analysis.extraPaths": [
-        "./verbosius/exp_transformer"
+        "./verbosius/exp_transformer",
+        "./verbosius"
     ]
 }
