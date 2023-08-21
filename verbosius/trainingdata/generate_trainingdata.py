@@ -253,8 +253,8 @@ def do_weighting(data, feature_names, rm):
     if type(data) == type(None):
         return None
 
-
     all_x = []
+    _bad_x = []
 
     for i, inst in enumerate(data):
         
@@ -264,6 +264,7 @@ def do_weighting(data, feature_names, rm):
         tokens_x = inst["tokens"]
         tokenmap_x = inst["token_ids"]
         orig_label = inst["orig_labels"]
+        orig_x = inst["orig_text"]
 
         prediction, expl = rm.predict(bin_x, explain=True)
 
@@ -283,8 +284,11 @@ def do_weighting(data, feature_names, rm):
                         "orig_label" : orig_label}
 
             all_x.append(new_x)
+        
+        else:
+            _bad_x.append(orig_x)
 
-    return all_x
+    return all_x, _bad_x
 
 
 def write_data(data, output, dataset, batchdist_n, n):
@@ -296,6 +300,17 @@ def write_data(data, output, dataset, batchdist_n, n):
 
     file = open(os.path.join(path, f"chunk_{n}.pkl"), "wb")
     pickle.dump(data, file)
+
+
+def write_bad_x(x, output, dataset, batchdist_n, n):
+    
+    path = os.path.join(output, f"{dataset}_chunkdist_{batchdist_n}")
+
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+    file = open(os.path.join(path, f"bad_x_{n}.pkl"), "wb")
+    pickle.dump(x, file)
 
 
 if __name__ == "__main__":

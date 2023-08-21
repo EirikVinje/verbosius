@@ -58,7 +58,8 @@ def stage_preprocess(dataset:str, input:str, output:str, chunk_n : int):
                                       lemma_x=lemma_train_x, 
                                       token_ids_x=token_ids_train_x, 
                                       y=train_y, 
-                                      orig_labels=orig_train_y)
+                                      orig_labels=orig_train_y,
+                                      x=train_x)
                 
         val_data = pf.stage_data(cleaned_x=cleaned_val_x,
                                     split_x=split_val_x,
@@ -66,7 +67,8 @@ def stage_preprocess(dataset:str, input:str, output:str, chunk_n : int):
                                     lemma_x=lemma_val_x,
                                     token_ids_x=token_ids_val_x,
                                     y=val_y,
-                                    orig_labels=orig_val_y)
+                                    orig_labels=orig_val_y,
+                                    x=val_x)
 
         test_data = [{"text" : text, "sentiment" : label, "orig_labels" : orig_test_y} for text, label in zip(test_x, test_y)]
 

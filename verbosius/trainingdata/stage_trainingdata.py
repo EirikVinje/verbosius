@@ -15,6 +15,8 @@ def stage_trainingdata(dataset : str, input : str, chunkdist_n : int, output : s
 
     n_chunks = len(dir)
 
+    all_bad_x = []
+
     print(f"Number of chunks in {dataset} chunkdist {chunkdist_n}: {n_chunks}")
     for n in tqdm(range(n_chunks)):
         
@@ -22,8 +24,8 @@ def stage_trainingdata(dataset : str, input : str, chunkdist_n : int, output : s
         
         rm, feature_names = gen_data.rulemaker(data)
     
-        train_data = gen_data.do_weighting(data["train"], feature_names, rm)
-        val_data = gen_data.do_weighting(data["validation"], feature_names, rm)
+        train_data, train_bad_x = gen_data.do_weighting(data["train"], feature_names, rm)
+        val_data, val_bad_x = gen_data.do_weighting(data["validation"], feature_names, rm)
         
         data = {"train": train_data, 
                 "validation": val_data,
@@ -33,6 +35,10 @@ def stage_trainingdata(dataset : str, input : str, chunkdist_n : int, output : s
         
         gen_data.write_data(data, output, dataset, chunkdist_n, n)
 
+        bad_x = train_bad_x.extend(val_bad_x)
+        all_bad_x.extend(bad_x)
+        
+        
 
 def dataset_checker(dataset):
     valid_datasets = ['imdb', 'rottentomatoes', 'amazon']

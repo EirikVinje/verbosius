@@ -156,7 +156,7 @@ def map_tokens(stexts : list, tokens : list):
     return ids
 
 
-def stage_data(cleaned_x, split_x, token_x, lemma_x, token_ids_x, y, orig_labels):
+def stage_data(cleaned_x, split_x, token_x, lemma_x, token_ids_x, y, orig_labels, x):
 
     data_dicts = []
     
@@ -165,7 +165,8 @@ def stage_data(cleaned_x, split_x, token_x, lemma_x, token_ids_x, y, orig_labels
     
     for i in range(len(y)):
 
-        instance = {"cleaned_text": cleaned_x[i],
+        instance = {"orig_text" : x,
+                    "cleaned_text": cleaned_x[i],
                     "split_text": split_x[i],
                     "tokens": token_x[i],
                     "lemmas": lemma_x[i],
