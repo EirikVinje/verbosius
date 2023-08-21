@@ -7,36 +7,42 @@ import trainingdata.generate_trainingdata as gen_data
 import config as config
 
 
-def stage_trainingdata(dataset : str, input : str, chunkdist_n : int, output : str):
+def stage_trainingdata(dataset : str, input : str, chunkdist_n : int, output : str, return_data=False, get_bad_x=False):
 
     path = os.path.join(input, f"{dataset}_chunkdist_{chunkdist_n}")
-
     dir = os.listdir(path)
-
     n_chunks = len(dir)
-
     all_bad_x = []
+    all_bad_y = []
 
     print(f"Number of chunks in {dataset} chunkdist {chunkdist_n}: {n_chunks}")
     for n in tqdm(range(n_chunks)):
         
         data = pickle.load(open(f"{path}/chunk_{n}.pkl", "rb"))
-        
+
         rm, feature_names = gen_data.rulemaker(data)
     
-        train_data, train_bad_x = gen_data.do_weighting(data["train"], feature_names, rm)
-        val_data, val_bad_x = gen_data.do_weighting(data["validation"], feature_names, rm)
-        
+        train_data, train_bad_x, train_bad_y = gen_data.do_weighting(data["train"], feature_names, rm)
+        val_data, val_bad_x, val_bad_y = gen_data.do_weighting(data["validation"], feature_names, rm)
+
+        all_bad_x.extend(train_bad_x)
+        all_bad_y.extend(train_bad_y)
+
         data = {"train": train_data, 
                 "validation": val_data,
                 "test": data["test"], 
                 "distributer" : data["distributer"], 
                 "n_classes" : data["n_classes"]}
         
-        gen_data.write_data(data, output, dataset, chunkdist_n, n)
+        if return_data:
+            return data
+        
+        else:
+            gen_data.write_data(data, output, dataset, chunkdist_n, n)
+        
 
-        bad_x = train_bad_x.extend(val_bad_x)
-        all_bad_x.extend(bad_x)
+    if get_bad_x:
+        gen_data.write_bad_x(all_bad_x, all_bad_y, output, dataset, chunkdist_n)
         
         
 

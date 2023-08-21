@@ -165,7 +165,7 @@ def stage_data(cleaned_x, split_x, token_x, lemma_x, token_ids_x, y, orig_labels
     
     for i in range(len(y)):
 
-        instance = {"orig_text" : x,
+        instance = {"orig_text" : x[i],
                     "cleaned_text": cleaned_x[i],
                     "split_text": split_x[i],
                     "tokens": token_x[i],

@@ -10,7 +10,7 @@ import preprocessing.preprocess_functions as preprocess_functions
 import preprocessing.preprocess_functions as pf
 
 
-def stage_preprocess(dataset:str, input:str, output:str, chunk_n : int):
+def stage_preprocess(dataset:str, input:str, output:str, chunk_n : int, return_data=False):
 
     chunked_data = pf.load_chunk(dataset, chunk_n, input)         
         
@@ -22,10 +22,10 @@ def stage_preprocess(dataset:str, input:str, output:str, chunk_n : int):
     
     new_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{chunk_n}")
 
-    if not os.path.exists(new_chunkdist):
+    if not os.path.exists(new_chunkdist) and return_data is False:
         os.mkdir(new_chunkdist)
 
-    else:
+    elif return_data is False:
         assert False, f"Directory {new_chunkdist} already exists, please remove it before continuing" 
 
     for i, _ in enumerate(tqdm(range(len(chunked_data[0])))):
@@ -77,8 +77,14 @@ def stage_preprocess(dataset:str, input:str, output:str, chunk_n : int):
                 "test" : test_data,
                 "distributer" : dataset, 
                 "n_classes" : n_classes}
-                
-        pf.write_data(data=data, path=new_chunkdist)
+        
+        if return_data:
+            return data
+
+        else:
+            pf.write_data(data=data, path=new_chunkdist)
+    
+    return None
         
     
 def dataset_checker(dataset):
