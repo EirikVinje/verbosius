@@ -24,19 +24,17 @@ traindat_output_path= os.path.join(root, f"{dataset}/trainingdata")
 
 batchdist_n=0
 
-
-# TM PARAMS
 MAX_DF=0.9
 MIN_DF=1
-MAX_FEATURES=1400
+MAX_FEATURES=10000
 N_GRAM_RANGE=(1, 2)
-NUMBER_OF_CLAUSES=9000 #5853
+NUMBER_OF_CLAUSES=9000
 LITERAL_BUDGET=8
 S=3.4606
 T=9225
 TM_EPOCHS=4
 EARLY_STOP_ACC=0.86
-STOPWORDS=None #"english"
+STOPWORDS=None
 N_JOBS = 5
 
 
@@ -64,7 +62,7 @@ warmup_steps = 500
 load_best_model_at_end = True
 eval_accumulation_steps = 16
 label_names = ['labels', 'sentiment']
-neutral_weight = 0.3897 #
-loss_weight = 0.4154 #
+neutral_weight = 0.3897 
+loss_weight = 0.4154 
 num_labels = 3
 num_seq_labels = 2

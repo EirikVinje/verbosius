@@ -156,22 +156,21 @@ def map_tokens(stexts : list, tokens : list):
     return ids
 
 
-def stage_data(cleaned_x, split_x, token_x, lemma_x, token_ids_x, y, orig_labels, x):
+def stage_data(token_x, lemma_x, token_ids_x, y, orig_labels, x):
 
     data_dicts = []
     
-    if type(cleaned_x) == type(None):
+    if type(token_x) == type(None):
         return None
     
     for i in range(len(y)):
-
-        instance = {"orig_text" : x[i],
-                    "cleaned_text": cleaned_x[i],
-                    "split_text": split_x[i],
+        
+        instance = {
                     "tokens": token_x[i],
+                    "sentiment": y[i],
                     "lemmas": lemma_x[i],
+                    "orig_text" : x[i],
                     "token_ids": token_ids_x[i],
-                    "label": y[i],
                     "orig_labels": orig_labels[i] if orig_labels is not None else None}
 
         data_dicts.append(instance)

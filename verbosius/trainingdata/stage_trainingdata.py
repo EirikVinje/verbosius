@@ -3,48 +3,56 @@ import pickle
 import argparse
 from tqdm import tqdm
 
+from sklearn.model_selection import train_test_split
+
 import trainingdata.generate_trainingdata as gen_data
 import config as config
 
 
-def stage_trainingdata(dataset : str, input : str, chunkdist_n : int, output : str, return_data=False, get_bad_x=False):
+def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : int, error_chunk : bool = False):
 
     path = os.path.join(input, f"{dataset}_chunkdist_{chunkdist_n}")
+    
     dir = os.listdir(path)
     n_chunks = len(dir)
-    all_bad_x = []
-    all_bad_y = []
+    n = 0
+    
+    all_error_data = []
 
     print(f"Number of chunks in {dataset} chunkdist {chunkdist_n}: {n_chunks}")
-    for n in tqdm(range(n_chunks)):
-        
+
+    while n < n_chunks:
+
         data = pickle.load(open(f"{path}/chunk_{n}.pkl", "rb"))
 
-        rm, feature_names = gen_data.rulemaker(data)
+        data, train_error_data, eval_error_data = gen_data.make_weighted_data(data, error_chunk)
+
+        gen_data.write_data(data, output, dataset, chunkdist_n, n)
+
+        if error_chunk:
+            
+            all_error_data.extend(train_error_data)
+            all_error_data.extend(eval_error_data)
+
+        print("Number of error instances: ", len(all_error_data), "\n")
+
+        if error_chunk and len(all_error_data) > 2000:
+            
+            train_error_data, eval_error_data = train_test_split(all_error_data, test_size=0.2, random_state=42)
+
+            data = {"train": train_error_data, 
+                    "validation": eval_error_data,
+                    "test": data["test"], 
+                    "distributer" : data["distributer"], 
+                    "n_classes" : data["n_classes"]}
+            
+            gen_data.write_data(data, input, dataset, chunkdist_n, n_chunks)
+
+            n_chunks += 1
+            all_error_data = []
+
+        n += 1
     
-        train_data, train_bad_x, train_bad_y = gen_data.do_weighting(data["train"], feature_names, rm)
-        val_data, val_bad_x, val_bad_y = gen_data.do_weighting(data["validation"], feature_names, rm)
-
-        all_bad_x.extend(train_bad_x)
-        all_bad_y.extend(train_bad_y)
-
-        data = {"train": train_data, 
-                "validation": val_data,
-                "test": data["test"], 
-                "distributer" : data["distributer"], 
-                "n_classes" : data["n_classes"]}
-        
-        if return_data:
-            return data
-        
-        else:
-            gen_data.write_data(data, output, dataset, chunkdist_n, n)
-        
-
-    if get_bad_x:
-        gen_data.write_bad_x(all_bad_x, all_bad_y, output, dataset, chunkdist_n)
-        
-        
 
 def dataset_checker(dataset):
     valid_datasets = ['imdb', 'rottentomatoes', 'amazon']

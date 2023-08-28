@@ -5,7 +5,7 @@ def test_stage_preprocess():
     data = stage_preprocess(dataset="imdb", 
                      input="/home/bigtech/data/verbosius/imdb/testing/chunker", 
                      output="/home/bigtech/data/verbosius/imdb/testing/preprocess", 
-                     chunk_n=0,
+                     chunk_n=1,
                      return_data=False)
 
 

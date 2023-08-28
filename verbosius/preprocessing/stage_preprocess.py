@@ -52,18 +52,14 @@ def stage_preprocess(dataset:str, input:str, output:str, chunk_n : int, return_d
         token_ids_train_x = preprocess_functions.map_tokens(split_train_x, token_train_x)
         token_ids_val_x = preprocess_functions.map_tokens(split_val_x, token_val_x)
 
-        train_data = pf.stage_data(cleaned_x=cleaned_train_x, 
-                                      split_x=split_train_x, 
-                                      token_x=token_train_x, 
+        train_data = pf.stage_data(token_x=token_train_x, 
                                       lemma_x=lemma_train_x, 
                                       token_ids_x=token_ids_train_x, 
                                       y=train_y, 
                                       orig_labels=orig_train_y,
                                       x=train_x)
                 
-        val_data = pf.stage_data(cleaned_x=cleaned_val_x,
-                                    split_x=split_val_x,
-                                    token_x=token_val_x,
+        val_data = pf.stage_data(token_x=token_val_x,
                                     lemma_x=lemma_val_x,
                                     token_ids_x=token_ids_val_x,
                                     y=val_y,

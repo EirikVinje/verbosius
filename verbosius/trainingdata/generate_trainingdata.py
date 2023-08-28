@@ -11,7 +11,7 @@ import green_tsetlin as gt
 import config as config
 
 
-def rulemaker(data):
+def rulemaker(train_x, train_y, eval_x, eval_y, n_classes, accuracy : bool = False, error_chunk_params : bool = False):
     
     """
     Trains the Tsetlin Machine and creates a RulePredictor from the trained Tsetlin Machine that is used to
@@ -28,24 +28,39 @@ def rulemaker(data):
     
     """
 
-    train_x = [instance["lemmas"] for instance in data["train"]]
-    train_y = [instance["label"] for instance in data["train"]]
-    valid_x = [instance["lemmas"] for instance in data["validation"]] if data["validation"] is not None else None
-    valid_y = [instance["label"] for instance in data["validation"]] if data["validation"] is not None else None
+    MAX_FEATURES = config.MAX_FEATURES
+    MAX_DF = config.MAX_DF
+    MIN_DF = config.MIN_DF
+    N_GRAM_RANGE = config.N_GRAM_RANGE
+    NUMBER_OF_CLAUSES = config.NUMBER_OF_CLAUSES
+    LITERAL_BUDGET = config.LITERAL_BUDGET
+    S = config.S
+    T = config.T
+    TM_EPOCHS = config.TM_EPOCHS
+    EARLY_STOP_ACC = config.EARLY_STOP_ACC
+    STOPWORDS = config.STOPWORDS
+    N_JOBS = config.N_JOBS
+
+    if error_chunk_params:
+        MAX_FEATURES = 700
+        NUMBER_OF_CLAUSES = int(len(train_x) * 1/3)
+        LITERAL_BUDGET = 4
+        S = 3.4606
+        T = 1500
     
     train_y = np.array(train_y, dtype=np.uint32)
-    valid_y = np.array(valid_y, dtype=np.uint32) if valid_y is not None else None
-    
-    vectorizer = CountVectorizer(max_features=config.MAX_FEATURES*6,
-                                 max_df=config.MAX_DF, 
-                                 min_df=config.MIN_DF,
-                                 ngram_range=config.N_GRAM_RANGE,
+    eval_y = np.array(eval_y, dtype=np.uint32) if eval_y is not None else None
+
+    vectorizer = CountVectorizer(max_features=MAX_FEATURES,
+                                 max_df=MAX_DF, 
+                                 min_df=MIN_DF,
+                                 ngram_range=N_GRAM_RANGE,
                                  binary=True,
                                  dtype=np.uint8,
-                                 stop_words = config.STOPWORDS)
+                                 stop_words =STOPWORDS)
     
     train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x])
-    valid_x_bin = vectorizer.transform([" ".join(x) for x in valid_x]) if valid_x is not None else None
+    eval_x_bin = vectorizer.transform([" ".join(x) for x in eval_x]) if eval_x is not None else None
     _feature_names = vectorizer.get_feature_names_out()
 
     SKB = SelectKBest(chi2, k='all')
@@ -55,34 +70,26 @@ def rulemaker(data):
     assert feature_names.all() == _feature_names[SKB.get_support(indices=True)].all()
 
     train_x_bin = SKB.transform(train_x_bin).toarray()
-    valid_x_bin = SKB.transform(valid_x_bin).toarray() if valid_x_bin is not None else None
+    eval_x_bin = SKB.transform(eval_x_bin).toarray() if eval_x_bin is not None else None
 
     tm = gt.TsetlinMachine(n_literals=train_x_bin.shape[1], 
-                           n_clauses=config.NUMBER_OF_CLAUSES, 
-                           n_classes=data["n_classes"],
-                           s=config.S,
-                           n_literal_budget=config.LITERAL_BUDGET, 
+                           n_clauses=NUMBER_OF_CLAUSES, 
+                           n_classes=n_classes,
+                           s=S,
+                           n_literal_budget=LITERAL_BUDGET, 
                            )
 
-    for i in range(len(data["train"])):
-        data["train"][i]["bin"] = train_x_bin[i]
-
-    if data["validation"] is not None:
-        for i in range(len(data["validation"])):
-            data["validation"][i]["bin"] = valid_x_bin[i]
-    
     tm.set_train_data(train_x_bin, train_y)
     
-    if valid_x_bin is not None:
-        tm.set_test_data(valid_x_bin, valid_y) 
+    if eval_x_bin is not None:
+        tm.set_test_data(eval_x_bin, eval_y) 
     
-    
-    trainer = gt.Trainer(config.T, 
-                         n_epochs=config.TM_EPOCHS, 
+    trainer = gt.Trainer(threshold=T, 
+                         n_epochs=TM_EPOCHS, 
                          seed=42, 
-                         n_jobs=config.N_JOBS, 
-                         early_exit_acc=config.EARLY_STOP_ACC,
-                         progress_bar=False,)
+                         n_jobs=N_JOBS, 
+                         early_exit_acc=EARLY_STOP_ACC,
+                         progress_bar=accuracy)
 
     trainer.train(tm)    
 
@@ -91,7 +98,7 @@ def rulemaker(data):
 
     rp.create_from_state(tm.get_state(), fm)
     
-    return rp, feature_names
+    return rp, feature_names, train_x_bin, eval_x_bin
     
 
 def weight_tokens(lemmas, tokens, vocabulary, token_map):
@@ -144,7 +151,6 @@ def weight_tokens(lemmas, tokens, vocabulary, token_map):
             
             uni_w = vocabulary[unigram]
             weights[i] += uni_w
-
 
     new_toks, new_weights = connect_tokens(tokens, weights, token_map)
     return new_toks, new_weights
@@ -230,7 +236,7 @@ def label_tokens(sentiment, weights, threshold : float = 0.0):
     return labels
 
 
-def do_weighting(data, feature_names, rm):
+def do_weighting(data, feature_names, rm, gen_error_chunk : bool = False):
     """
     
     Applies the weighting of tokens to the data and returns the new data.
@@ -257,17 +263,22 @@ def do_weighting(data, feature_names, rm):
         return None
 
     all_x = []
-    _bad_x = []
-    _bad_y = []
+    all_error_x = []
 
-    for i, inst in enumerate(data):
+    print("keys : ", data[0].keys())
+
+    assert False
+
+    for _, inst in enumerate(data):
         
-        y = inst["label"]
+        tokens_x = inst["tokens"]
+        y = inst["sentiment"]
+        orig_label = inst["orig_labels"]
+        
+        tokenmap_x = inst["token_ids"]
         bin_x = inst["bin"]
         lemmas_x = inst["lemmas"]
-        tokens_x = inst["tokens"]
-        tokenmap_x = inst["token_ids"]
-        orig_label = inst["orig_labels"]
+        
         orig_x = inst["orig_text"]
 
         prediction, expl = rm.predict(bin_x, explain=True)
@@ -281,24 +292,72 @@ def do_weighting(data, feature_names, rm):
             labels = label_tokens(y, weights_x)
 
             new_x = {"tokens" : newtokens_x,
-                        "weights" : weights_x,
-                        "text" : " ".join(newtokens_x),
-                        "sentiment" : y,
-                        "labels" : labels,
-                        "orig_label" : orig_label}
+                     "weights" : weights_x,
+                     "text" : " ".join(newtokens_x),
+                     "sentiment" : y,
+                     "labels" : labels,
+                     "orig_label" : orig_label}
 
             all_x.append(new_x)
         
-        else:
-            _bad_x.append(orig_x)
-            _bad_y.append(y)
+        elif gen_error_chunk:
+            new_error_x = {"sentiment" : y,
+                           "lemmas" : lemmas_x,
+                           "tokens" : tokens_x,
+                           "token_ids" : tokenmap_x,
+                           "orig_labels" : orig_label,
+                           "orig_text" : orig_x}
 
-    return all_x, _bad_x, _bad_y
+            all_error_x.append(new_error_x)
+
+    if gen_error_chunk:
+        return all_x, all_error_x
+
+    else:
+        return all_x, None
 
 
-def write_data(data, output, dataset, batchdist_n, n):
+def make_weighted_data(data, error_chunk : bool = False):
+
+    train_x = [instance["lemmas"] for instance in data["train"]]
+    train_y = [instance["sentiment"] for instance in data["train"]]
+    eval_x = [instance["lemmas"] for instance in data["validation"]] if data["validation"] is not None else None
+    eval_y = [instance["sentiment"] for instance in data["validation"]] if data["validation"] is not None else None
+
+    rm, feature_names, train_x_bin, eval_x_bin = rulemaker(train_x, 
+                                                            train_y, 
+                                                            eval_x, 
+                                                            eval_y, 
+                                                            data["n_classes"], 
+                                                            accuracy=False, 
+                                                            error_chunk_params=False)
+
+    for i in range(len(data["train"])):
+        data["train"][i]["bin"] = train_x_bin[i]
+
+    if data["validation"] is not None:
+        for i in range(len(data["validation"])):
+            data["validation"][i]["bin"] = eval_x_bin[i]
+
+    train_data, train_error_data = do_weighting(data["train"], feature_names, rm, gen_error_chunk=error_chunk)
+    eval_data, eval_error_data = do_weighting(data["validation"], feature_names, rm, gen_error_chunk=error_chunk)
+
+    data = {"train": train_data, 
+            "validation": eval_data,
+            "test": data["test"], 
+            "distributer" : data["distributer"], 
+            "n_classes" : data["n_classes"]}
+        
+    if error_chunk:
+        return data, train_error_data, eval_error_data
+
+    else:
+        data, None, None
+
+
+def write_data(data, path, dataset, batchdist_n, n):
     
-    path = os.path.join(output, f"{dataset}_chunkdist_{batchdist_n}")
+    path = os.path.join(path, f"{dataset}_chunkdist_{batchdist_n}")
 
     if not os.path.exists(path):
         os.mkdir(path)
