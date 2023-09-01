@@ -483,20 +483,50 @@ def chunk_data_multiclass(dataset,
     return train_x, train_y, test_x, test_y, val_x, val_y, train_y_orig, test_y_orig, val_y_orig, n_classes
 
 
-def write_chunks(chunkdata, output, dataset, train_size, test_size, validation_size, n_chunks_per_mix):
+def write_chunks(output, data, test : bool = False):
+    
+    if test:
 
-    n = len(os.listdir(output))
+        output = os.path.join(output, "test")
 
-    with open(f"{output}/{dataset}_chunkdata_{n}_c{n_chunks_per_mix}_tr{train_size}_ts{test_size}_v{validation_size}.pkl", "wb") as f:
-        pickle.dump(chunkdata, f)
+        if not os.path.exists(output):
+            os.mkdir(output)
+        
+        dir = os.listdir(output)
+
+        n = len(dir)
+
+        with open(f"{output}/test_chunk_{n}.pkl", "wb") as f:
+            pickle.dump(data, f)
+
+    else:
+
+        output = os.path.join(output, "train_val")
+
+        if not os.path.exists(output):
+            os.mkdir(output)
+        
+        dir = os.listdir(output)
+
+        n = len(dir)
+
+        with open(f"{output}/train_val_chunk_{n}.pkl", "wb") as f:
+            pickle.dump(data, f)
 
 
+def write_meta_chunks(output, train_length, validation_length, test_length, dataset, n_classes, seed, shuffle, chunk_amount):
 
-
-
-
-
-
+    meta = {"train_length": train_length,
+            "validation_length": validation_length,
+            "test_length": test_length,
+            "n_classes": n_classes,
+            "dataset": dataset,
+            "seed": seed,
+            "shuffle": shuffle,
+            "chunk_amount": chunk_amount}
+    
+    with open(f"{output}/meta.pkl", "wb") as f:
+        pickle.dump(meta, f)
 
 
 

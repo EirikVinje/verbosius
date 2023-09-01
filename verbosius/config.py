@@ -1,6 +1,9 @@
 from transformers import AutoTokenizer
 import os
 
+# *************** GLOBAL ***************
+seed = 42
+
 # *************** PREPROSESSING *************** 
 
 
@@ -26,13 +29,13 @@ batchdist_n=0
 
 MAX_DF=0.9
 MIN_DF=1
-MAX_FEATURES=10000
+MAX_FEATURES=5000
 N_GRAM_RANGE=(1, 2)
 NUMBER_OF_CLAUSES=9000
 LITERAL_BUDGET=8
 S=3.4606
 T=9225
-TM_EPOCHS=4
+TM_EPOCHS=5
 EARLY_STOP_ACC=0.86
 STOPWORDS=None
 N_JOBS = 5
@@ -54,7 +57,7 @@ final_output_dir = os.path.join(root, f"{dataset}/models")
 learning_rate = 1.539e-5
 per_device_train_batch_size = 16
 per_device_eval_batch_size = 16
-num_train_epochs = 1
+num_train_epochs = 5
 weight_decay = 0.01
 evaluation_strategy = "epoch"
 save_strategy = "epoch"

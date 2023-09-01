@@ -178,13 +178,28 @@ def stage_data(token_x, lemma_x, token_ids_x, y, orig_labels, x):
     return data_dicts
 
 
-def write_data(data, path):
+def write_data(data, path, n, test : bool):
 
-    dir = os.listdir(path)
-    n = len(dir)
+    if test:
+
+        dir = os.path.join(path, "test")
+
+        if not os.path.exists(dir):
+            os.mkdir(dir)
+    
+        with open(f"{path}/test_chunk_{n}.pkl", "wb") as f:
+            pickle.dump(data, f)
+
+    else:
         
-    with open(f"{path}/chunk_{n}.pkl", "wb") as f:
-        pickle.dump(data, f)
+        dir = os.path.join(path, "train_val")
+
+        if not os.path.exists(dir):
+            os.mkdir(dir)
+
+        with open(f"{dir}/train_val_chunk_{n}.pkl", "wb") as f:
+            pickle.dump(data, f)
+
 
 
 def load_chunk(dataset, chunk_n, dir):

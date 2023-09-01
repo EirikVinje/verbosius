@@ -10,41 +10,37 @@ import preprocessing.preprocess_functions as preprocess_functions
 import preprocessing.preprocess_functions as pf
 
 
-def stage_preprocess(dataset:str, input:str, output:str, chunk_n : int, return_data=False):
+def stage_preprocess(dataset:str, input:str, output:str, chunk_n : int):
 
-    chunked_data = pf.load_chunk(dataset, chunk_n, input)         
-        
-    print("\n----------------------------------------------------------------------------------------------------")
-    print(f"len train : {[len(chunk) for chunk in chunked_data[0]]}, len test : {[len(chunk) for chunk in chunked_data[2]]}, len val : {[len(chunk) for chunk in chunked_data[4]] if chunked_data[4] is not None else None}")
-    print("----------------------------------------------------------------------------------------------------\n")
-
-    n_classes = chunked_data[-1]
-    
     new_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{chunk_n}")
 
-    if not os.path.exists(new_chunkdist) and return_data is False:
+    if not os.path.exists(new_chunkdist):
         os.mkdir(new_chunkdist)
 
-    elif return_data is False:
+    else:
         assert False, f"Directory {new_chunkdist} already exists, please remove it before continuing" 
 
-    for i, _ in enumerate(tqdm(range(len(chunked_data[0])))):
+    dist = os.listdir(input)
+    dist = dist[chunk_n]
 
-        train_x = chunked_data[0][i]
-        train_y = chunked_data[1][i]
+    path_to_dist = os.path.join(input, dist, "train_val") 
+    chunks = sorted(os.listdir(path_to_dist))
 
-        test_x = chunked_data[2][i] 
-        test_y = chunked_data[3][i] 
+    for i, chunk in enumerate(tqdm(chunks)):
+        
+        chunk = os.path.join(path_to_dist, chunk)
+        data = pickle.load(open(chunk, "rb"))
 
-        val_x = chunked_data[4][i] if chunked_data[4] is not None else None
-        val_y = chunked_data[5][i] if chunked_data[5] is not None else None
+        raw_train_x = data["train_x"]
+        train_y = data["train_y"]
+        orig_train_y = data["orig_train_y"]
 
-        orig_train_y = chunked_data[6][i] if chunked_data[6] is not None else None
-        orig_test_y = chunked_data[7][i] if chunked_data[7] is not None else None 
-        orig_val_y = chunked_data[8][i] if chunked_data[8] is not None else None
-    
-        cleaned_train_x = preprocess_functions.clean_text(train_x)
-        cleaned_val_x = preprocess_functions.clean_text(val_x)
+        raw_val_x = data["val_x"]
+        val_y = data["val_y"]
+        orig_val_y = data["orig_val_y"]
+        
+        cleaned_train_x = preprocess_functions.clean_text(raw_train_x)
+        cleaned_val_x = preprocess_functions.clean_text(raw_val_x)
 
         split_train_x, token_train_x, lemma_train_x = preprocess_functions.lemmatize(cleaned_train_x, lemmatizer="en_core_web_sm")
         split_val_x, token_val_x, lemma_val_x = preprocess_functions.lemmatize(cleaned_val_x, lemmatizer="en_core_web_sm") 
@@ -57,31 +53,19 @@ def stage_preprocess(dataset:str, input:str, output:str, chunk_n : int, return_d
                                       token_ids_x=token_ids_train_x, 
                                       y=train_y, 
                                       orig_labels=orig_train_y,
-                                      x=train_x)
+                                      x=raw_train_x)
                 
         val_data = pf.stage_data(token_x=token_val_x,
                                     lemma_x=lemma_val_x,
                                     token_ids_x=token_ids_val_x,
                                     y=val_y,
                                     orig_labels=orig_val_y,
-                                    x=val_x)
+                                    x=raw_val_x)
 
-        test_data = [{"text" : text, "sentiment" : label, "orig_labels" : orig_test_y} for text, label in zip(test_x, test_y)]
+        train_val_data = {"train": train_data, "validation": val_data}
 
-        data = {"train": train_data, 
-                "validation": val_data,
-                "test" : test_data,
-                "distributer" : dataset, 
-                "n_classes" : n_classes}
-        
-        if return_data:
-            return data
+        pf.write_data(data=train_val_data, path=new_chunkdist, n=i, test=False)
 
-        else:
-            pf.write_data(data=data, path=new_chunkdist)
-    
-    return None
-        
     
 def dataset_checker(dataset):
     valid_datasets = ['imdb', 'rottentomatoes', 'amazon', 'mnist']
