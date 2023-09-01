@@ -14,7 +14,7 @@ import xai_validation.helper_functions_xaival as hf_xaival
 
 
 
-def transformer_pipeline(output_dir, train_data, test_x, test_y, val_data):
+def transformer_pipeline(output_dir, train_data, test_x, test_y, val_data, save_model : bool = True):
     
     device = config.device
     learning_rate = config.learning_rate
@@ -37,7 +37,6 @@ def transformer_pipeline(output_dir, train_data, test_x, test_y, val_data):
 
     model = xm.CustomModel(num_labels, num_seq_labels, neutral_weight, loss_weight)
     model = model.to(device = device)
-    save_model = config.save_model
 
     train_data = hf.Dataset(**train_data)
     test_x = hf.Test_Dataset(**test_x)

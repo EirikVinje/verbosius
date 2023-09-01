@@ -9,7 +9,7 @@ import xai_transformer.transformer as tf
 import xai_validation.helper_functions_xaival as hf_xaival
 
 
-def stage_transformer(dataset : str, input : str, output : str, save_model : str, chunkdist_n : tuple):
+def stage_transformer(dataset : str, train_val_input : str, test_input : str, model_output : str, save_model : str, chunkdist_n : int):
 
     """
     
@@ -34,60 +34,61 @@ def stage_transformer(dataset : str, input : str, output : str, save_model : str
 
     """
 
-    path = os.path.join(output, f"{dataset}_model_{len(os.listdir(output))}")
-    if not os.path.exists(path):
-        os.mkdir(path)
-    output = path
-
-    dists = sorted(os.listdir(input))
-
-    chunk_dists = dists[chunkdist_n[0]:chunkdist_n[1]] if chunkdist_n[1] != -1 else dists[chunkdist_n[0]:]
-
+    model_path = os.path.join(model_output, f"{dataset}_model_dist_{chunkdist_n}")
+    
+    if not os.path.exists(model_path):
+        os.mkdir(model_path)
+    
+    else:
+        assert False, f"Directory {model_path} already exists, please remove it before continuing"
+    
+    trainingdata_chunkdist = os.path.join(train_val_input, f"{dataset}_chunkdist_{chunkdist_n}")
+    
+    chunks = sorted(os.listdir(trainingdata_chunkdist))
+    
     train_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
     val_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
+    
+    for _, chunk in enumerate(chunks):
+        
+        chunk = os.path.join(trainingdata_chunkdist, chunk)
+
+        train_val = pickle.load(open(chunk, "rb"))
+        
+        new_train_batch = hf.tokenize_and_align_labels(train_val["train"], config.tokenizer) 
+        new_val_batch = hf.tokenize_and_align_labels(train_val["validation"], config.tokenizer)
+        
+        train_data = hf.extend_data(train_data, new_train_batch)
+        val_data = hf.extend_data(val_data, new_val_batch)  
+    
     test_x = {"input_ids": [], "attention_mask": [], "targets": []}
     test_y = []
-    
-    tokenizer = config.tokenizer
 
-    print("chunkdistros: ")
-    for dist in chunk_dists:
-        print(dist)
-    print()
+    testdata_chunkdist = os.path.join(test_input, f"{dataset}_chunkdist_{chunkdist_n}", "test")
+    test_chunks = sorted(os.listdir(testdata_chunkdist))
 
-    for dist in chunk_dists:
+    for _, chunk in enumerate(test_chunks):
 
-        path = os.path.join(input, dist)
-        dir = os.listdir(path)
-        n_batches = len(dir)
-        
-        for n in range(n_batches):
-            
-            data = pickle.load(open(f"{path}/chunk_{n}.pkl", "rb"))
-            
-            #print(f"Batch: {n} , [{len(data['train'])}, {len(data['validation'])}, {len(data['test'])}]")
-            
-            new_train_batch = hf.tokenize_and_align_labels(data["train"], tokenizer) 
-            new_val_batch = hf.tokenize_and_align_labels(data["validation"], tokenizer)
-            train_data = hf.extend_data(train_data, new_train_batch)
-            val_data = hf.extend_data(val_data, new_val_batch)  
-            
-            new_test_batch = hf_xaival.tokenize_to_model([ins["text"] for ins in data["test"]], tokenizer, config.device)
-            test_x = hf.extend_test(test_x, new_test_batch)
-            test_y.extend([ins["sentiment"] for ins in data["test"]])
+        chunk = os.path.join(testdata_chunkdist, chunk)
+        test = pickle.load(open(chunk, "rb"))
 
+        new_test_x = hf_xaival.tokenize_to_model([text for text in test["test_x"]], config.tokenizer, config.device)
+
+        test_x = hf.extend_test(test_x, new_test_x)
+        test_y.extend(test["test_y"])
+
+    print()    
     print("Train size: ", len(train_data["input_ids"]))
     print("Test size: ", len(test_x["input_ids"]))
     print("Validation size: ", len(val_data["input_ids"])) if val_data["input_ids"] != [] else None
-
-
-
-    seq_acc = tf.transformer_pipeline(output_dir=output, 
+    print()
+    
+    seq_acc = tf.transformer_pipeline(output_dir=model_output, 
                                                train_data=train_data, 
                                                val_data=val_data, 
                                                test_x=test_x,
-                                               test_y=test_y)
-                                    
+                                               test_y=test_y,
+                                               save_model=save_model)
     
     return seq_acc
 
