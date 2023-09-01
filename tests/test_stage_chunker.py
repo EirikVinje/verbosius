@@ -9,10 +9,7 @@ def test_stage_chunks():
                  input="",
                  output="/home/bigtech/data/verbosius/imdb/testing/chunker",
                  test_size=0.4,
-                 validation=True,
-                 seed=42,
-                 shuffle=True,
-                 return_data=False)
+                 shuffle=True)
 
 if __name__ == "__main__":
     test_stage_chunks()

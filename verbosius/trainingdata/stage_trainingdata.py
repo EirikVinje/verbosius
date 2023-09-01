@@ -9,49 +9,64 @@ import trainingdata.generate_trainingdata as gen_data
 import config as config
 
 
-def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : int, error_chunk : bool = False):
+def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : int, n_badtexts : int = 2000, error_chunk : bool = False):
 
-    path = os.path.join(input, f"{dataset}_chunkdist_{chunkdist_n}")
-    
-    dir = os.listdir(path)
-    n_chunks = len(dir)
-    n = 0
+    trainingdata_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{chunkdist_n}")
+
+    if not os.path.exists(trainingdata_chunkdist):
+        os.mkdir(trainingdata_chunkdist)
+
+    else:
+        assert False, f"Directory {trainingdata_chunkdist} already exists, please remove it before continuing"
     
     all_error_data = []
+    n = 0
 
-    print(f"Number of chunks in {dataset} chunkdist {chunkdist_n}: {n_chunks}")
+    preproc_chunkdist = os.path.join(input, f"{dataset}_chunkdist_{chunkdist_n}", "train_val")
+    
+    print(f"Number of chunks in {dataset} chunkdist {chunkdist_n}: {len(os.listdir(preproc_chunkdist))} \n")
+    
+    while True:
 
-    while n < n_chunks:
+        dir = sorted(os.listdir(preproc_chunkdist))
+        n_chunks = len(dir)
 
-        data = pickle.load(open(f"{path}/chunk_{n}.pkl", "rb"))
+        if n >= len(dir):
+            break
+        
+        chunk = dir[n]
 
-        data, train_error_data, eval_error_data = gen_data.make_weighted_data(data, error_chunk)
+        verbose = True if dir[n][-5] == "e" else False
+        error_params = True if dir[n][-5] == "e" else False
 
-        gen_data.write_data(data, output, dataset, chunkdist_n, n)
+        chunk = os.path.join(preproc_chunkdist, chunk)
+        data = pickle.load(open(chunk, "rb"))
 
-        if error_chunk:
-            
-            all_error_data.extend(train_error_data)
-            all_error_data.extend(eval_error_data)
+        print(dir)
+        print("verbose : ", verbose)
+        print("error_params : ", error_params)
+
+        data, train_error_data, eval_error_data = gen_data.make_weighted_data(data, error_chunk, verbose, error_params)
+
+        gen_data.write_chunk(data, trainingdata_chunkdist, n)
+    
+        all_error_data.extend(train_error_data)
+        all_error_data.extend(eval_error_data)
 
         print("Number of error instances: ", len(all_error_data), "\n")
 
-        if error_chunk and len(all_error_data) > 2000:
+        if error_chunk and len(all_error_data) > n_badtexts:
             
             train_error_data, eval_error_data = train_test_split(all_error_data, test_size=0.2, random_state=42)
 
-            data = {"train": train_error_data, 
-                    "validation": eval_error_data,
-                    "test": data["test"], 
-                    "distributer" : data["distributer"], 
-                    "n_classes" : data["n_classes"]}
+            data = {"train": train_error_data, "validation": eval_error_data,}
             
-            gen_data.write_data(data, input, dataset, chunkdist_n, n_chunks)
+            gen_data.write_error_chunk(data, preproc_chunkdist, n_chunks)
 
-            n_chunks += 1
             all_error_data = []
 
         n += 1
+
     
 
 def dataset_checker(dataset):

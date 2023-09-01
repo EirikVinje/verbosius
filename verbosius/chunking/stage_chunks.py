@@ -5,8 +5,10 @@ import numpy as np
 
 import chunking.chunker_functions as chunker_functions
 
+import config as config
 
-def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : str, output : str, test_size : float, validation : bool, seed : int, shuffle : int, return_data=False):
+
+def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : str, output : str, test_size : float, shuffle : int):
     
     ds = chunker_functions.dataset(dataset)
     ds = ds(two_cat=True)
@@ -15,22 +17,58 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
                                                     chunk_size = chunk_size,
                                                     path = input,
                                                     test_size=test_size,
-                                                    validation = validation,
+                                                    validation = True,
                                                     val_size=0.2,
                                                     shuffle=shuffle,
-                                                    seed=seed)
+                                                    seed=config.seed)
     
-    test_size = len(chunked_data[2][0])
-    validation_size = len(chunked_data[4][0]) if chunked_data[4] is not None else 0
+    chunk_n = len(os.listdir(output))
+    new_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{chunk_n}")
+
+    if not os.path.exists(new_chunkdist):
+        os.mkdir(new_chunkdist)
+
+    output = new_chunkdist
+
+    for i, _ in enumerate(range(len(chunked_data[0]))):
+
+        train_x = chunked_data[0][i]
+        train_y = chunked_data[1][i]
+
+        test_x = chunked_data[2][i] 
+        test_y = chunked_data[3][i] 
+
+        val_x = chunked_data[4][i] if chunked_data[4] is not None else None
+        val_y = chunked_data[5][i] if chunked_data[5] is not None else None
+
+        orig_train_y = chunked_data[6][i] if chunked_data[6] is not None else None
+        orig_test_y = chunked_data[7][i] if chunked_data[7] is not None else None 
+        orig_val_y = chunked_data[8][i] if chunked_data[8] is not None else None
+
+        train_val = {"train_x": train_x,
+                     "train_y": train_y,
+                     "val_x": val_x,
+                     "val_y": val_y,
+                     "orig_train_y": orig_train_y,
+                     "orig_val_y": orig_val_y
+                     }
+        
+        test = {"test_x": test_x,
+                "test_y": test_y,
+                "orig_test_y": orig_test_y}
+        
+        chunker_functions.write_chunks(output, train_val, test=False)
+        chunker_functions.write_chunks(output, test, test=True)
+
+
+    train_length = len(chunked_data[0][0])
+    test_length = len(chunked_data[2][0])
+    validation_length = len(chunked_data[4][0]) if chunked_data[4] is not None else 0
+    n_classes = chunked_data[-1]
     
-    if return_data:
-        return chunked_data
+    chunker_functions.write_meta_chunks(output, train_length, validation_length, test_length, dataset, n_classes, seed, shuffle, chunk_amount)
 
-    else:
-        chunker_functions.write_chunks(chunked_data, output, dataset, chunk_size, test_size, validation_size, chunk_amount)
-        return None
-
-
+    
 
 def dataset_checker(dataset):
     valid_datasets = ['imdb', 'rottentomatoes', 'amazon', 'mnist']
