@@ -1,7 +1,7 @@
 import argparse
 import pickle
 import os
-import re
+import json
 
 import config as config
 import xai_transformer.helper_functions as hf
@@ -34,24 +34,26 @@ def stage_transformer(dataset : str, train_val_input : str, test_input : str, mo
 
     """
 
-    model_path = os.path.join(model_output, f"{dataset}_model_dist_{chunkdist_n}")
+    model_dir = os.path.join(model_output, f"{dataset}_model_dist_{chunkdist_n}")
     
-    if not os.path.exists(model_path):
-        os.mkdir(model_path)
+    if not os.path.exists(model_dir):
+        os.mkdir(model_dir)
     
     else:
-        assert False, f"Directory {model_path} already exists, please remove it before continuing"
+        assert False, f"Directory {model_dir} already exists, please remove it before continuing"
     
-    trainingdata_chunkdist = os.path.join(train_val_input, f"{dataset}_chunkdist_{chunkdist_n}")
+    model_path = os.path.join(model_dir, "model")
+
+    trainingdata_dist = os.path.join(train_val_input, f"{dataset}_chunkdist_{chunkdist_n}", "train_val")
     
-    chunks = sorted(os.listdir(trainingdata_chunkdist))
+    chunks = sorted(os.listdir(trainingdata_dist))
     
     train_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
     val_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
     
     for _, chunk in enumerate(chunks):
         
-        chunk = os.path.join(trainingdata_chunkdist, chunk)
+        chunk = os.path.join(trainingdata_dist, chunk)
 
         train_val = pickle.load(open(chunk, "rb"))
         
@@ -83,38 +85,32 @@ def stage_transformer(dataset : str, train_val_input : str, test_input : str, mo
     print("Validation size: ", len(val_data["input_ids"])) if val_data["input_ids"] != [] else None
     print()
     
-    seq_acc = tf.transformer_pipeline(output_dir=model_output, 
+    seq_acc = tf.transformer_pipeline(output_dir=model_path, 
                                                train_data=train_data, 
                                                val_data=val_data, 
                                                test_x=test_x,
                                                test_y=test_y,
                                                save_model=save_model)
     
-    return seq_acc
+    meta_model = {"seq_acc": seq_acc}
+
+    with open(os.path.join(model_dir, "meta_model.json"), "w") as f:
+        json.dump(meta_model, f)
+
+    with open(os.path.join("/home/bigtech/projects/verboius/model_logs", "meta_model.json"), "w") as f:
+        json.dump(meta_model, f)
+
+    os.system(f"git add --all")
+    os.system(f"git commit -m 'new model trained'")
+    os.system(f"git push origin HEAD")
+
+
 
 def dataset_checker(dataset):
     valid_datasets = ['imdb', 'rottentomatoes', 'amazon']
     if dataset.lower() not in valid_datasets:
         raise argparse.ArgumentTypeError(f"Invalid dataset, available datasets are: {(i for i in valid_datasets)}")
     return dataset.lower()
-
-
-def batchdist_checker(batchdist_range, input, dataset):
-
-    if batchdist_range[1] != -1:
-
-        for i in range(batchdist_range[0], batchdist_range[1]):
-            if not os.path.exists(os.path.join(input, f"{dataset}_batchdist_{i}")):
-                raise argparse.ArgumentTypeError(f"Invalid batch dist, batch dist {i} does not exist")
-
-    elif batchdist_range[1] == -1:
-        
-        dir = os.listdir(input)
-        n = len(dir)
-
-        for i in range(batchdist_range[0], n):
-            if not os.path.exists(os.path.join(input, f"{dataset}_batchdist_{i}")):
-                raise argparse.ArgumentTypeError(f"Invalid batch dist, batch dist {batchdist_range[0]} does not exist")
 
 
 def input_checker(input):
@@ -131,56 +127,30 @@ def output_checker(output):
         raise argparse.ArgumentTypeError(f'Invalid output path, "{output}" is not writable or is not a directory')
 
 
-def save_checker(save_model):
-    if save_model.lower() == "true":
-        return True
-    elif save_model.lower() == "false":
-        return False
-    else:
-        raise argparse.ArgumentTypeError(f'Invalid save_model, "{save_model}" is not "true" or "false"')
+def chunkdist_checker(dataset, input, chunkdist_n):
+    if not os.path.exists(os.path.join(input, f"{dataset}_chunkdist_{chunkdist_n}")):
+        raise argparse.ArgumentTypeError(f"Invalid chunk dist, {dataset}_chunkdist_{chunkdist_n} does not exist") 
 
-
-def n_batch_dist_checker(batchdist_range):
-
-    regex = re.compile(r"\((\d+),(-?\d+)\)")
-
-    match = regex.match(batchdist_range)
-
-    if match is None:
-        raise argparse.ArgumentTypeError(f"Invalid n_batch_dist, must be tuple interval, e.g (0,-1) is all batchdistros and on the exact form (int,int)")
-
-    batchdist_range = tuple(map(int, batchdist_range.strip("()").split(",")))
-    if batchdist_range[0] < 0:
-        raise argparse.ArgumentTypeError(f"Invalid intervals in n_batch_dist")
-    
-    if batchdist_range[0] > batchdist_range[1] and batchdist_range[1] != -1:
-        raise argparse.ArgumentTypeError(f"Invalid interval, {batchdist_range[0]} is larger than {batchdist_range[1]}")
-    
-    return batchdist_range
+    return chunkdist_n
 
     
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Stage trainingdata to transformer")
 
-    parser.add_argument("--dataset", type=dataset_checker, 
-                        help="Dataset to make trainingdata")
-    
-    parser.add_argument("--input", type=input_checker,
-                        help="Path to batchdistros of dataset, must be the absolute path to a valid directory where the datafiles are located.")
-    
-    parser.add_argument("--output", type=output_checker, 
-                        help="Path to output data, must be a path to a directory that exists and is writable.")
-    
-    parser.add_argument("--save_model", type=save_checker, nargs="?", default="false",
-                        help="Save model or not, either 'true' or 'false'.")
-    
-    parser.add_argument("--batchdist_range", type=n_batch_dist_checker,
-                        help="Number of batchdistros to use, must use tuple interval, e.g (0,-1) is all batchdistros")
+    parser.add_argument("--dataset", type=str, help="Dataset to train on")
+    parser.add_argument("--input_traindata", type=str, help="train and val data path")
+    parser.add_argument("--input_testdata", type=str, help="test data path")
+    parser.add_argument("--model_output", type=str, help="Path to output model, must be a path to a directory that exists and is writable.")
+    parser.add_argument("--save_model", type=bool, nargs="?", default="false", help="Save model or not, either True or False.")
+    parser.add_argument("--chunkdist_n", type=int, help="Select chunkdist to train on")
 
     args = parser.parse_args()
 
-    batchdist_checker(args.batchdist_range, args.input, args.dataset)
+    dataset_checker(args.dataset)
+    input_checker(args.input_traindata)
+    input_checker(args.input_testdata)
+    output_checker(args.model_output)
+    chunkdist_checker(args.dataset, args.input_traindata, args.chunkdist_n)
 
-    stage_transformer(args.dataset, args.input, args.output, args.save_model, args.batchdist_range)
-    
+    stage_transformer(args.dataset, args.input_traindata, args.input_testdata, args.model_output, args.save_model, args.chunkdist_n)
