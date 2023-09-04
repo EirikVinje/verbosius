@@ -3,15 +3,15 @@ import os
 
 # ********** Global ********** #
 dataset = "imdb"
-chunkdist_n = 384756
+chunkdist_n = 999999
 user = os.environ.get("USER")
 
 
 # *********** Chunker ********** #
 input_raw = f"/home/{user}/data/verbosius/imdb/testing/"
 output_chunk = f"/home/{user}/data/verbosius/imdb/testing/chunking"
-chunk_size = 100
-chunk_amount = 3
+chunk_size = 25000
+chunk_amount = 1
 
 # *********** Preprocess ********** #
 input_chunk = f"/home/{user}/data/verbosius/imdb/testing/chunking"

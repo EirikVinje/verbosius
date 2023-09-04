@@ -20,8 +20,8 @@ validation=True
 
 batchdist_n=0
 
-MAX_DF=0.9
-MIN_DF=1
+MAX_DF=0.6
+MIN_DF=5
 MAX_FEATURES=5000
 N_GRAM_RANGE=(1, 2)
 NUMBER_OF_CLAUSES=9000
@@ -34,7 +34,7 @@ STOPWORDS=None
 N_JOBS = 5
 
 error_chunk=True
-n_badtexts=20
+n_badtexts=2000
 
 # *************** TRANSFORMER ***************
 
