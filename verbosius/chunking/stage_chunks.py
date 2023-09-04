@@ -8,7 +8,7 @@ import chunking.chunker_functions as chunker_functions
 import config as config
 
 
-def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : str, output : str, test_size : float, shuffle : int):
+def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : str, output : str, test_size : float, validation: bool, seed: int, shuffle : int):
     
     ds = chunker_functions.dataset(dataset)
     ds = ds(two_cat=True)
@@ -17,11 +17,16 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
                                                     chunk_size = chunk_size,
                                                     path = input,
                                                     test_size=test_size,
-                                                    validation = True,
+                                                    validation = validation,
                                                     val_size=0.2,
                                                     shuffle=shuffle,
                                                     seed=config.seed)
     
+    print(len(chunked_data[0]))
+    print(chunked_data[0][0].shape)
+
+    assert False, "Stop here"
+
     chunk_n = len(os.listdir(output))
     new_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{chunk_n}")
 

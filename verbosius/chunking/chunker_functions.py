@@ -483,6 +483,162 @@ def chunk_data_multiclass(dataset,
     return train_x, train_y, test_x, test_y, val_x, val_y, train_y_orig, test_y_orig, val_y_orig, n_classes
 
 
+def chunk_data_multiclass_supersample(dataset, 
+                                        n_chunks_per_mix : int, 
+                                        chunk_size : int, 
+                                        path : str, 
+                                        validation : bool = True,
+                                        test_chunk_size: int = -1,
+                                        test_size: float = 0.2, 
+                                        val_size: float = 0.5, 
+                                        shuffle : bool = True, 
+                                        seed : int = 42,
+                                        val_chunk_size : int = -1):  
+    
+    """
+    dataset : dataset class
+    n_chunks_per_mix : number of chunks per mix
+    chunk_size : number of samples per chunk
+    path : path to dataset
+    test : whether to return test data
+    dataset.exists_test_set : whether to use test set for training
+    test_chunk_size : number of samples per test chunk, default is same as chunk_size but can be changed if you want different chunk size for the test data 
+    
+    test_size : size of test data, percentage of total data
+    dataset.exists_validation_set : whether to use validation set for training
+    val_chunk_size : number of samples per validation chunk, default is same as chunk_size but can be changed if you want different chunk size for the validation data
+    
+    val_size : size of validation data if no set is provided and the sizes aren't specified. Using this variable will split the TEST DATA into two parts, one for validation and one for testing
+    shuffle : whether to shuffle data
+    seed : random seed
+
+    returns:
+    train_x : training data
+    train_y : training labels
+    train_y_orig : original training labels, None if no original labels
+    test_x : test data
+    test_y : test labels
+    test_y_orig : original test labels, None if no original labels
+    val_x : validation data, None if no val data
+    val_y : validation labels, None if no val data
+    val_y_orig : original validation labels, None if no original labels
+    """
+
+    orig_chunk_size = chunk_size
+
+    if not dataset.exists_test_set and test_chunk_size == -1:        
+        test_chunk_size = int(orig_chunk_size*test_size)
+        chunk_size = chunk_size - test_chunk_size
+    elif test_chunk_size == -1:
+        test_chunk_size = chunk_size
+
+
+
+    if not dataset.exists_validation_set and val_chunk_size == -1:
+        val_chunk_size = int(orig_chunk_size*val_size)
+
+    elif val_chunk_size == -1:
+        val_chunk_size = test_chunk_size
+
+
+    un_chunked_mix = dataset.load_data(path, test_size=test_size)
+    train_data, test_data, val_data = un_chunked_mix
+
+
+    # TRAIN DATA vvvvvv
+    texts_train = train_data[:, 0]
+    labels_train = train_data[:, 1]
+
+    unique_classes = np.unique(labels_train)
+    n_classes = len(unique_classes)
+
+
+    indicies_class_train = []    
+    for i in unique_classes:
+        indicies_class_train.append(np.where(labels_train==i)[0])
+
+    # min_count = chunk_size//n_classes #min(num_elements_0, num_elements_1)
+    # print('min_count:',min_count)
+    # min_count = [3310, 1624, 3610]
+    _bal_count = chunk_size//n_classes
+    _min_count = Counter(labels_train)
+    
+    if _bal_count < _min_count[min(_min_count)]:
+        for i in unique_classes:
+            _min_count[i] = _bal_count
+    min_count = _min_count
+    
+    if shuffle:
+        rng = np.random.default_rng(seed)
+        for indicies in indicies_class_train:
+            rng.shuffle(indicies)
+
+    split_ind_train = []
+    for index, elem in enumerate(unique_classes):
+        split_ind_train.append(np.array_split(indicies_class_train[index][:min_count[elem]*n_chunks_per_mix], n_chunks_per_mix))
+
+
+
+    train_x, train_y, train_y_orig = chunk_data(n_chunks_per_mix, n_classes, split_ind_train, texts_train, labels_train, dataset, seed)
+    
+        
+
+        
+    if dataset.exists_validation_set and validation:
+        texts_val = val_data[:, 0]
+        labels_val = val_data[:, 1]
+
+        indicies_class_val = []
+        for i in unique_classes:
+            indicies_class_val.append(np.where(labels_val==i)[0])
+
+        _bal_count = chunk_size//n_classes
+        _min_count = Counter(labels_val)
+        if _bal_count < _min_count[min(_min_count)]:
+            for i in unique_classes:
+                _min_count[i] = _bal_count
+        min_count = _min_count
+
+
+        if shuffle:
+            rng = np.random.default_rng(seed)
+            for indicies in indicies_class_val:
+                rng.shuffle(indicies)
+
+        split_ind_val = []
+        for index,  elem in enumerate(unique_classes):
+            split_ind_val.append(np.array_split(indicies_class_val[i][:min_count[elem]*n_chunks_per_mix], n_chunks_per_mix))
+
+
+        val_x, val_y, val_y_orig = chunk_data(n_chunks_per_mix, n_classes, split_ind_val, texts_val, labels_val, dataset, seed)
+        
+
+
+    elif validation:
+        train_x_split, train_y_split, val_x_split, val_y_split = [], [], [], []
+        for i in range(n_chunks_per_mix):
+            train_x_temp, val_x_temp, train_y_temp, val_y_temp = train_test_split(train_x[i], train_y[i], test_size=val_size, random_state=seed)
+            train_x_split.append(train_x_temp)
+            train_y_split.append(train_y_temp)
+            val_x_split.append(val_x_temp)
+            val_y_split.append(val_y_temp)
+        
+        train_x = train_x_split
+        train_y = train_y_split
+        val_x = val_x_split
+        val_y = val_y_split
+        val_y_orig = None
+
+    
+    else:
+        val_x, val_y, val_y_orig = None, None, None
+        
+
+    return train_x, train_y, val_x, val_y, train_y_orig, val_y_orig, n_classes
+
+
+
+
 def write_chunks(output, data, test : bool = False):
     
     if test:
