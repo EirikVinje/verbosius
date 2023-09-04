@@ -34,7 +34,7 @@ STOPWORDS=None
 N_JOBS = 5
 
 error_chunk=True
-n_badtexts=2000
+n_badtexts=20
 
 # *************** TRANSFORMER ***************
 
