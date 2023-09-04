@@ -34,6 +34,9 @@ def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : i
     while True:
 
         dir = sorted(os.listdir(preproc_dist))
+
+        print(dir)
+
         n_chunks = len(dir)
 
         if n >= len(dir):

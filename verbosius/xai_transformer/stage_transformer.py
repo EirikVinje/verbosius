@@ -100,7 +100,7 @@ def stage_transformer(dataset : str, train_val_input : str, test_input : str, mo
     with open(os.path.join(model_dir, "meta_model.json"), "w") as f:
         json.dump(meta_model, f)
 
-    with open(os.path.join("/home/bigtech/projects/verbosius/model_logs", "meta_model.json"), "w") as f:
+    with open(os.path.join("/home/bigtech/projects/verbosius/model_logs", f"meta_model_{chunkdist_n}.json"), "w") as f:
         json.dump(meta_model, f)
 
     os.system(f"git add --all")
