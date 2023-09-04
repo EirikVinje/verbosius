@@ -2,6 +2,7 @@ import argparse
 import pickle
 import os
 import json
+import datetime
 
 import config as config
 import xai_transformer.helper_functions as hf
@@ -92,7 +93,9 @@ def stage_transformer(dataset : str, train_val_input : str, test_input : str, mo
                                                test_y=test_y,
                                                save_model=save_model)
     
-    meta_model = {"seq_acc": seq_acc}
+    meta_model = {"seq_acc": seq_acc,
+                "dist" : chunkdist_n,
+                "time_finished" : str(datetime.datetime.now())}
 
     with open(os.path.join(model_dir, "meta_model.json"), "w") as f:
         json.dump(meta_model, f)
