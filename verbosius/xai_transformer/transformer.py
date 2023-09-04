@@ -83,11 +83,8 @@ def transformer_pipeline(output_dir, train_data, test_x, test_y, val_data, save_
 
     print("Sequence accuracy: ", seq_acc)
 
-    if not save_model:
-        os.system(f"rm -rf {output_dir}")
-    else:
-        os.system(f"rm -rf {output_dir}")
-        torch.save(model, output_dir)
+    os.system(f"rm -rf {output_dir}")
+    torch.save(model, output_dir)
 
 
     return  seq_acc

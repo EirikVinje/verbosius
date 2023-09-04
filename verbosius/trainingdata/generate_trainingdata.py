@@ -323,7 +323,7 @@ def make_weighted_data(data, error_chunk : bool = False, verbose : bool = False,
                                                             eval_y=eval_y, 
                                                             accuracy=verbose, 
                                                             error_params=error_params)
-
+    
     for i in range(len(data["train"])):
         data["train"][i]["bin"] = train_x_bin[i]
 
@@ -336,16 +336,12 @@ def make_weighted_data(data, error_chunk : bool = False, verbose : bool = False,
 
     data = {"train": train_data, "validation": eval_data}
     
-    if error_chunk:
-        return data, train_error_data, eval_error_data
-
-    else:
-        return data, None, None
+    return data, train_error_data, eval_error_data
 
 
-def write_chunk(data, path, n):
+def write_chunk(data, output, n):
     
-    file = open(os.path.join(path, f"train_val_chunk_{n}.pkl"), "wb")
+    file = open(os.path.join(output, f"train_val_chunk_{n}.pkl"), "wb")
     pickle.dump(data, file)
 
 

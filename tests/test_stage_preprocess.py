@@ -5,7 +5,7 @@ def test_stage_preprocess():
     stage_preprocess(dataset="imdb", 
                      input="/home/bigtech/data/verbosius/imdb/testing/chunker", 
                      output="/home/bigtech/data/verbosius/imdb/testing/preprocess", 
-                     chunk_n=0)
+                     chunkdist_n=0)
 
 
 if __name__ == "__main__":

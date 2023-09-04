@@ -7,10 +7,7 @@ def test_stage_trainingdata():
     stage_trainingdata(dataset="imdb",
                        input="/home/bigtech/data/verbosius/imdb/testing/preprocess",
                        output="/home/bigtech/data/verbosius/imdb/testing/trainingdata",
-                       chunkdist_n=0,
-                       n_badtexts=25,
-                       error_chunk=True,
-                       )
+                       chunkdist_n=0)
 
 
 if __name__ == "__main__":

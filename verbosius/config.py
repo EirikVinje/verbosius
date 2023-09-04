@@ -6,24 +6,17 @@ seed = 42
 
 # *************** PREPROSESSING *************** 
 
-
-dataset="sst5"
-root = os.path.expanduser("~/data/verbosius")
-preproc_input_path= os.path.join(root, f"{dataset}/{dataset}_raw")
-preproc_output_path= os.path.join(root, f"{dataset}/preprocess")
-
 batch_size=8544
 batch_amount=1
 use_test_set=True
 batch_size_test = 2210
 shuffle=True
 seed=42
-
+test_size=0.2
+val_size=0.2
+validation=True
 
 # *************** GENERATE TRAINING DATA ***************
-
-traindat_input_path= os.path.join(root, f"{dataset}/preprocess")
-traindat_output_path= os.path.join(root, f"{dataset}/trainingdata")
 
 batchdist_n=0
 
@@ -40,19 +33,14 @@ EARLY_STOP_ACC=0.86
 STOPWORDS=None
 N_JOBS = 5
 
+error_chunk=True
+n_badtexts=2000
 
 # *************** TRANSFORMER ***************
 
 device="cuda"
 model_name_ = "distilroberta-base"
 tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True, device=device)
-
-save_model = True
-
-batchdist_range = "\(1,2\)"
-final_input_dir = os.path.join(root, f"{dataset}/trainingdata")
-final_output_dir = os.path.join(root, f"{dataset}/models")
-
 
 learning_rate = 1.539e-5
 per_device_train_batch_size = 16
