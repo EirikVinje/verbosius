@@ -2,7 +2,8 @@ from transformers import AutoTokenizer
 import os
 
 # *************** GLOBAL ***************
-seed = 42
+
+seed = 69
 
 # *************** PREPROSESSING *************** 
 
@@ -20,12 +21,12 @@ validation=True
 
 batchdist_n=0
 
-MAX_DF=0.6
-MIN_DF=5
+MAX_DF=0.7
+MIN_DF=10
 MAX_FEATURES=5000
 N_GRAM_RANGE=(1, 2)
 NUMBER_OF_CLAUSES=9000
-LITERAL_BUDGET=8
+LITERAL_BUDGET=10
 S=3.4606
 T=9225
 TM_EPOCHS=5
@@ -43,8 +44,8 @@ model_name_ = "distilroberta-base"
 tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True, device=device)
 
 learning_rate = 1.539e-5
-per_device_train_batch_size = 16
-per_device_eval_batch_size = 16
+per_device_train_batch_size = 32
+per_device_eval_batch_size = 32
 num_train_epochs = 5
 weight_decay = 0.01
 evaluation_strategy = "epoch"
