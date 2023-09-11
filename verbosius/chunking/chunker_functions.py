@@ -625,6 +625,8 @@ def chunk_data_multiclass_supersample(dataset,
         for index,  elem in enumerate(unique_classes):
             split_ind_val.append(np.array_split(indicies_class_val[i][:min_count[elem]*n_chunks_per_mix], n_chunks_per_mix))
 
+        split_ind_val = supersample_chunk(split_ind_val, n_classes, n_chunks_per_mix, _bal_count, rng)
+        
 
         val_x, val_y, val_y_orig = chunk_data(n_chunks_per_mix, n_classes, split_ind_val, texts_val, labels_val, dataset, seed)
         
