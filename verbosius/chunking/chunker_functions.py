@@ -483,6 +483,18 @@ def chunk_data_multiclass(dataset,
     return train_x, train_y, test_x, test_y, val_x, val_y, train_y_orig, test_y_orig, val_y_orig, n_classes
 
 
+def supersample_chunk(split_ind, n_classes, n_chunks, bal_count, rng):
+    for c in range(n_classes):
+        for i in range(n_chunks):
+            if len(split_ind[c][i]) < bal_count:
+                temp = list(range(n_chunks))
+                temp.remove(i)
+                print(temp)
+                sample_index = rng.choice(temp)
+                split_ind[c][i] = np.concatenate((split_ind[c][i], rng.choice(split_ind[c][sample_index], bal_count-len(split_ind[c][i]))))
+    return split_ind
+
+
 def chunk_data_multiclass_supersample(dataset, 
                                         n_chunks_per_mix : int, 
                                         chunk_size : int, 
@@ -525,6 +537,7 @@ def chunk_data_multiclass_supersample(dataset,
     """
 
     orig_chunk_size = chunk_size
+    rng = np.random.default_rng(seed)
 
     if not dataset.exists_test_set and test_chunk_size == -1:        
         test_chunk_size = int(orig_chunk_size*test_size)
@@ -557,19 +570,20 @@ def chunk_data_multiclass_supersample(dataset,
     for i in unique_classes:
         indicies_class_train.append(np.where(labels_train==i)[0])
 
-    # min_count = chunk_size//n_classes #min(num_elements_0, num_elements_1)
-    # print('min_count:',min_count)
-    # min_count = [3310, 1624, 3610]
+ 
     _bal_count = chunk_size//n_classes
     _min_count = Counter(labels_train)
+
     
     if _bal_count < _min_count[min(_min_count)]:
         for i in unique_classes:
             _min_count[i] = _bal_count
     min_count = _min_count
     
+
+    
     if shuffle:
-        rng = np.random.default_rng(seed)
+        
         for indicies in indicies_class_train:
             rng.shuffle(indicies)
 
@@ -578,6 +592,8 @@ def chunk_data_multiclass_supersample(dataset,
         split_ind_train.append(np.array_split(indicies_class_train[index][:min_count[elem]*n_chunks_per_mix], n_chunks_per_mix))
 
 
+    # Do supersample, if needed
+    split_ind_train = supersample_chunk(split_ind_train, n_classes, n_chunks_per_mix, _bal_count, rng)
 
     train_x, train_y, train_y_orig = chunk_data(n_chunks_per_mix, n_classes, split_ind_train, texts_train, labels_train, dataset, seed)
     
@@ -693,3 +709,8 @@ def write_meta_chunks(output, train_length, validation_length, test_length, data
 
 
 
+# for c in range(n_classes):
+    #     for i in range(n_chunks_per_mix):
+    #         if len(split_ind_train[c][i]) < _bal_count:
+    #             print('yo')
+    #             split_ind_train[c][i] = np.concatenate((split_ind_train[c][i], rng.choice(split_ind_train[c][i], _bal_count-len(split_ind_train[c][i]))))
