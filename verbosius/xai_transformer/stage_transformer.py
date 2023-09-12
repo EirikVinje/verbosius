@@ -81,10 +81,10 @@ def stage_transformer(dataset : str, train_val_input : str, test_input : str, mo
         # chunk = os.path.join(testdata_chunkdist, chunk)
         # test = pickle.load(open(chunk, "rb"))
 
-    new_test_x = hf_xaival.tokenize_to_model([text for text in test[0][0]], config.tokenizer, config.device)
+    new_test_x = hf_xaival.tokenize_to_model([text for text, _ in test], config.tokenizer, config.device)
 
     test_x = hf.extend_test(test_x, new_test_x)
-    test_y = test[0][1]
+    test_y = [label for _, label in test]
 
     print()    
     print("Train size: ", len(train_data["input_ids"]))

@@ -62,7 +62,8 @@ def transformer_pipeline(output_dir, train_data, test_x, test_y, val_data, save_
         label_names = label_names,
         )
 
-    training_args = training_args.set_dataloader(pin_memory=False)
+    if device != "cpu":
+        training_args = training_args.set_dataloader(pin_memory=False)
 
     trainer = Trainer(
         model=model,

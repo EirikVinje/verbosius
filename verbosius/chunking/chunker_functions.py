@@ -27,18 +27,20 @@ class IMDB:
         test_data = dataset["test"]
 
         test_x, test_y = [], []
+
         for i in range(len(test_data)):
             test_x.append(test_data[i]["text"])
             test_y.append(test_data[i]["label"])
         
+
         test_x = np.asarray(test_x)
         test_y = np.asarray(test_y)
 
         test_x = test_x.astype(object)
         test_y = test_y.astype(np.uint8)
 
-        test_data = np.column_stack((test_x, test_y))
 
+        test_data = np.column_stack((test_x, test_y))
 
         return test_data
 
