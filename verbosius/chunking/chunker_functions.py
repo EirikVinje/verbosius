@@ -1,13 +1,16 @@
 import os
 import datasets as ds
+import pickle
+import json
+from time import perf_counter
+
 import pandas as pd
 import numpy as np
-import pickle
 
-from time import perf_counter
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 from collections import Counter
+
 
 class IMDB:
 
@@ -679,8 +682,8 @@ def write_meta_chunks(output, train_length, validation_length, test_length, data
             "shuffle": shuffle,
             "chunk_amount": chunk_amount}
     
-    with open(f"{output}/meta.pkl", "wb") as f:
-        pickle.dump(meta, f)
+    with open(f"{output}/meta.json", "w") as f:
+         json.dump(meta, f)
 
 
 

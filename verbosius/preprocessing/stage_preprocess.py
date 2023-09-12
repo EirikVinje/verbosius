@@ -10,25 +10,21 @@ import preprocessing.preprocess_functions as preprocess_functions
 import preprocessing.preprocess_functions as pf
 
 
-def stage_preprocess(dataset:str, input:str, output:str, chunk_n : int):
+def stage_preprocess(dataset:str, input:str, output:str, chunkdist_n : int):
 
-    new_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{chunk_n}")
+    new_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{chunkdist_n}")
 
     if not os.path.exists(new_chunkdist):
         os.mkdir(new_chunkdist)
-
     else:
         assert False, f"Directory {new_chunkdist} already exists, please remove it before continuing" 
 
-    dist = os.listdir(input)
-    dist = dist[chunk_n]
-
-    path_to_dist = os.path.join(input, dist, "train_val") 
-    chunks = sorted(os.listdir(path_to_dist))
+    chunk_dist = os.path.join(input, f"{dataset}_chunkdist_{chunkdist_n}", "train_val")
+    chunks = sorted(os.listdir(chunk_dist))
 
     for i, chunk in enumerate(tqdm(chunks)):
         
-        chunk = os.path.join(path_to_dist, chunk)
+        chunk = os.path.join(chunk_dist, chunk)
         data = pickle.load(open(chunk, "rb"))
 
         raw_train_x = data["train_x"]
@@ -64,7 +60,7 @@ def stage_preprocess(dataset:str, input:str, output:str, chunk_n : int):
 
         train_val_data = {"train": train_data, "validation": val_data}
 
-        pf.write_data(data=train_val_data, path=new_chunkdist, n=i, test=False)
+        pf.write_data(data=train_val_data, path=new_chunkdist, n=i)
 
     
 def dataset_checker(dataset):
@@ -88,21 +84,28 @@ def output_checker(output):
         raise argparse.ArgumentTypeError(f'Invalid output path, "{output}" is not writable or is not a directory')
 
 
+def chunkdist_checker(dataset, input, chunkdist_n):
+
+    if not os.path.exists(os.path.join(input, f"{dataset}_chunkdist_{chunkdist_n}")):
+        raise argparse.ArgumentTypeError(f"Invalid chunk dist, {dataset}_chunkdist_{chunkdist_n} does not exist") 
+
+    return chunkdist_n
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Stage data for training")
 
-    parser.add_argument("--dataset", type=dataset_checker, 
-                        help="Dataset to stage")
-    
-    parser.add_argument("--input", type=input_checker, 
-                        help="Path to input data, must be the absolute path to a valid directory where the datafiles are located.")
-    
-    parser.add_argument("--output", type=output_checker, 
-                        help="Path to output data, must be a path to a directory that exists and is writable.")
-    
-    parser.add_argument("--chunk_n", type=int, help="Which chunk to stage")
+    parser.add_argument("--dataset", type=str, help="Dataset to stage")
+    parser.add_argument("--input", type=str, help="Path to input data, must be the absolute path to a valid directory where the datafiles are located.")
+    parser.add_argument("--output", type=str, help="Path to output data, must be a path to a directory that exists and is writable.")
+    parser.add_argument("--chunkdist_n", type=int, help="Which chunk to stage")
 
     args = parser.parse_args()
 
-    stage_preprocess(args.dataset, args.input, args.output, args.chunk_n)
+    dataset_checker(args.dataset)
+    input_checker(args.input)
+    output_checker(args.output)
+    chunkdist_checker(args.dataset, args.input, args.chunkdist_n)
+
+    stage_preprocess(args.dataset, args.input, args.output, args.chunkdist_n)
+    # stage_preprocess(dataset:str, input:str, output:str, chunkdist_n : int)
