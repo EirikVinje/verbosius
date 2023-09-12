@@ -3,7 +3,7 @@ import os
 
 # ********** Global ********** #
 dataset = "imdb"
-chunkdist_n = 696969
+chunkdist_n = 192837
 user = os.environ.get("USER")
 
 

@@ -7,10 +7,6 @@ seed = 69
 
 # *************** PREPROSESSING *************** 
 
-batch_size=8544
-batch_amount=1
-use_test_set=True
-batch_size_test = 2210
 shuffle=True
 seed=42
 test_size=0.2
@@ -18,8 +14,6 @@ val_size=0.2
 validation=True
 
 # *************** GENERATE TRAINING DATA ***************
-
-batchdist_n=0
 
 MAX_DF=0.7
 MIN_DF=10
