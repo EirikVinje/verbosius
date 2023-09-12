@@ -22,10 +22,7 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
                                                     shuffle=shuffle,
                                                     seed=config.seed)
     
-    print(len(chunked_data[0]))
-    print(chunked_data[0][0].shape)
 
-    assert False, "Stop here"
 
     chunk_n = len(os.listdir(output))
     new_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{chunk_n}")
@@ -40,15 +37,11 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
         train_x = chunked_data[0][i]
         train_y = chunked_data[1][i]
 
-        test_x = chunked_data[2][i] 
-        test_y = chunked_data[3][i] 
+        val_x = chunked_data[2][i] if chunked_data[2] is not None else None
+        val_y = chunked_data[3][i] if chunked_data[3] is not None else None
 
-        val_x = chunked_data[4][i] if chunked_data[4] is not None else None
-        val_y = chunked_data[5][i] if chunked_data[5] is not None else None
-
-        orig_train_y = chunked_data[6][i] if chunked_data[6] is not None else None
-        orig_test_y = chunked_data[7][i] if chunked_data[7] is not None else None 
-        orig_val_y = chunked_data[8][i] if chunked_data[8] is not None else None
+        orig_train_y = chunked_data[4][i] if chunked_data[4] is not None else None
+        orig_val_y = chunked_data[5][i] if chunked_data[5] is not None else None
 
         train_val = {"train_x": train_x,
                      "train_y": train_y,

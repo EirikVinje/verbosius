@@ -17,7 +17,10 @@ class IMDB:
         self.exists_test_set = True
         self.exists_validation_set = False
         self.n_classes = 2
+        self.test_data = None
 
+    def load_test(self):
+        return self.test_data
 
     def load_data(self, path: str, test: bool = False, test_size: float = 0.2):
 
@@ -53,7 +56,9 @@ class IMDB:
         train_data = np.column_stack((train_x, train_y))
         test_data = np.column_stack((test_x, test_y))
 
-        return train_data, test_data, None
+        self.test_data = test_data
+
+        return train_data, None
 
             
 class MNIST:
@@ -65,6 +70,10 @@ class MNIST:
         self.exists_test_set = False
         self.exists_validation_set = False
         self.n_classes = 10
+        self.test_data = None
+
+    def load_test(self):
+        return self.test_data
 
     def load_data(self, path: str, test: bool = False, test_size: float = 0.2):
         t0 = perf_counter()
@@ -105,7 +114,11 @@ class RottenTomatoes:
         self.exists_test_set = True
         self.exists_validation_set = True
         self.n_classes = 2
+        self.test_data = None
 
+    def load_test(self):
+        return self.test_data
+    
     def load_data(self, path: str,test: bool = False, test_size: float = 0.2):
 
         rt = ds.load_dataset("rotten_tomatoes")
@@ -144,7 +157,9 @@ class RottenTomatoes:
         test_data = np.column_stack((test_x, test_y))
         val_data = np.column_stack((val_x, val_y))
 
-        return train_data, test_data, val_data
+        self.test_data = test_data
+
+        return train_data, val_data
 
 
 class SST5:
@@ -155,6 +170,10 @@ class SST5:
         self.exists_test_set = True
         self.exists_validation_set = True
         self.n_classes = 5
+        self.test_data = None
+
+    def load_test(self):
+        return self.test_data
 
     def load_data(self, path: str, test: bool = False, test_size: float = 0.2):
         dataset = ds.load_dataset("SetFit/sst5")
@@ -207,11 +226,12 @@ class SST5:
         self.val_all_labels = val_all_labels.astype(np.uint8)
 
         train_data = np.column_stack((train_x, train_y))
-        test_data = np.column_stack((test_x, test_y))
+        test_data = np.column_stack((test_x, test_y, test_all_labels))
         val_data = np.column_stack((val_x, val_y))
         
+        self.test_data = test_data
 
-        return train_data, test_data, val_data
+        return train_data, val_data
 
 
 class Amazon:
@@ -221,10 +241,16 @@ class Amazon:
         self.two_cat = two_cat
         self.exists_test_set = False
         self.exists_validation_set = False
+        self.test_data = None
 
+    def load_test(self):
+        return self.test_data
+    
     def load_data(self, path: str):
 
-        return 
+        return None, None
+    
+
     
 
 def dataset(dataset : str):
@@ -285,6 +311,16 @@ def chunk_data(n_chunks_per_mix, n_classes, split_ind_input, texts, labels, data
     return train_x, train_y, None
 
 
+def supersample_chunk(split_ind, n_classes, n_chunks, bal_count, rng):
+    for c in range(n_classes):
+        for i in range(n_chunks):
+            if len(split_ind[c][i]) < bal_count:
+                temp = list(range(n_chunks))
+                temp.remove(i)
+                sample_index = rng.choice(temp)
+                split_ind[c][i] = np.concatenate((split_ind[c][i], rng.choice(split_ind[c][sample_index], bal_count-len(split_ind[c][i]))))
+    return split_ind
+
 def chunk_data_multiclass(dataset, 
                           n_chunks_per_mix : int, 
                           chunk_size : int, 
@@ -344,7 +380,7 @@ def chunk_data_multiclass(dataset,
 
 
     un_chunked_mix = dataset.load_data(path, test_size=test_size)
-    train_data, test_data, val_data = un_chunked_mix
+    train_data, val_data = un_chunked_mix
 
 
     # TRAIN DATA vvvvvv
@@ -382,52 +418,6 @@ def chunk_data_multiclass(dataset,
 
 
     train_x, train_y, train_y_orig = chunk_data(n_chunks_per_mix, n_classes, split_ind_train, texts_train, labels_train, dataset, seed)
-    
-
-
-    # TEST DATA  vvvvvv
-    if dataset.exists_test_set:
-        texts_test = test_data[:, 0]
-        labels_test = test_data[:, 1]
-
-
-        indicies_class_test = []
-        for i in unique_classes:
-            indicies_class_test.append(np.where(labels_test==i)[0])
-
-
-        _bal_count = chunk_size//n_classes
-        _min_count = Counter(labels_test)
-        if _bal_count < _min_count[min(_min_count)]:
-            for i in unique_classes:
-                _min_count[i] = _bal_count
-        min_count = _min_count
-
-        if shuffle:
-            rng = np.random.default_rng(seed)
-            for indicies in indicies_class_test:
-                rng.shuffle(indicies)
-
-        split_ind_test = []
-        for index,  elem in enumerate(unique_classes):
-            split_ind_test.append(np.array_split(indicies_class_test[index][:min_count[elem]*n_chunks_per_mix], n_chunks_per_mix))
-
-        test_x, test_y, test_y_orig = chunk_data(n_chunks_per_mix, n_classes, split_ind_test, texts_test, labels_test, dataset, seed)
-        
-    else:
-        train_x_split, train_y_split, test_x_split, test_y_split = [], [], [], []
-        for i in range(n_chunks_per_mix):
-            train_x_temp, train_y_temp, test_x_temp, test_y_temp = train_test_split(train_x[i], train_y[i], test_size=test_size, random_state=seed)
-            train_x_split.append(train_x_temp)
-            train_y_split.append(train_y_temp)
-            test_x_split.append(test_x_temp)
-            test_y_split.append(test_y_temp)
-        
-        train_x = train_x_split
-        train_y = train_y_split
-        test_x = test_x_split
-        test_y = test_y_split
-        test_y_orig = None
 
         
     if dataset.exists_validation_set and validation:
@@ -480,19 +470,9 @@ def chunk_data_multiclass(dataset,
         val_x, val_y, val_y_orig = None, None, None
         
 
-    return train_x, train_y, test_x, test_y, val_x, val_y, train_y_orig, test_y_orig, val_y_orig, n_classes
+    return train_x, train_y, val_x, val_y, train_y_orig, val_y_orig, n_classes
 
 
-def supersample_chunk(split_ind, n_classes, n_chunks, bal_count, rng):
-    for c in range(n_classes):
-        for i in range(n_chunks):
-            if len(split_ind[c][i]) < bal_count:
-                temp = list(range(n_chunks))
-                temp.remove(i)
-                print(temp)
-                sample_index = rng.choice(temp)
-                split_ind[c][i] = np.concatenate((split_ind[c][i], rng.choice(split_ind[c][sample_index], bal_count-len(split_ind[c][i]))))
-    return split_ind
 
 
 def chunk_data_multiclass_supersample(dataset, 
@@ -555,7 +535,7 @@ def chunk_data_multiclass_supersample(dataset,
 
 
     un_chunked_mix = dataset.load_data(path, test_size=test_size)
-    train_data, test_data, val_data = un_chunked_mix
+    train_data, val_data = un_chunked_mix
 
 
     # TRAIN DATA vvvvvv
@@ -709,6 +689,51 @@ def write_meta_chunks(output, train_length, validation_length, test_length, data
 
 
 
+
+
+# TEST DATA  vvvvvv
+    # if dataset.exists_test_set:
+    #     texts_test = test_data[:, 0]
+    #     labels_test = test_data[:, 1]
+
+
+    #     indicies_class_test = []
+    #     for i in unique_classes:
+    #         indicies_class_test.append(np.where(labels_test==i)[0])
+
+
+    #     _bal_count = chunk_size//n_classes
+    #     _min_count = Counter(labels_test)
+    #     if _bal_count < _min_count[min(_min_count)]:
+    #         for i in unique_classes:
+    #             _min_count[i] = _bal_count
+    #     min_count = _min_count
+
+    #     if shuffle:
+    #         rng = np.random.default_rng(seed)
+    #         for indicies in indicies_class_test:
+    #             rng.shuffle(indicies)
+
+    #     split_ind_test = []
+    #     for index,  elem in enumerate(unique_classes):
+    #         split_ind_test.append(np.array_split(indicies_class_test[index][:min_count[elem]*n_chunks_per_mix], n_chunks_per_mix))
+
+    #     test_x, test_y, test_y_orig = chunk_data(n_chunks_per_mix, n_classes, split_ind_test, texts_test, labels_test, dataset, seed)
+        
+    # else:
+    #     train_x_split, train_y_split, test_x_split, test_y_split = [], [], [], []
+    #     for i in range(n_chunks_per_mix):
+    #         train_x_temp, train_y_temp, test_x_temp, test_y_temp = train_test_split(train_x[i], train_y[i], test_size=test_size, random_state=seed)
+    #         train_x_split.append(train_x_temp)
+    #         train_y_split.append(train_y_temp)
+    #         test_x_split.append(test_x_temp)
+    #         test_y_split.append(test_y_temp)
+        
+    #     train_x = train_x_split
+    #     train_y = train_y_split
+    #     test_x = test_x_split
+    #     test_y = test_y_split
+    #     test_y_orig = None
 
 
 # for c in range(n_classes):

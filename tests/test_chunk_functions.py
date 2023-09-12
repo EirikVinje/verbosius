@@ -15,11 +15,10 @@ def test_chunk():
                                                     seed=42)
     
     assert len(chunked_data[0]) == 4, "Chunked train data should have 4 chunks"
-    assert len(chunked_data[2]) == 4, "Chunked test data should have 4 chunks"
-    assert len(chunked_data[4]) == 4, "Chunked val data should have 4 chunks"
+    assert len(chunked_data[2]) == 4, "Chunked val data should have 4 chunks"
 
     assert len(chunked_data[0][0]) == (25000/4)*0.8
-    assert len(chunked_data[4][0]) == (25000/4)*0.2
+    assert len(chunked_data[2][0]) == (25000/4)*0.2
     
 
 
@@ -82,7 +81,7 @@ def test_skips_supersample_lower_chunk_size():
     assert len(chunked_data[2][0]) == 3000*0.2, len(chunked_data[2][0])
 
 if __name__ == "__main__":
-    # test_chunk()
+    test_chunk()
     test_chunk_supersample()
     test_skips_supersample_lower_chunk_size()
     print(f"Passed all tests in {__file__}")
