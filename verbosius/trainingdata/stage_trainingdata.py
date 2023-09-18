@@ -31,21 +31,20 @@ def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : i
 
     print()
 
-    while True:
+    dir = sorted(os.listdir(preproc_dist))
 
-        dir = sorted(os.listdir(preproc_dist))
-        n_chunks = len(dir)
+    while True:
 
         if n >= len(dir):
             break
         
         chunk = dir[n]
 
-        verbose = True if dir[n][-5] == "e" else False
-        error_params = True if dir[n][-5] == "e" else False
+        verbose = True if type(dir[n]) != type(dir[0]) else False
+        error_params = True if type(dir[n]) != type(dir[0]) else False
 
-        chunk = os.path.join(preproc_dist, chunk)
-        data = pickle.load(open(chunk, "rb"))
+        chunk = os.path.join(preproc_dist, chunk) if not verbose else None
+        data = pickle.load(open(chunk, "rb")) if not verbose else dir[n]
 
         data, train_error_data, eval_error_data = gen_data.make_weighted_data(data, config.error_chunk, verbose, error_params)
 
@@ -54,15 +53,13 @@ def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : i
         all_error_data.extend(train_error_data)
         all_error_data.extend(eval_error_data)
 
-        print("Number of error instances: ", len(all_error_data))
-
         if len(all_error_data) > config.n_badtexts:
             
             train_error_data, eval_error_data = train_test_split(all_error_data, test_size=0.2, random_state=42)
 
             data = {"train": train_error_data, "validation": eval_error_data,}
             
-            gen_data.write_error_chunk(data, preproc_dist, n_chunks)
+            dir.append(data)
 
             all_error_data = []
 

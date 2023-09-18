@@ -9,7 +9,7 @@ import config as config
 
 
 def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : str, output : str, chunkdist_n : int):
-    
+
     ds = chunker_functions.dataset(dataset)
     ds = ds(two_cat=True)
     

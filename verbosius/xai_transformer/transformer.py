@@ -9,12 +9,8 @@ from sklearn.metrics import accuracy_score
 import config as config
 import xai_transformer.xai_model as xm
 import xai_transformer.helper_functions as hf
-import xai_transformer.transformer as tf
-import xai_validation.helper_functions_xaival as hf_xaival
 
-
-
-def transformer_pipeline(output_dir, train_data, test_x, test_y, val_data, save_model : bool = True):
+def transformer_pipeline(output_dir, train_data, test_x, test_y, val_data):
     
     device = config.device
     learning_rate = config.learning_rate
@@ -84,7 +80,6 @@ def transformer_pipeline(output_dir, train_data, test_x, test_y, val_data, save_
     print("Sequence accuracy: ", seq_acc)
 
     os.system(f"rm -rf {output_dir}")
-    torch.save(model, output_dir)
+    #torch.save(model, output_dir)
 
-
-    return  seq_acc
+    return seq_acc
