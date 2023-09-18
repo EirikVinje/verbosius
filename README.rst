@@ -8,7 +8,7 @@ To setup env for develpoment:
 
 1. create conda env w/python=3.10
 
-2. run pip install -r requirements.text
+2. run pip install -r requirements.txt
 
 3. run pip install -e .
 
