@@ -42,6 +42,7 @@ def rulemaker(train_x, train_y, eval_x, eval_y, accuracy : bool = False, error_p
     N_JOBS = config.N_JOBS
 
     if error_params:
+        
         MAX_FEATURES = int(MAX_FEATURES/25000 * len(train_x))
         NUMBER_OF_CLAUSES = int(NUMBER_OF_CLAUSES/25000 * len(train_x))
         LITERAL_BUDGET = int(LITERAL_BUDGET/2)
@@ -103,7 +104,7 @@ def rulemaker(train_x, train_y, eval_x, eval_y, accuracy : bool = False, error_p
                          seed=config.seed, 
                          n_jobs=N_JOBS, 
                          early_exit_acc=EARLY_STOP_ACC,
-                         progress_bar=accuracy)
+                         progress_bar= True) #accuracy)
 
     trainer.train(tm)    
 
@@ -250,7 +251,7 @@ def label_tokens(sentiment, weights, threshold : float = 0.0):
     return labels
 
 
-def do_weighting(data, feature_names, rm, gen_error_chunk : bool = False):
+def do_weighting(data, feature_names, rm):
     """
     
     Applies the weighting of tokens to the data and returns the new data.
@@ -276,10 +277,36 @@ def do_weighting(data, feature_names, rm, gen_error_chunk : bool = False):
     if type(data) == type(None):
         return None, None
 
-    all_x = []
-    all_error_x = []
+    true_x = []
+    false_x = []
 
-    for _, inst in enumerate(data):
+    for idx, inst in enumerate(data):
+    
+        bin_x = inst["bin"]
+        y = inst["sentiment"]
+    
+        prediction, expl = rm.predict(bin_x, explain=True)
+
+        votes = rm._inference.get_votes()
+
+        if y == prediction: 
+            true_x.append(votes[prediction])
+        
+        else:
+            false_x.append(idx)
+    
+    percentile_25 = np.percentile(true_x, 25)
+
+    is_75_percentile = np.where(true_x >= percentile_25)[0]
+    is_25_percentile = np.where(true_x < percentile_25)[0]
+
+    true_x = is_75_percentile
+    false_x.extend(is_25_percentile)
+
+    true_data = []
+    false_data = []
+
+    for idx, inst in enumerate(data):
         
         y = inst["sentiment"]
         tokens_x = inst["tokens"]
@@ -291,40 +318,38 @@ def do_weighting(data, feature_names, rm, gen_error_chunk : bool = False):
         
         orig_x = inst["orig_text"]
 
-        prediction, expl = rm.predict(bin_x, explain=True)
-
-        if y == prediction: #TODO filter out text with low confidence (votes)
-
+        if idx in is_75_percentile:
+            
             vocabulary = {feature_names[i]: expl[i] for i in range(len(feature_names))}
 
             newtokens_x, weights_x = weight_tokens(lemmas_x, tokens_x, vocabulary, tokenmap_x)
 
             labels = label_tokens(y, weights_x)
 
-            new_x = {"tokens" : newtokens_x,
+            true_inst = {"tokens" : newtokens_x,
                      "weights" : weights_x,
                      "text" : " ".join(newtokens_x),
                      "sentiment" : y,
                      "labels" : labels,
                      "orig_label" : orig_label}
 
-            all_x.append(new_x)
-        
-        elif gen_error_chunk:
-            new_error_x = {"sentiment" : y,
+            true_data.append(true_inst)
+            
+        elif is_25_percentile:
+            
+            false_inst = {"sentiment" : y,
                            "lemmas" : lemmas_x,
                            "tokens" : tokens_x,
                            "token_ids" : tokenmap_x,
                            "orig_labels" : orig_label,
                            "orig_text" : orig_x}
 
-            all_error_x.append(new_error_x)
+            false_data.append(false_inst)
+        
+    return true_data, false_data
 
     
-    return all_x, all_error_x
-
-    
-def make_weighted_data(data, error_chunk : bool = False, verbose : bool = False, error_params : bool = False):
+def make_weighted_data(data, verbose : bool = False, error_params : bool = False):
 
     train_x = [instance["lemmas"] for instance in data["train"]]
     train_y = [instance["sentiment"] for instance in data["train"]]
@@ -345,8 +370,8 @@ def make_weighted_data(data, error_chunk : bool = False, verbose : bool = False,
         for i in range(len(data["validation"])):
             data["validation"][i]["bin"] = eval_x_bin[i]
 
-    train_data, train_error_data = do_weighting(data["train"], feature_names, rm, gen_error_chunk=error_chunk)
-    eval_data, eval_error_data = do_weighting(data["validation"], feature_names, rm, gen_error_chunk=error_chunk)
+    train_data, train_error_data = do_weighting(data["train"], feature_names, rm)
+    eval_data, eval_error_data = do_weighting(data["validation"], feature_names, rm)
 
     data = {"train": train_data, "validation": eval_data}
     
