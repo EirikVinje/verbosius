@@ -31,9 +31,9 @@ TRAININGDATA:
 
 
 
-BATCHING DATA:
+CHUNKING DATA:
 
-In batch data we've set it so that batchsizes for train and test can be configured
+In chunk data we've set it so that chunksizes for train and test can be configured
 seperately. If no test sizes are set a 80/20 split is used, unless there is a testset
 that is to be used, in that case the batchsizes are copied form the training settings.
 
@@ -41,6 +41,12 @@ The function requires reading all the data at once, then batching it.
 After doing so the data is batched and saved balanced over the amount of classes we have
 in our data.
 
+The function also has the ability to  extract validation data from the training data. This is done by percent split if no
+val set is available. 
+
+The chunks can also be supersampled, i.e. if we have 25000 datapoints but want 4 chunks of 8000 samples (32k total)
+each chunk receives sampels from the otehr chunks randomly til they have size of 8000. Class balance is kept after this.
+When train/val split happens it is taken from the training chunks, i.e. a 80/20 split will give trianing chunk of size 6400 etc...
 
 STAGER(S):
 

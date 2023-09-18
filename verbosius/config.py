@@ -33,7 +33,7 @@ n_badtexts=2000
 
 # *************** TRANSFORMER ***************
 
-device="cuda"
+device="cpu"
 model_name_ = "distilroberta-base"
 tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True, device=device)
 

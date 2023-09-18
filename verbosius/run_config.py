@@ -3,23 +3,22 @@ import os
 
 # ********** Global ********** #
 dataset = "imdb"
-chunkdist_n = 192837
 user = os.environ.get("USER")
 
 
 # *********** Chunker ********** #
 input_raw = f"/home/{user}/data/verbosius/imdb/testing/"
-output_chunk = f"/home/{user}/data/verbosius/imdb/testing/chunking"
-chunk_size = 25000
-chunk_amount = 1
+output_chunk = f"/home/{user}/data/verbosius/imdb/testing/chunking/"
+chunk_size = 100
+chunk_amount = 3
 
 # *********** Preprocess ********** #
-input_chunk = f"/home/{user}/data/verbosius/imdb/testing/chunking"
-output_preproc = "/home/bigtech/data/verbosius/imdb/testing/preprocess"
+input_chunk = f"/home/{user}/data/verbosius/imdb/testing/chunking/"
+output_preproc = f"/home/{user}/data/verbosius/imdb/testing/preprocess/"
 
 # *********** Trainingdata ********** #
-input_preproc = f"/home/{user}/data/verbosius/imdb/testing/preprocess"
-output_traindata = f"/home/{user}/data/verbosius/imdb/testing/trainingdata"
+input_preproc = f"/home/{user}/data/verbosius/imdb/testing/preprocess/"
+output_traindata = f"/home/{user}/data/verbosius/imdb/testing/trainingdata/"
 
 # *********** Transformer ********** #
 input_traindata = f"/home/{user}/data/verbosius/imdb/testing/trainingdata"

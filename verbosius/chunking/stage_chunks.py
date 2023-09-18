@@ -13,7 +13,7 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
     ds = chunker_functions.dataset(dataset)
     ds = ds(two_cat=True)
     
-    chunked_data = chunker_functions.chunk_data_multiclass(dataset = ds,
+    chunked_data = chunker_functions.chunk_data_multiclass_supersample(dataset = ds,
                                                     n_chunks_per_mix=chunk_amount,
                                                     chunk_size = chunk_size,
                                                     path = input,
@@ -36,15 +36,11 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
         train_x = chunked_data[0][i]
         train_y = chunked_data[1][i]
 
-        test_x = chunked_data[2][i] 
-        test_y = chunked_data[3][i] 
+        val_x = chunked_data[2][i] if chunked_data[2] is not None else None
+        val_y = chunked_data[3][i] if chunked_data[3] is not None else None
 
-        val_x = chunked_data[4][i] if chunked_data[4] is not None else None
-        val_y = chunked_data[5][i] if chunked_data[5] is not None else None
-
-        orig_train_y = chunked_data[6][i] if chunked_data[6] is not None else None
-        orig_test_y = chunked_data[7][i] if chunked_data[7] is not None else None 
-        orig_val_y = chunked_data[8][i] if chunked_data[8] is not None else None
+        orig_train_y = chunked_data[4][i] if chunked_data[4] is not None else None
+        orig_val_y = chunked_data[5][i] if chunked_data[5] is not None else None
 
         train_val = {"train_x": train_x,
                      "train_y": train_y,
@@ -54,12 +50,12 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
                      "orig_val_y": orig_val_y
                      }
         
-        test = {"test_x": test_x,
-                "test_y": test_y,
-                "orig_test_y": orig_test_y}
+        # test = {"test_x": test_x,
+        #         "test_y": test_y,
+        #         "orig_test_y": orig_test_y}
         
         chunker_functions.write_chunks(new_chunkdist, train_val, test=False)
-        chunker_functions.write_chunks(new_chunkdist, test, test=True)
+        # chunker_functions.write_chunks(new_chunkdist, test, test=True)
 
     train_length = len(chunked_data[0][0])
     test_length = len(chunked_data[2][0])
