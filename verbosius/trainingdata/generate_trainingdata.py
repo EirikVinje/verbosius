@@ -293,7 +293,7 @@ def do_weighting(data, feature_names, rm, gen_error_chunk : bool = False):
 
         prediction, expl = rm.predict(bin_x, explain=True)
 
-        if y == prediction:
+        if y == prediction: #TODO filter out text with low confidence (votes)
 
             vocabulary = {feature_names[i]: expl[i] for i in range(len(feature_names))}
 

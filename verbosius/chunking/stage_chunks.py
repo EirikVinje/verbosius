@@ -10,6 +10,31 @@ import config as config
 
 def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : str, output : str, chunkdist_n : int):
 
+    """
+    Makes chunks of data for further preprocessing and training.
+
+    Parameters
+    ----------
+    dataset : str
+        Name of dataset to stage chunks for.
+    
+    chunk_size : int
+        Size of individual chunk. Must be greater than 0.
+    
+    chunk_amount : int
+        Amount of chunks to stage at a time. Must be greater than 0.
+    
+    input : str
+        Path to input data. Must be absolute path to directory.
+    
+    output : str
+        Path to output of this module. Must be absolute path to directory.
+    
+    chunkdist_n : int
+        ID of chunkdistribution. Must be an integer.
+
+    """
+
     ds = chunker_functions.dataset(dataset)
     ds = ds(two_cat=True)
     
