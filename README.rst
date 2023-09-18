@@ -2,6 +2,20 @@
 verbosius
 =========
 
+SETUP:
+
+To setup env for develpoment:
+
+1. create conda env w/python=3.10
+
+2. run pip install -r requirements.txt
+
+3. run pip install -e .
+
+4. run python -m spacy download en_core_web_sm
+
+5. should be ablet o run ./run.sh after this 
+
 PREPROCESSING:
 
 The preprocessing module is used to preprocess the data. It is used to create the

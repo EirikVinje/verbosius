@@ -64,11 +64,11 @@ if __name__ == "__main__":
     run_config.chunkdist_n = np.random.randint(0, 100000)
     config.seed = 42
 
-    study = optuna.create_study(study_name="hprun_supersample_cs8000_cn5", direction="maximize", storage="sqlite:////home/bigtech/projects/verbosius/sqlite3.db", load_if_exists=True)
+    study = optuna.create_study(study_name="hprun_supersample_cs10000_cn4", direction="maximize", storage="sqlite:////home/tobxtra/projects/verbosius/sqlite3.db", load_if_exists=True)
 
     stage_chunks(dataset = run_config.dataset,
-                chunk_size = 8000,
-                chunk_amount = 5,
+                chunk_size = 10000,
+                chunk_amount = 4,
                 input = run_config.input_raw,
                 output = run_config.output_chunk,
                 chunkdist_n = run_config.chunkdist_n)
