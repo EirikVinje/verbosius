@@ -3,7 +3,6 @@ import os
 
 # ********** Global ********** #
 dataset = "imdb"
-chunkdist_n = 42069
 user = os.environ.get("USER")
 
 
@@ -22,9 +21,7 @@ input_preproc = f"/home/{user}/data/verbosius/imdb/testing/preprocess/"
 output_traindata = f"/home/{user}/data/verbosius/imdb/testing/trainingdata/"
 
 # *********** Transformer ********** #
-input_traindata = f"/home/{user}/data/verbosius/imdb/testing/trainingdata/"
-input_testdata = f"/home/{user}/data/verbosius/imdb/testing/chunking/"
-model_output = f"/home/{user}/data/verbosius/imdb/testing/models/"
-save_model = True
-
+input_traindata = f"/home/{user}/data/verbosius/imdb/testing/trainingdata"
+input_testdata = f"/home/{user}/data/verbosius/imdb/testing/chunking"
+model_output = f"/home/{user}/data/verbosius/imdb/testing/models"
 

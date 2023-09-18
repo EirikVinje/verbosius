@@ -11,7 +11,7 @@ import xai_transformer.transformer as tf
 import xai_validation.helper_functions_xaival as hf_xaival
 
 
-def stage_transformer(dataset : str, train_val_input : str, test_input : str, model_output : str, save_model : str, chunkdist_n : int):
+def stage_transformer(dataset : str, train_val_input : str, test_input : str, model_output : str, chunkdist_n : int, return_seq_acc : bool = True):
 
     """
     
@@ -95,24 +95,25 @@ def stage_transformer(dataset : str, train_val_input : str, test_input : str, mo
     seq_acc = tf.transformer_pipeline(output_dir=model_path, 
                                                train_data=train_data, 
                                                val_data=val_data, 
-                                               test_x=test_x, 
-                                               test_y=test_y, 
-                                               save_model=save_model)
+                                               test_x=test_x,
+                                               test_y=test_y)
     
+    if return_seq_acc:
+        return seq_acc
+
     meta_model = {"seq_acc": seq_acc,
                 "dist" : chunkdist_n,
                 "time_finished" : str(datetime.datetime.now())}
-
-    with open(os.path.join(model_dir, "meta_model.json"), "w") as f:
-        json.dump(meta_model, f)
-
-    with open(os.path.join("/home/bigtech/projects/verboius/model_logs", "meta_model.json"), "w") as f:
-        json.dump(meta_model, f)
 
     os.system(f"git add --all")
     os.system(f"git commit -m 'new model trained'")
     os.system(f"git push origin HEAD")
 
+    with open(os.path.join("/home/bigtech/projects/verbosius/model_logs", f"meta_model_{chunkdist_n}.json"), "w") as f:
+        json.dump(meta_model, f)
+
+    return None
+    
 
 
 def dataset_checker(dataset):
@@ -151,7 +152,6 @@ if __name__ == "__main__":
     parser.add_argument("--input_traindata", type=str, help="train and val data path")
     parser.add_argument("--input_testdata", type=str, help="test data path")
     parser.add_argument("--model_output", type=str, help="Path to output model, must be a path to a directory that exists and is writable.")
-    parser.add_argument("--save_model", type=bool, nargs="?", default="false", help="Save model or not, either True or False.")
     parser.add_argument("--chunkdist_n", type=int, help="Select chunkdist to train on")
 
     args = parser.parse_args()
@@ -162,4 +162,4 @@ if __name__ == "__main__":
     output_checker(args.model_output)
     chunkdist_checker(args.dataset, args.input_traindata, args.chunkdist_n)
 
-    stage_transformer(args.dataset, args.input_traindata, args.input_testdata, args.model_output, args.save_model, args.chunkdist_n)
+    stage_transformer(args.dataset, args.input_traindata, args.input_testdata, args.model_output, args.chunkdist_n)

@@ -23,4 +23,3 @@ output_traindata="$(python -c 'import run_config; print(run_config.output_traind
 input_traindata="$(python -c 'import run_config; print(run_config.input_traindata)')"
 input_testdata="$(python -c 'import run_config; print(run_config.input_testdata)')"
 model_output="$(python -c 'import run_config; print(run_config.model_output)')"
-save_model="$(python -c 'import run_config; print(run_config.save_model)')"
