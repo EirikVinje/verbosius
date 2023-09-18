@@ -12,6 +12,24 @@ import preprocessing.preprocess_functions as pf
 
 def stage_preprocess(dataset:str, input:str, output:str, chunkdist_n : int):
 
+    """
+    Preprocesses data for training.
+
+    Parameters
+    ----------
+    dataset : str
+        Name of dataset to stage chunks for.
+    
+    input : str
+        Path to input data. Must be absolute path to directory.
+    
+    output : str
+        Path to output of this module. Must be absolute path to directory.
+    
+    chunkdist_n : int
+        ID of chunkdistribution. Must be an integer.
+    """
+
     new_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{chunkdist_n}")
 
     if not os.path.exists(new_chunkdist):

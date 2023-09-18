@@ -11,6 +11,30 @@ import config as config
 
 def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : int):
 
+    """
+    Stage trainingdata for transformer.
+    Uses TM to weight individual tokens in a sequence of text.
+
+    Parameters
+    ----------
+    dataset : str
+        Name of dataset to stage trainingdata for.
+    
+    input : str
+        Path to input data from preprocessed chunk. Must be absolute path to directory.
+
+    output : str
+        Path to output of this module. Must be absolute path to directory.
+    
+    chunkdist_n : int
+        ID of chunkdist to use for trainingdata. Must be an integer.
+    
+    Returns
+    -------
+    None
+
+    """
+
     trainingdata_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{chunkdist_n}")
 
     if not os.path.exists(trainingdata_chunkdist):
@@ -65,8 +89,6 @@ def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : i
 
         n += 1
     
-    print()
-
 def dataset_checker(dataset):
     valid_datasets = ['imdb', 'rottentomatoes', 'amazon']
     if dataset.lower() not in valid_datasets:

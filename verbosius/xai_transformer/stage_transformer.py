@@ -14,25 +14,27 @@ import xai_validation.helper_functions_xaival as hf_xaival
 def stage_transformer(dataset : str, train_val_input : str, test_input : str, model_output : str, chunkdist_n : int, return_seq_acc : bool = True):
 
     """
-    
-    Train transformer on staged trainingdata
+    Train transformer on weigthed trainingdata.
 
     Parameters
     ----------
     dataset : str
-        Name of dataset to stage trainingdata for
+        Name of dataset to train on.
+
+    train_val_input : str
+        Path to trainingdata. Must be absolute path to directory.
     
-    input : str
-        Path to batchdistros of dataset, must be the absolute path to a valid directory where the datafiles are located.
+    test_input : str
+        Path to testdata. Must be absolute path to directory.
     
-    output : str
-        Path to output model, must be a path to a directory that exists and is writable.
+    model_output : str
+        Path to output of this module. Must be absolute path to directory.
     
-    save_model : str
-        Save model or not, either 'true' or 'false'.
+    chunkdist_n : int
+        ID of chunkdist to use for trainingdata. Must be an integer.
     
-    batchdist_n : tuple
-        Batchdist_n to stage trainingdata for, must use tuple interval, e.g (0,-1) is all batchdistros
+    return_seq_acc : bool
+        If True, returns the sequence accuracy of the trained model. If False, returns None.
 
     """
     
@@ -73,14 +75,6 @@ def stage_transformer(dataset : str, train_val_input : str, test_input : str, mo
     test_x = {"input_ids": [], "attention_mask": [], "targets": []}
     test_y = []
 
-    # testdata_chunkdist = os.path.join(test_input, f"{dataset}_chunkdist_{chunkdist_n}", "test")
-    # test_chunks = sorted(os.listdir(testdata_chunkdist))
-
-    # for _, chunk in enumerate(test_chunks):
-
-        # chunk = os.path.join(testdata_chunkdist, chunk)
-        # test = pickle.load(open(chunk, "rb"))
-
     new_test_x = hf_xaival.tokenize_to_model([text for text, _ in test], config.tokenizer, config.device)
 
     test_x = hf.extend_test(test_x, new_test_x)
@@ -101,16 +95,16 @@ def stage_transformer(dataset : str, train_val_input : str, test_input : str, mo
     if return_seq_acc:
         return seq_acc
 
-    meta_model = {"seq_acc": seq_acc,
-                "dist" : chunkdist_n,
-                "time_finished" : str(datetime.datetime.now())}
+    # meta_model = {"seq_acc": seq_acc,
+    #             "dist" : chunkdist_n,
+    #             "time_finished" : str(datetime.datetime.now())}
 
-    os.system(f"git add --all")
-    os.system(f"git commit -m 'new model trained'")
-    os.system(f"git push origin HEAD")
+    # os.system(f"git add --all")
+    # os.system(f"git commit -m 'new model trained'")
+    # os.system(f"git push origin HEAD")
 
-    with open(os.path.join("/home/bigtech/projects/verbosius/model_logs", f"meta_model_{chunkdist_n}.json"), "w") as f:
-        json.dump(meta_model, f)
+    # with open(os.path.join("/home/bigtech/projects/verbosius/model_logs", f"meta_model_{chunkdist_n}.json"), "w") as f:
+    #     json.dump(meta_model, f)
 
     return None
     
