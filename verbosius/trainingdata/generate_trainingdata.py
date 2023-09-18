@@ -42,12 +42,26 @@ def rulemaker(train_x, train_y, eval_x, eval_y, accuracy : bool = False, error_p
     N_JOBS = config.N_JOBS
 
     if error_params:
-        MAX_FEATURES = int(5/25 * len(train_x))
-        NUMBER_OF_CLAUSES = int(9/25 * len(train_x))
-        LITERAL_BUDGET = 4
-        S = 3.4606
-        T = 1500
-    
+        MAX_FEATURES = int(MAX_FEATURES/25000 * len(train_x))
+        NUMBER_OF_CLAUSES = int(NUMBER_OF_CLAUSES/25000 * len(train_x))
+        LITERAL_BUDGET = int(LITERAL_BUDGET/2)
+        S = S
+        T = int(len(train_x)/2)
+
+        print()
+        print("********** ERROR PARAMS **********")
+        print("MAX_FEATURES: ", MAX_FEATURES)
+        print("NUMBER_OF_CLAUSES: ", NUMBER_OF_CLAUSES)
+        print("LITERAL_BUDGET: ", LITERAL_BUDGET)
+        print("S: ", S)
+        print("T: ", T)
+        print("**********************************")
+        print()
+        print("**********************************")
+        print("Number of error instances: ", len(train_x))
+        print("**********************************")
+        print()
+
     train_y = np.array(train_y, dtype=np.uint32)
     eval_y = np.array(eval_y, dtype=np.uint32) if eval_y is not None else None
 

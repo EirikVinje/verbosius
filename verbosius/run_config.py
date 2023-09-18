@@ -25,6 +25,4 @@ output_traindata = f"/home/{user}/data/verbosius/imdb/testing/trainingdata"
 input_traindata = f"/home/{user}/data/verbosius/imdb/testing/trainingdata"
 input_testdata = f"/home/{user}/data/verbosius/imdb/testing/chunking"
 model_output = f"/home/{user}/data/verbosius/imdb/testing/models"
-save_model = True
-
 
