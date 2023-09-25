@@ -40,6 +40,14 @@ def objective(trial):
     config.neutral_weight = trial.suggest_float("neutral_weight", 0.0, 0.5)
     config.loss_weight = trial.suggest_float("loss_weight", 0.1, 0.9)
     
+    config.ERROR_MAX_FEATURES=trial.suggest_categorical("ERROR_MAX_FEATURES", [250, 500, 750, 1000, 2000, 3000])
+    config.ERROR_NUMBER_OF_CLAUSES=trial.suggest_categorical("ERROR_NUMBER_OF_CLAUSES", [250, 500, 750, 1000, 2000, 3000])
+    config.ERROR_S = trial.suggest_float("ERROR_S", 2.0, 20.0)
+    config.ERROR_T = trial.suggest_categorical("ERROR_T", [500, 1000, 1500, 2000])
+    config.ERROR_LITERAL_BUDGET = trial.suggest_int("ERROR_LITERAL_BUDGET", 5, 15)
+    config.ERROR_MAX_DF = trial.suggest_float("ERROR_MAX_DF", 0.4, 0.9)
+    config.ERROR_MIN_DF = trial.suggest_int("ERROR_MIN_DF", 1, 20)
+
     stage_trainingdata(dataset = run_config.dataset,
                     input = run_config.input_preproc,
                     output = run_config.output_traindata,
@@ -63,7 +71,8 @@ if __name__ == "__main__":
     run_config.chunkdist_n = np.random.randint(0, 100000)
     config.seed = 42
 
-    study = optuna.create_study(study_name="hprun_supersample_percentile_cs8000_cn5", direction="maximize", storage=f"sqlite:////home/{os.environ.get('USER')}/projects/verbosius/sqlite3.db", load_if_exists=True)
+    user = os.environ.get('USER')
+    study = optuna.create_study(study_name="eirik_hprun_supersample_percentile_cs8000_cn5", direction="maximize", storage=f"sqlite:////home/{user}/projects/verbosius/sqlite3.db", load_if_exists=True)
 
     stage_chunks(dataset = run_config.dataset,
                 chunk_size = 8000,

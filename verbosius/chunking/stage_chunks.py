@@ -75,13 +75,9 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
                      "orig_val_y": orig_val_y
                      }
         
-        # test = {"test_x": test_x,
-        #         "test_y": test_y,
-        #         "orig_test_y": orig_test_y}
-        
         chunker_functions.write_chunks(new_chunkdist, train_val, test=False)
-        # chunker_functions.write_chunks(new_chunkdist, test, test=True)
-
+    
+    
     train_length = len(chunked_data[0][0])
     test_length = len(chunked_data[2][0])
     validation_length = len(chunked_data[4][0]) if chunked_data[4] is not None else 0
