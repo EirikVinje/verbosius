@@ -31,6 +31,14 @@ N_JOBS = 5
 error_chunk=True
 n_badtexts=2000
 
+ERROR_MAX_FEATURES=100
+ERROR_NUMBER_OF_CLAUSES=50
+ERROR_S = 10
+ERROR_T = 100
+ERROR_LITERAL_BUDGET = 10
+ERROR_MAX_DF = 0.9
+ERROR_MIN_DF = 10
+
 # *************** TRANSFORMER ***************
 
 device="cuda"

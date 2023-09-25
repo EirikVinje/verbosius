@@ -11,7 +11,7 @@ import green_tsetlin as gt
 import config as config
 
 
-def rulemaker(train_x, train_y, eval_x, eval_y, accuracy : bool = False, error_params : bool = False):
+def rulemaker(train_x, train_y, eval_x, eval_y, error_params : bool = False):
     
     """
     Trains the Tsetlin Machine and creates a RulePredictor from the trained Tsetlin Machine that is used to
@@ -40,27 +40,20 @@ def rulemaker(train_x, train_y, eval_x, eval_y, accuracy : bool = False, error_p
     EARLY_STOP_ACC = config.EARLY_STOP_ACC
     STOPWORDS = config.STOPWORDS
     N_JOBS = config.N_JOBS
+    SEED = config.seed
 
     if error_params:
         
-        MAX_FEATURES = int(MAX_FEATURES/25000 * len(train_x))
-        NUMBER_OF_CLAUSES = int(NUMBER_OF_CLAUSES/25000 * len(train_x))
-        LITERAL_BUDGET = int(LITERAL_BUDGET/2)
-        S = S
-        T = int(len(train_x)/2)
+        MAX_FEATURES = config.ERROR_MAX_FEATURES
+        NUMBER_OF_CLAUSES = config.ERROR_NUMBER_OF_CLAUSES
+        LITERAL_BUDGET = config.ERROR_LITERAL_BUDGET
+        S = config.ERROR_S
+        T = config.ERROR_T
+        MAX_DF = config.ERROR_MAX_DF
+        MIN_DF = config.ERROR_MIN_DF
 
-        print()
-        print("********** ERROR PARAMS **********")
-        print("MAX_FEATURES: ", MAX_FEATURES)
-        print("NUMBER_OF_CLAUSES: ", NUMBER_OF_CLAUSES)
-        print("LITERAL_BUDGET: ", LITERAL_BUDGET)
-        print("S: ", S)
-        print("T: ", T)
-        print("**********************************")
-        print()
-        print("**********************************")
-        print("Number of error instances: ", len(train_x))
-        print("**********************************")
+        print("### USING ERROR PARAMS ###")
+        print("-> length train_x: ", len(train_x))
         print()
 
     train_y = np.array(train_y, dtype=np.uint32)
@@ -91,8 +84,7 @@ def rulemaker(train_x, train_y, eval_x, eval_y, accuracy : bool = False, error_p
                            n_clauses=NUMBER_OF_CLAUSES, 
                            n_classes=len(np.unique(train_y)),
                            s=S,
-                           n_literal_budget=LITERAL_BUDGET, 
-                           )
+                           n_literal_budget=LITERAL_BUDGET)
 
     tm.set_train_data(train_x_bin, train_y)
     
@@ -101,16 +93,15 @@ def rulemaker(train_x, train_y, eval_x, eval_y, accuracy : bool = False, error_p
     
     trainer = gt.Trainer(threshold=T, 
                          n_epochs=TM_EPOCHS, 
-                         seed=config.seed, 
+                         seed=SEED, 
                          n_jobs=N_JOBS, 
                          early_exit_acc=EARLY_STOP_ACC,
-                         progress_bar= True) #accuracy)
+                         progress_bar= True)
 
     trainer.train(tm)    
 
     rp = gt.RulePredictor()
     fm = list(range(train_x_bin.shape[1]))
-
     rp.create_from_state(tm.get_state(), fm)
     
     return rp, feature_names, train_x_bin, eval_x_bin
@@ -328,14 +319,14 @@ def do_weighting(data, feature_names, rm):
 
             true_inst = {"tokens" : newtokens_x,
                      "weights" : weights_x,
-                     "text" : " ".join(newtokens_x),
+                     "text" : orig_x,
                      "sentiment" : y,
                      "labels" : labels,
                      "orig_label" : orig_label}
 
             true_data.append(true_inst)
             
-        elif is_25_percentile:
+        elif idx in is_25_percentile:
             
             false_inst = {"sentiment" : y,
                            "lemmas" : lemmas_x,
@@ -349,7 +340,7 @@ def do_weighting(data, feature_names, rm):
     return true_data, false_data
 
     
-def make_weighted_data(data, verbose : bool = False, error_params : bool = False):
+def make_weighted_data(data, error_params : bool = False):
 
     train_x = [instance["lemmas"] for instance in data["train"]]
     train_y = [instance["sentiment"] for instance in data["train"]]
@@ -360,7 +351,6 @@ def make_weighted_data(data, verbose : bool = False, error_params : bool = False
                                                             train_y=train_y, 
                                                             eval_x=eval_x, 
                                                             eval_y=eval_y, 
-                                                            accuracy=verbose, 
                                                             error_params=error_params)
     
     for i in range(len(data["train"])):

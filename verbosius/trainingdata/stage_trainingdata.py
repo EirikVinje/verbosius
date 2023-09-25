@@ -46,14 +46,15 @@ def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : i
     trainingdata_chunkdist = os.path.join(trainingdata_chunkdist, "train_val")
 
     if not os.path.exists(trainingdata_chunkdist):
-        os.makedirs(trainingdata_chunkdist)
+        os.mkdir(trainingdata_chunkdist)
     
     all_error_data = []
     n = 0
 
     preproc_dist = os.path.join(input, f"{dataset}_chunkdist_{chunkdist_n}", "train_val")
 
-    print()
+    if not os.path.exists(preproc_dist):
+        raise FileNotFoundError(f"Directory {preproc_dist} does not exist")
 
     dir = sorted(os.listdir(preproc_dist))
 
@@ -64,16 +65,15 @@ def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : i
         
         chunk = dir[n]
 
-        verbose = True if type(dir[n]) != type(dir[0]) else False
         error_params = True if type(dir[n]) != type(dir[0]) else False
 
-        chunk = os.path.join(preproc_dist, chunk) if not verbose else None
-        data = pickle.load(open(chunk, "rb")) if not verbose else dir[n]
+        chunk = os.path.join(preproc_dist, chunk)
+        data = pickle.load(open(chunk, "rb")) if not error_params else dir[n]
 
         print(f"train size : {len(data['train'])}")
         print(f"validation size : {len(data['validation'])}")
 
-        data, train_error_data, eval_error_data = gen_data.make_weighted_data(data, verbose, error_params)
+        data, train_error_data, eval_error_data = gen_data.make_weighted_data(data, error_params)
 
         gen_data.write_chunk(data, trainingdata_chunkdist, n)
     
