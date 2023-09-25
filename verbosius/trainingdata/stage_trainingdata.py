@@ -67,7 +67,7 @@ def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : i
 
         error_params = True if type(dir[n]) != type(dir[0]) else False
 
-        chunk = os.path.join(preproc_dist, chunk)
+        chunk = os.path.join(preproc_dist, chunk) if not error_params else None
         data = pickle.load(open(chunk, "rb")) if not error_params else dir[n]
 
         print(f"train size : {len(data['train'])}")
