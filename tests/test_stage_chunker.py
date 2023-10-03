@@ -4,7 +4,7 @@ from chunking.stage_chunks import stage_chunks
 def test_stage_chunks():
 
     stage_chunks(dataset="imdb",
-                 chunk_size=100,
+                 chunk_size=200,
                  chunk_amount=3,
                  input="",
                  output="/home/bigtech/data/verbosius/imdb_testing/chunking",

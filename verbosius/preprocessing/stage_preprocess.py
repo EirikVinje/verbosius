@@ -45,22 +45,18 @@ def stage_preprocess(dataset:str, input:str, output:str, chunkdist_n : int):
         chunk = os.path.join(chunk_dist, chunk)
         data = pickle.load(open(chunk, "rb"))
 
-        raw_train_x = data["train_x"]
-        train_y = data["train_y"]
+        raw_train_x = list(data["train_x"])
+        train_y = list(data["train_y"])
         orig_train_y = data["orig_train_y"]
 
-        raw_val_x = data["val_x"]
-        val_y = data["val_y"]
-        orig_val_y = data["orig_val_y"]
+        raw_train_x.extend(list(data["val_x"]))
+        train_y.extend(list(data["val_y"]))
         
         cleaned_train_x = preprocess_functions.clean_text(raw_train_x)
-        cleaned_val_x = preprocess_functions.clean_text(raw_val_x)
 
         split_train_x, token_train_x, lemma_train_x = preprocess_functions.lemmatize(cleaned_train_x, lemmatizer="en_core_web_sm")
-        split_val_x, token_val_x, lemma_val_x = preprocess_functions.lemmatize(cleaned_val_x, lemmatizer="en_core_web_sm") 
 
         token_ids_train_x = preprocess_functions.map_tokens(split_train_x, token_train_x)
-        token_ids_val_x = preprocess_functions.map_tokens(split_val_x, token_val_x)
 
         train_data = pf.stage_data(token_x=token_train_x, 
                                       lemma_x=lemma_train_x, 
@@ -69,16 +65,8 @@ def stage_preprocess(dataset:str, input:str, output:str, chunkdist_n : int):
                                       orig_labels=orig_train_y,
                                       x=raw_train_x)
                 
-        val_data = pf.stage_data(token_x=token_val_x,
-                                    lemma_x=lemma_val_x,
-                                    token_ids_x=token_ids_val_x,
-                                    y=val_y,
-                                    orig_labels=orig_val_y,
-                                    x=raw_val_x)
 
-        train_val_data = {"train": train_data, "validation": val_data}
-
-        pf.write_data(data=train_val_data, path=new_chunkdist, n=i)
+        pf.write_data(data=train_data, path=new_chunkdist, n=i)
 
     
 def dataset_checker(dataset):
