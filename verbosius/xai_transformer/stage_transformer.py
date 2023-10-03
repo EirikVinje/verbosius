@@ -6,6 +6,7 @@ import datetime
 
 import config as config
 import chunking.chunker_functions as cf
+import chunking.get_data as gd
 import xai_transformer.helper_functions as hf
 import xai_transformer.transformer as tf
 import xai_validation.helper_functions_xaival as hf_xaival
@@ -38,7 +39,7 @@ def stage_transformer(dataset : str, train_val_input : str, test_input : str, mo
 
     """
     
-    ds = cf.dataset(dataset)
+    ds = gd.dataset(dataset)
     ds = ds(two_cat=True)
 
     test = ds.load_test()

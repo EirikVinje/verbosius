@@ -4,6 +4,7 @@ import numpy as np
 
 
 import chunking.chunker_functions as chunker_functions
+import chunking.get_data as get_data
 
 import config as config
 
@@ -35,8 +36,9 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
 
     """
 
-    ds = chunker_functions.dataset(dataset)
+    ds = get_data.dataset(dataset)
     ds = ds(two_cat=True)
+    
     
     chunked_data = chunker_functions.chunk_data_multiclass_supersample(dataset = ds,
                                                     n_chunks_per_mix=chunk_amount,
