@@ -1,4 +1,5 @@
 from transformers import AutoTokenizer
+from sklearn.feature_selection import chi2, f_classif, mutual_info_classif
 import os
 
 # *************** GLOBAL ***************
@@ -18,6 +19,7 @@ validation=True
 MAX_DF=0.9
 MIN_DF=10
 MAX_FEATURES=100
+CV_MAX_FEATURES=30000
 N_GRAM_RANGE=(1, 2)
 NUMBER_OF_CLAUSES=50
 LITERAL_BUDGET=10
@@ -28,6 +30,7 @@ EARLY_STOP_ACC=0.86
 STOPWORDS=None
 N_JOBS = 5
 
+SKB_score_func = chi2
 error_chunk=True
 n_badtexts=2000
 
