@@ -57,10 +57,13 @@ def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : i
         raise FileNotFoundError(f"Directory {preproc_dist} does not exist")
 
     dir = sorted(os.listdir(preproc_dist))
+    dir_len = len(dir)
+
+    correct_x = 0
 
     while True:
 
-        if n >= len(dir):
+        if n >= dir_len * 2:
             break
         
         chunk = dir[n]
@@ -68,29 +71,21 @@ def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : i
         error_params = True if type(dir[n]) != type(dir[0]) else False
 
         chunk = os.path.join(preproc_dist, chunk) if not error_params else None
-        data = pickle.load(open(chunk, "rb")) if not error_params else dir[n]
+        train_data = pickle.load(open(chunk, "rb")) if not error_params else dir[n]
 
-        print(f"train size : {len(data['train'])}")
-        print(f"validation size : {len(data['validation'])}")
+        train_data, train_error_data = gen_data.make_weighted_data(train_data, error_params)
 
-        data, train_error_data, eval_error_data = gen_data.make_weighted_data(data, error_params)
+        correct_x += len(train_data)
 
-        gen_data.write_chunk(data, trainingdata_chunkdist, n)
+        gen_data.write_chunk(train_data, trainingdata_chunkdist, n)
     
         all_error_data.extend(train_error_data)
-        all_error_data.extend(eval_error_data)
-
-        if len(all_error_data) > config.n_badtexts:
             
-            train_error_data, eval_error_data = train_test_split(all_error_data, test_size=0.2, random_state=42)
-
-            data = {"train": train_error_data, "validation": eval_error_data,}
-            
-            dir.append(data)
-
-            all_error_data = []
+        dir.append(train_error_data)
 
         n += 1
+    
+    return correct_x
     
 def dataset_checker(dataset):
     valid_datasets = ['imdb', 'rottentomatoes', 'amazon']
