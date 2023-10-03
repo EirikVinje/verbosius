@@ -59,7 +59,7 @@ def rulemaker(train_x, train_y, eval_x, eval_y, error_params : bool = False):
     train_y = np.array(train_y, dtype=np.uint32)
     eval_y = np.array(eval_y, dtype=np.uint32) if eval_y is not None else None
 
-    vectorizer = CountVectorizer(max_features=MAX_FEATURES,
+    vectorizer = CountVectorizer(max_features=20000,
                                  max_df=MAX_DF, 
                                  min_df=MIN_DF,
                                  ngram_range=N_GRAM_RANGE,
@@ -71,7 +71,7 @@ def rulemaker(train_x, train_y, eval_x, eval_y, error_params : bool = False):
     eval_x_bin = vectorizer.transform([" ".join(x) for x in eval_x]) if eval_x is not None else None
     _feature_names = vectorizer.get_feature_names_out()
 
-    SKB = SelectKBest(chi2, k='all')
+    SKB = SelectKBest(chi2, k=MAX_FEATURES)
 
     SKB.fit(train_x_bin, train_y)
     feature_names = SKB.get_feature_names_out(input_features=_feature_names)
