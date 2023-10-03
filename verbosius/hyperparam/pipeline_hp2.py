@@ -20,7 +20,7 @@ def objective(trial):
 
     print("Trial: ", trial.number)
 
-    config.MAX_FEATURES = trial.suggest_categorical("MAX_FEATURES", [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000])
+    config.MAX_FEATURES = trial.suggest_categorical("MAX_FEATURES", [4000, 5000, 6000, 7000, 8000, 9000, 10000])
     config.MAX_DF = trial.suggest_float("MAX_DF", 0.4, 0.9)
     config.MIN_DF = trial.suggest_int("MIN_DF", 1, 20)
     
@@ -28,7 +28,6 @@ def objective(trial):
     config.LITERAL_BUDGET = trial.suggest_int("LITERAL_BUDGET", 8, 16)
     config.S = trial.suggest_float("S", 2.0, 20.0)
     config.T = trial.suggest_categorical("T", [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000])
-    config.TM_EPOCHS = trial.suggest_int("TM_EPOCHS", 4, 8)
     
     config.learning_rate = trial.suggest_float("learning_rate", 1e-6, 1e-3, log=True)
     config.per_device_train_batch_size = trial.suggest_categorical("per_device_train_batch_size", [8, 16, 32, 64, 128])
@@ -68,23 +67,23 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Hyperparameter optimization for IMDB dataset on complete pipeline")
     parser.add_argument("--n_trials", type=int, default=100, help="Number of trials to run")
     
-    run_config.chunkdist_n = np.random.randint(0, 100000)
+    run_config.chunkdist_n = 90036 # np.random.randint(0, 100000)
     config.seed = 42
 
     user = os.environ.get('USER')
-    study = optuna.create_study(study_name="eirik_hprun_supersample_percentile_cs8000_cn5", direction="maximize", storage=f"sqlite:////home/{user}/projects/verbosius/sqlite3.db", load_if_exists=True)
+    study = optuna.create_study(study_name="eirik_hprun_supersample_percentile_cs8000_cn5_it2", direction="maximize", storage=f"sqlite:////home/{user}/projects/verbosius/sqlite3.db", load_if_exists=True)
 
-    stage_chunks(dataset = run_config.dataset,
-                chunk_size = 8000,
-                chunk_amount = 5,
-                input = run_config.input_raw,
-                output = run_config.output_chunk,
-                chunkdist_n = run_config.chunkdist_n)
+    # stage_chunks(dataset = run_config.dataset,
+    #             chunk_size = 8000,
+    #             chunk_amount = 5,
+    #             input = run_config.input_raw,
+    #             output = run_config.output_chunk,
+    #             chunkdist_n = run_config.chunkdist_n)
     
-    stage_preprocess(dataset = run_config.dataset,
-                    input = run_config.input_chunk,
-                    output = run_config.output_preproc,
-                    chunkdist_n = run_config.chunkdist_n)
+    # stage_preprocess(dataset = run_config.dataset,
+    #                 input = run_config.input_chunk,
+    #                 output = run_config.output_preproc,
+    #                 chunkdist_n = run_config.chunkdist_n)
 
     study.optimize(objective, n_trials=parser.parse_args().n_trials, show_progress_bar=True)
     
