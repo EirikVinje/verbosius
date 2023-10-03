@@ -28,6 +28,7 @@ EARLY_STOP_ACC=0.86
 STOPWORDS=None
 N_JOBS = 5
 
+SKB_score_func = "chi2"
 error_chunk=True
 n_badtexts=2000
 

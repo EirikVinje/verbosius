@@ -51,6 +51,7 @@ def rulemaker(train_x, train_y, eval_x, eval_y, error_params : bool = False):
         T = config.ERROR_T
         MAX_DF = config.ERROR_MAX_DF
         MIN_DF = config.ERROR_MIN_DF
+        SKB_score_func = config.SKB_score_func
 
         print("### USING ERROR PARAMS ###")
         print("-> length train_x: ", len(train_x))
@@ -71,7 +72,7 @@ def rulemaker(train_x, train_y, eval_x, eval_y, error_params : bool = False):
     eval_x_bin = vectorizer.transform([" ".join(x) for x in eval_x]) if eval_x is not None else None
     _feature_names = vectorizer.get_feature_names_out()
 
-    SKB = SelectKBest(chi2, k='all')
+    SKB = SelectKBest(SKB_score_func, k='all')
 
     SKB.fit(train_x_bin, train_y)
     feature_names = SKB.get_feature_names_out(input_features=_feature_names)
