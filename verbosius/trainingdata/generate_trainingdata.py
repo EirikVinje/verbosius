@@ -6,12 +6,13 @@ import os
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.model_selection import train_test_split
 import green_tsetlin as gt
 
 import config as config
 
 
-def rulemaker(train_x, train_y, eval_x, eval_y, error_params : bool = False):
+def rulemaker(train_x, train_y, error_params : bool = False):
     
     """
     Trains the Tsetlin Machine and creates a RulePredictor from the trained Tsetlin Machine that is used to
@@ -57,8 +58,7 @@ def rulemaker(train_x, train_y, eval_x, eval_y, error_params : bool = False):
         print()
 
     train_y = np.array(train_y, dtype=np.uint32)
-    eval_y = np.array(eval_y, dtype=np.uint32) if eval_y is not None else None
-
+    
     vectorizer = CountVectorizer(max_features=20000,
                                  max_df=MAX_DF, 
                                  min_df=MIN_DF,
@@ -67,8 +67,8 @@ def rulemaker(train_x, train_y, eval_x, eval_y, error_params : bool = False):
                                  dtype=np.uint8,
                                  stop_words =STOPWORDS)
     
+
     train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x])
-    eval_x_bin = vectorizer.transform([" ".join(x) for x in eval_x]) if eval_x is not None else None
     _feature_names = vectorizer.get_feature_names_out()
 
     SKB = SelectKBest(chi2, k=MAX_FEATURES)
@@ -78,18 +78,20 @@ def rulemaker(train_x, train_y, eval_x, eval_y, error_params : bool = False):
     assert feature_names.all() == _feature_names[SKB.get_support(indices=True)].all()
 
     train_x_bin = SKB.transform(train_x_bin).toarray()
-    eval_x_bin = SKB.transform(eval_x_bin).toarray() if eval_x_bin is not None else None
-
+    
     tm = gt.TsetlinMachine(n_literals=train_x_bin.shape[1], 
                            n_clauses=NUMBER_OF_CLAUSES, 
                            n_classes=len(np.unique(train_y)),
                            s=S,
                            n_literal_budget=LITERAL_BUDGET)
 
-    tm.set_train_data(train_x_bin, train_y)
-    
-    if eval_x_bin is not None:
-        tm.set_test_data(eval_x_bin, eval_y) 
+    copy_train_x_bin = deepcopy(train_x_bin)
+    copy_train_y = deepcopy(train_y)
+
+    c_train_x, c_val_x, c_train_y, c_val_y = train_test_split(copy_train_x_bin, copy_train_y, test_size=0.2, random_state=SEED)
+
+    tm.set_train_data(c_train_x, c_train_y)
+    tm.set_test_data(c_val_x, c_val_y)
     
     trainer = gt.Trainer(threshold=T, 
                          n_epochs=TM_EPOCHS, 
@@ -104,7 +106,7 @@ def rulemaker(train_x, train_y, eval_x, eval_y, error_params : bool = False):
     fm = list(range(train_x_bin.shape[1]))
     rp.create_from_state(tm.get_state(), fm)
     
-    return rp, feature_names, train_x_bin, eval_x_bin
+    return rp, feature_names, train_x_bin
     
 
 def weight_tokens(lemmas, tokens, vocabulary, token_map):
@@ -242,7 +244,7 @@ def label_tokens(sentiment, weights, threshold : float = 0.0):
     return labels
 
 
-def do_weighting(data, feature_names, rm):
+def do_weighting(train_data, feature_names, rm):
     """
     
     Applies the weighting of tokens to the data and returns the new data.
@@ -265,13 +267,13 @@ def do_weighting(data, feature_names, rm):
     
     """
 
-    if type(data) == type(None):
+    if type(train_data) == type(None):
         return None, None
 
-    true_x = []
-    false_x = []
+    true_x_idx = []
+    false_x_idx = []
 
-    for idx, inst in enumerate(data):
+    for idx, inst in enumerate(train_data):
     
         bin_x = inst["bin"]
         y = inst["sentiment"]
@@ -280,24 +282,34 @@ def do_weighting(data, feature_names, rm):
 
         votes = rm._inference.get_votes()
 
-        if y == prediction: 
-            true_x.append(votes[prediction])
+        n_votes = votes[prediction]
+
+        if y == prediction and n_votes > 0: 
+            true_x_idx.append([n_votes, idx])
         
         else:
-            false_x.append(idx)
+            false_x_idx.append(idx)
     
-    percentile_25 = np.percentile(true_x, 25)
+    true_x_idx = np.array(true_x_idx)
 
-    is_75_percentile = np.where(true_x >= percentile_25)[0]
-    is_25_percentile = np.where(true_x < percentile_25)[0]
+    percentile_25 = np.percentile(true_x_idx[:, 0], 25)
 
-    true_x = is_75_percentile
-    false_x.extend(is_25_percentile)
+    is_75_percentile = np.where(true_x_idx[:, 0] >= percentile_25)[0]
+    is_25_percentile = np.where(true_x_idx[:, 0] < percentile_25)[0]
+
+    true_x = true_x_idx[is_75_percentile]
+    true_x = list(true_x[:, 1])
+
+    is_25_percentile = true_x_idx[is_25_percentile]
+    is_25_percentile = list(is_25_percentile[:, 1])
+
+    false_x_idx.extend(is_25_percentile)
+    false_x = false_x_idx
 
     true_data = []
     false_data = []
 
-    for idx, inst in enumerate(data):
+    for idx, inst in enumerate(train_data):
         
         y = inst["sentiment"]
         tokens_x = inst["tokens"]
@@ -309,7 +321,7 @@ def do_weighting(data, feature_names, rm):
         
         orig_x = inst["orig_text"]
 
-        if idx in is_75_percentile:
+        if idx in true_x:
             
             vocabulary = {feature_names[i]: expl[i] for i in range(len(feature_names))}
 
@@ -326,7 +338,7 @@ def do_weighting(data, feature_names, rm):
 
             true_data.append(true_inst)
             
-        elif idx in is_25_percentile:
+        elif idx in false_x:
             
             false_inst = {"sentiment" : y,
                            "lemmas" : lemmas_x,
@@ -340,32 +352,21 @@ def do_weighting(data, feature_names, rm):
     return true_data, false_data
 
     
-def make_weighted_data(data, error_params : bool = False):
+def make_weighted_data(train_data, error_params : bool = False):
 
-    train_x = [instance["lemmas"] for instance in data["train"]]
-    train_y = [instance["sentiment"] for instance in data["train"]]
-    eval_x = [instance["lemmas"] for instance in data["validation"]] if data["validation"] is not None else None
-    eval_y = [instance["sentiment"] for instance in data["validation"]] if data["validation"] is not None else None
-
-    rm, feature_names, train_x_bin, eval_x_bin = rulemaker(train_x=train_x, 
+    train_x = [instance["lemmas"] for instance in train_data]
+    train_y = [instance["sentiment"] for instance in train_data]
+    
+    rm, feature_names, train_x_bin = rulemaker(train_x=train_x, 
                                                             train_y=train_y, 
-                                                            eval_x=eval_x, 
-                                                            eval_y=eval_y, 
                                                             error_params=error_params)
     
-    for i in range(len(data["train"])):
-        data["train"][i]["bin"] = train_x_bin[i]
-
-    if data["validation"] is not None:
-        for i in range(len(data["validation"])):
-            data["validation"][i]["bin"] = eval_x_bin[i]
-
-    train_data, train_error_data = do_weighting(data["train"], feature_names, rm)
-    eval_data, eval_error_data = do_weighting(data["validation"], feature_names, rm)
-
-    data = {"train": train_data, "validation": eval_data}
+    for i in range(len(train_data)):
+        train_data[i]["bin"] = train_x_bin[i]
     
-    return data, train_error_data, eval_error_data
+    train_data, train_error_data = do_weighting(train_data, feature_names, rm)
+    
+    return train_data, train_error_data
 
 
 def write_chunk(data, output, n):
