@@ -30,6 +30,7 @@ def rulemaker(train_x, train_y, error_params : bool = False):
     """
 
     MAX_FEATURES = config.MAX_FEATURES
+    CV_MAX_FEATURES = config.CV_MAX_FEATURES
     MAX_DF = config.MAX_DF
     MIN_DF = config.MIN_DF
     N_GRAM_RANGE = config.N_GRAM_RANGE
@@ -42,6 +43,8 @@ def rulemaker(train_x, train_y, error_params : bool = False):
     STOPWORDS = config.STOPWORDS
     N_JOBS = config.N_JOBS
     SEED = config.seed
+    SKB_score_func = config.SKB_score_func
+
 
     if error_params:
         
@@ -59,7 +62,7 @@ def rulemaker(train_x, train_y, error_params : bool = False):
 
     train_y = np.array(train_y, dtype=np.uint32)
     
-    vectorizer = CountVectorizer(max_features=20000,
+    vectorizer = CountVectorizer(max_features=CV_MAX_FEATURES,
                                  max_df=MAX_DF, 
                                  min_df=MIN_DF,
                                  ngram_range=N_GRAM_RANGE,
@@ -71,7 +74,7 @@ def rulemaker(train_x, train_y, error_params : bool = False):
     train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x])
     _feature_names = vectorizer.get_feature_names_out()
 
-    SKB = SelectKBest(chi2, k=MAX_FEATURES)
+    SKB = SelectKBest(SKB_score_func, k=MAX_FEATURES)
 
     SKB.fit(train_x_bin, train_y)
     feature_names = SKB.get_feature_names_out(input_features=_feature_names)
