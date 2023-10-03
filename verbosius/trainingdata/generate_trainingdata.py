@@ -29,6 +29,7 @@ def rulemaker(train_x, train_y, eval_x, eval_y, error_params : bool = False):
     """
 
     MAX_FEATURES = config.MAX_FEATURES
+    CV_MAX_FEATURES = config.CV_MAX_FEATURES
     MAX_DF = config.MAX_DF
     MIN_DF = config.MIN_DF
     N_GRAM_RANGE = config.N_GRAM_RANGE
@@ -41,6 +42,8 @@ def rulemaker(train_x, train_y, eval_x, eval_y, error_params : bool = False):
     STOPWORDS = config.STOPWORDS
     N_JOBS = config.N_JOBS
     SEED = config.seed
+    SKB_score_func = config.SKB_score_func
+
 
     if error_params:
         
@@ -51,7 +54,6 @@ def rulemaker(train_x, train_y, eval_x, eval_y, error_params : bool = False):
         T = config.ERROR_T
         MAX_DF = config.ERROR_MAX_DF
         MIN_DF = config.ERROR_MIN_DF
-        SKB_score_func = config.SKB_score_func
 
         print("### USING ERROR PARAMS ###")
         print("-> length train_x: ", len(train_x))
@@ -60,7 +62,7 @@ def rulemaker(train_x, train_y, eval_x, eval_y, error_params : bool = False):
     train_y = np.array(train_y, dtype=np.uint32)
     eval_y = np.array(eval_y, dtype=np.uint32) if eval_y is not None else None
 
-    vectorizer = CountVectorizer(max_features=20000,
+    vectorizer = CountVectorizer(max_features=CV_MAX_FEATURES,
                                  max_df=MAX_DF, 
                                  min_df=MIN_DF,
                                  ngram_range=N_GRAM_RANGE,
