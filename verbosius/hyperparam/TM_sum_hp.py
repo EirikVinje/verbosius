@@ -13,7 +13,7 @@ from chunking.stage_chunks import stage_chunks
 from preprocessing.stage_preprocess import stage_preprocess
 from trainingdata.stage_trainingdata import stage_trainingdata
 from xai_transformer.stage_transformer import stage_transformer
-from sklearn.feature_selection import chi2, f_classif, mutual_info_classif
+
 
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -27,23 +27,23 @@ def objective(trial):
     config.ERROR_LITERAL_BUDGET = 6
 
     # Hyperparameters to be optimized
-    config.MAX_FEATURES = trial.suggest_int("MAX_FEATURES", 1000, 10000, step=500)
+    config.MAX_FEATURES = trial.suggest_int("MAX_FEATURES", 1000, 10000, step=250)
     config.MAX_DF = trial.suggest_float("MAX_DF", 0.4, 0.9)
-    config.MIN_DF = trial.suggest_int("MIN_DF", 1, 20)
+    config.MIN_DF = trial.suggest_int("MIN_DF", 1, 30) #increase from 20 to 30
     
-    config.NUMBER_OF_CLAUSES = trial.suggest_int("NUMBER_OF_CLAUSES", 5000, 10000, step=500)
+    config.NUMBER_OF_CLAUSES = trial.suggest_int("NUMBER_OF_CLAUSES", 4000, 10000, step=250) # lower from 5k to 4k, step to 250
     config.S = trial.suggest_float("S", 2.0, 20.0, step=0.1)
     config.T = trial.suggest_int("T", 1000, 11000, step=500)
-    config.TM_EPOCHS = trial.suggest_int("TM_EPOCHS", 4, 12)
+    config.TM_EPOCHS = trial.suggest_int("TM_EPOCHS", 4, 15) #increased from 12 to 15
     
     config.ERROR_MAX_FEATURES=trial.suggest_int("ERROR_MAX_FEATURES", 250, 3000, step=50)
-    config.ERROR_NUMBER_OF_CLAUSES=trial.suggest_int("ERROR_NUMBER_OF_CLAUSES", 250, 3000, step=50)
-    config.ERROR_S = trial.suggest_float("ERROR_S", 2.0, 20.0)
-    config.ERROR_T = trial.suggest_int("ERROR_T", 500, 2000, step=250)
-    config.ERROR_MAX_DF = trial.suggest_float("ERROR_MAX_DF", 0.4, 0.9)
-    config.ERROR_MIN_DF = trial.suggest_int("ERROR_MIN_DF", 1, 20)
+    config.ERROR_NUMBER_OF_CLAUSES=trial.suggest_int("ERROR_NUMBER_OF_CLAUSES", 250, 4000, step=50) # increased from 3000 to 4000
+    config.ERROR_S = trial.suggest_float("ERROR_S", 2.0, 27.5) # increased from 20.0 to 25.0 to 27.5
+    config.ERROR_T = trial.suggest_int("ERROR_T", 500, 2500, step=250) # increased to 2500 from 2000
+    config.ERROR_MAX_DF = trial.suggest_float("ERROR_MAX_DF", 0.4, 0.95) #increased from 0.9 to 0.95
+    config.ERROR_MIN_DF = trial.suggest_int("ERROR_MIN_DF", 5, 30) #increase from 20 to 30, lower bound from 1 to 5
 
-    config.SKB_score_func = trial.suggest_categorical("SKB_score_func", [chi2, f_classif, mutual_info_classif])
+    config.SKB_score_func = trial.suggest_categorical("SKB_score_func", ["chi2", "f_classif", "mutual_info_classif"])
 
 
     total_count = stage_trainingdata(dataset = run_config.dataset,
@@ -65,12 +65,13 @@ if __name__ == "__main__":
     config.seed = 42
 
     user = os.environ.get('USER')
+    # hprun_tot_tm_text_cs8000_cn5
     study = optuna.create_study(study_name="hprun_tot_tm_text_cs8000_cn5", direction="maximize", storage=f"sqlite:////home/{user}/projects/verbosius/sqlite3.db", load_if_exists=True)
 
     if not os.path.exists(f"/home/{user}/data/verbosius/imdb/preprocess/imdb_chunkdist_5555/"):
         os.system("cd ~ && ./projects/verbosius/make_env.sh")
         stage_chunks(dataset = run_config.dataset,
-                    chunk_size = 100,
+                    chunk_size = 8000,
                     chunk_amount = 5,
                     input = run_config.input_raw,
                     output = run_config.output_chunk,
