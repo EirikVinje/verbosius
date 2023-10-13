@@ -5,7 +5,7 @@ import os
 
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import SelectKBest, chi2, f_classif, mutual_info_classif
 from sklearn.model_selection import train_test_split
 import green_tsetlin as gt
 
@@ -54,7 +54,15 @@ def rulemaker(train_x, train_y, error_params : bool = False):
     train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x])
     _feature_names = vectorizer.get_feature_names_out()
 
-    SKB = SelectKBest(SKB_score_func, k=MAX_FEATURES)
+    _score_func = None
+    if SKB_score_func == "chi2":
+        _score_func = chi2
+    elif SKB_score_func == "f_classif":
+        _score_func = f_classif
+    elif SKB_score_func == "mutual_info_classif":
+        _score_func = mutual_info_classif
+
+    SKB = SelectKBest(_score_func, k=MAX_FEATURES)
 
     SKB.fit(train_x_bin, train_y)
     feature_names = SKB.get_feature_names_out(input_features=_feature_names)
