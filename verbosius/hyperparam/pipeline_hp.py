@@ -48,7 +48,7 @@ def objective(trial):
 
     td.main(config.dataset, config.traindat_input_path, config.batchdist_n, config.traindat_output_path)
     seq_acc, tok_acc = tf.main(config.dataset, config.final_input_dir, config.final_output_dir, config.save_model, (2,3))
-    val_acc = vf.main(config.final_output_dir, "imdb_model_0", config.batch_size_pred)
+    val_acc = vf.stage_validation(config.final_output_dir, "imdb_model_0", config.batch_size_pred)
 
     # os.system(f"rm -rf {config.final_output_dir}")
     # os.system(f"mkdir {config.final_output_dir}")

@@ -52,11 +52,8 @@ def transformer_pipeline(output_dir, train_data, test_x, test_y, val_data):
         num_train_epochs = num_train_epochs,
         evaluation_strategy = evaluation_strategy,
         save_strategy = save_strategy,
-        warmup_steps = warmup_steps,
         load_best_model_at_end = load_best_model_at_end,
-        eval_accumulation_steps = eval_accumulation_steps,
         label_names = label_names,
-        weight_decay=weight_decay
         )
 
     if device != "cpu":
@@ -81,8 +78,7 @@ def transformer_pipeline(output_dir, train_data, test_x, test_y, val_data):
 
     print("Sequence test accuracy: ", seq_acc)
     
-
     os.system(f"rm -rf {output_dir}")
-    #torch.save(model, output_dir)
+    torch.save(model, output_dir)
 
     return seq_acc

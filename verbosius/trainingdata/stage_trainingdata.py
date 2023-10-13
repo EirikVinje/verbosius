@@ -48,7 +48,7 @@ def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : i
     if not os.path.exists(trainingdata_chunkdist):
         os.mkdir(trainingdata_chunkdist)
     
-    all_error_data = []
+    #all_error_data = []
     n = 0
 
     preproc_dist = os.path.join(input, f"{dataset}_chunkdist_{chunkdist_n}", "train_val")
@@ -73,13 +73,17 @@ def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : i
         chunk = os.path.join(preproc_dist, chunk) if not error_params else None
         train_data = pickle.load(open(chunk, "rb")) if not error_params else dir[n]
 
+        print("train: ", len(train_data))
+
         train_data, train_error_data = gen_data.make_weighted_data(train_data, error_params)
 
-        correct_x += len(train_data)
+        print("train: ", len(train_data), "error: ", len(train_error_data))
+
+        #correct_x += len(train_data)
 
         gen_data.write_chunk(train_data, trainingdata_chunkdist, n)
     
-        all_error_data.extend(train_error_data)
+        #all_error_data.extend(train_error_data)
             
         dir.append(train_error_data)
 

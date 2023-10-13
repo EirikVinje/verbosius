@@ -4,12 +4,15 @@ import os
 import json
 import datetime
 
+from sklearn.model_selection import train_test_split
+
 import config as config
 import chunking.chunker_functions as cf
 import chunking.get_data as gd
 import xai_transformer.helper_functions as hf
 import xai_transformer.transformer as tf
 import xai_validation.helper_functions_xaival as hf_xaival
+
 
 
 def stage_transformer(dataset : str, train_val_input : str, test_input : str, model_output : str, chunkdist_n : int, return_seq_acc : bool = True):
@@ -58,21 +61,19 @@ def stage_transformer(dataset : str, train_val_input : str, test_input : str, mo
     
     chunks = sorted(os.listdir(trainingdata_dist))
     
-    train_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
-    val_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
-    
+    all_train_data = []
     for _, chunk in enumerate(chunks):
         
         chunk = os.path.join(trainingdata_dist, chunk)
+        train_data = pickle.load(open(chunk, "rb"))        
+        all_train_data.extend(train_data)
 
-        train_val = pickle.load(open(chunk, "rb"))
         
-        new_train_batch = hf.tokenize_and_align_labels(train_val["train"], config.tokenizer) 
-        new_val_batch = hf.tokenize_and_align_labels(train_val["validation"], config.tokenizer)
-        
-        train_data = hf.extend_data(train_data, new_train_batch)
-        val_data = hf.extend_data(val_data, new_val_batch)  
-    
+    train_data, val_data = train_test_split(all_train_data, test_size=0.2, random_state=config.seed, shuffle=True)
+
+    train_tokenized = hf.tokenize_and_align_labels(train_data, config.tokenizer)
+    val_tokenized = hf.tokenize_and_align_labels(val_data, config.tokenizer) 
+
     test_x = {"input_ids": [], "attention_mask": [], "targets": []}
     test_y = []
 
@@ -82,30 +83,19 @@ def stage_transformer(dataset : str, train_val_input : str, test_input : str, mo
     test_y = [label for _, label in test]
 
     print()    
-    print("Train size: ", len(train_data["input_ids"]))
+    print("Train size: ", len(train_tokenized["input_ids"]))
     print("Test size: ", len(test_x["input_ids"]))
-    print("Validation size: ", len(val_data["input_ids"])) if val_data["input_ids"] != [] else None
+    print("Validation size: ", len(val_tokenized["input_ids"]))
     print()
     
     seq_acc = tf.transformer_pipeline(output_dir=model_path, 
-                                               train_data=train_data, 
-                                               val_data=val_data, 
+                                               train_data=train_tokenized, 
+                                               val_data=val_tokenized, 
                                                test_x=test_x,
                                                test_y=test_y)
     
     if return_seq_acc:
         return seq_acc
-
-    # meta_model = {"seq_acc": seq_acc,
-    #             "dist" : chunkdist_n,
-    #             "time_finished" : str(datetime.datetime.now())}
-
-    # os.system(f"git add --all")
-    # os.system(f"git commit -m 'new model trained'")
-    # os.system(f"git push origin HEAD")
-
-    # with open(os.path.join("/home/bigtech/projects/verbosius/model_logs", f"meta_model_{chunkdist_n}.json"), "w") as f:
-    #     json.dump(meta_model, f)
 
     return None
     
