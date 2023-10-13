@@ -8,6 +8,6 @@ mkdir -p imdb && cd imdb
 mkdir -p chunking && rm -rf chunking/*
 mkdir -p preprocess && rm -rf preprocess/*
 mkdir -p trainingdata && rm -rf trainingdata/*
-#mkdir -p models && rm -rf models/*
+mkdir -p models && rm -rf models/*
 
 

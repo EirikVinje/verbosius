@@ -14,7 +14,7 @@ import config as config
 import xai_validation.helper_functions_xaival as vf
 
 
-def main(model_path : str, model_name : str, batch_size_pred : int):
+def stage_validation(model_path : str, model_name : str, batch_size_pred : int):
 
     ds = datasets.load_dataset("rotten_tomatoes")
     
@@ -26,20 +26,22 @@ def main(model_path : str, model_name : str, batch_size_pred : int):
     train_y = np.array(train_y).astype(int)
     test_y = np.array(test_y).astype(int)
     
-    train_x_cleaned = preprocess_functions.clean_text(train_x)
-    test_x_cleaned = preprocess_functions.clean_text(test_x)
-    
-    model_path = os.path.join(model_path, model_name)
+    model_path = os.path.join(model_path, model_name, "model")
     
     model = torch.load(model_path)
 
-    token_preds, input_ids, attention_masks = vf.get_prediction_outputs(model, train_x_cleaned, batch_size_pred)
+    token_preds, input_ids, attention_masks = vf.get_prediction_outputs(model, train_x, batch_size_pred)
     
     vocabulary = vf.make_vocabulary(token_preds, input_ids, attention_masks, config.tokenizer)
+
+    print("LENGTH VOCABULARY: ", len(vocabulary))
+    print("VOCABULARY: ", vocabulary)
+
+
     vectorizer = CountVectorizer(binary=True, vocabulary=vocabulary)
     
-    train_x_bin = vectorizer.fit_transform(train_x_cleaned)
-    test_x_bin = vectorizer.transform(test_x_cleaned)
+    train_x_bin = vectorizer.fit_transform(train_x)
+    test_x_bin = vectorizer.transform(test_x)
 
     logreg = LogisticRegression(verbose=1, 
                                 max_iter=1000, 
@@ -47,7 +49,9 @@ def main(model_path : str, model_name : str, batch_size_pred : int):
                                 random_state=42, 
                                 C=0.092705530127623, 
                                 tol=0.748258213506498)
+    
     logreg.fit(train_x_bin, train_y)
+    
     log_res =  accuracy_score(test_y, logreg.predict(test_x_bin))
     
     print("-----------------------------------------------------------")
@@ -78,5 +82,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(args.model_path, args.model_name, args.batch_size_pred)
+    stage_validation(args.model_path, args.model_name, args.batch_size_pred)
     

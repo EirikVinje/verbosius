@@ -70,6 +70,9 @@ class CustomModel(nn.Module):
             #print('token_loss', token_loss.size())
 
             loss = (seq_loss)+(token_loss*self.loss_weight)
+            
+            #loss = token_loss
+
             #oss = seq_loss
             return TokenClassifierOutput(loss=loss, logits=logits)
         

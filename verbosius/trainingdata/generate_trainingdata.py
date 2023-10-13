@@ -5,7 +5,7 @@ import os
 
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.feature_selection import SelectKBest
 from sklearn.model_selection import train_test_split
 import green_tsetlin as gt
 
@@ -14,21 +14,6 @@ import config as config
 
 def rulemaker(train_x, train_y, error_params : bool = False):
     
-    """
-    Trains the Tsetlin Machine and creates a RulePredictor from the trained Tsetlin Machine that is used to
-    weight the tokens in the data.
-
-    Parameters:
-    -----------
-    data : dict("train" : [...], "test" : [...], "distributer" : str, "n_classes" : int)
-
-    Returns:
-    --------
-    rp : RulePredictor
-        RulePredictor created from the trained Tsetlin Machine
-    
-    """
-
     MAX_FEATURES = config.MAX_FEATURES
     CV_MAX_FEATURES = config.CV_MAX_FEATURES
     MAX_DF = config.MAX_DF
@@ -45,7 +30,6 @@ def rulemaker(train_x, train_y, error_params : bool = False):
     SEED = config.seed
     SKB_score_func = config.SKB_score_func
 
-
     if error_params:
         
         MAX_FEATURES = config.ERROR_MAX_FEATURES
@@ -55,10 +39,6 @@ def rulemaker(train_x, train_y, error_params : bool = False):
         T = config.ERROR_T
         MAX_DF = config.ERROR_MAX_DF
         MIN_DF = config.ERROR_MIN_DF
-
-        print("### USING ERROR PARAMS ###")
-        print("-> length train_x: ", len(train_x))
-        print()
 
     train_y = np.array(train_y, dtype=np.uint32)
     
@@ -101,7 +81,7 @@ def rulemaker(train_x, train_y, error_params : bool = False):
                          seed=SEED, 
                          n_jobs=N_JOBS, 
                          early_exit_acc=EARLY_STOP_ACC,
-                         progress_bar= True)
+                         progress_bar= False)
 
     trainer.train(tm)    
 

@@ -9,38 +9,39 @@ seed = 69
 # *************** PREPROSESSING *************** 
 
 shuffle=True
-seed=42
 test_size=0.2
 val_size=0.2
 validation=True
 
 # *************** GENERATE TRAINING DATA ***************
 
-MAX_DF=0.9
-MIN_DF=10
-MAX_FEATURES=100
-CV_MAX_FEATURES=30000
-N_GRAM_RANGE=(1, 2)
-NUMBER_OF_CLAUSES=50
-LITERAL_BUDGET=10
-S=10
-T=100
-TM_EPOCHS=15
-EARLY_STOP_ACC=0.86
-STOPWORDS=None
-N_JOBS = 5
 
-SKB_score_func = chi2
+# with 5 * 8000 (n_chunks * chunk_size(number of docs in each chunk))
+MAX_FEATURES = 1750
+MAX_DF = 0.7086319286046587
+MIN_DF = 22
+NUMBER_OF_CLAUSES = 4000
+S = 17.7
+T = 5000
+TM_EPOCHS = 15
+ERROR_MAX_FEATURES = 700
+ERROR_NUMBER_OF_CLAUSES = 3200
+ERROR_S = 25.61065
+ERROR_T = 1750
+ERROR_MAX_DF = 0.437663961421369
+ERROR_MIN_DF = 30
+SKB_score_func = mutual_info_classif
+
+
+STOPWORDS = None
+N_JOBS = 5
+EARLY_STOP_ACC=1.0
 error_chunk=True
 n_badtexts=2000
-
-ERROR_MAX_FEATURES=100
-ERROR_NUMBER_OF_CLAUSES=50
-ERROR_S = 10
-ERROR_T = 100
-ERROR_LITERAL_BUDGET = 10
-ERROR_MAX_DF = 0.9
-ERROR_MIN_DF = 10
+CV_MAX_FEATURES=30000
+N_GRAM_RANGE=(1, 2)
+LITERAL_BUDGET=6
+ERROR_LITERAL_BUDGET = 6
 
 # *************** TRANSFORMER ***************
 
@@ -59,7 +60,18 @@ warmup_steps = 500
 load_best_model_at_end = True
 eval_accumulation_steps = 16
 label_names = ['labels', 'sentiment']
-neutral_weight = 0.3897 
-loss_weight = 0.4154 
+neutral_weight = 0.001 
+loss_weight = 10.0
 num_labels = 3
 num_seq_labels = 2
+
+# *************** TESTING ***************
+#MAX_DF = 0.9
+#MIN_DF = 2
+#MAX_FEATURES = 50
+#NUMBER_OF_CLAUSES = 100
+#TM_EPOCHS = 2
+#ERROR_MAX_FEATURES = 50
+#ERROR_NUMBER_OF_CLAUSES = 100
+#ERROR_MAX_DF = 0.9
+#ERROR_MIN_DF = 2
