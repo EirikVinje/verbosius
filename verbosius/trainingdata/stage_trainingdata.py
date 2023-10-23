@@ -27,12 +27,9 @@ def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : i
         Path to output of this module. Must be absolute path to directory.
     
     chunkdist_n : int
-        ID of chunkdist to use for trainingdata. Must be an integer.
+        ID of chunkdist to use for trainingdata. Must be an integer. Will be used to name the output directory, e.g "path/to/output/{dataset}_chunkdist_{chunkdist_n}".
     
-    Returns
-    -------
-    None
-
+    
     """
 
     trainingdata_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{chunkdist_n}")
