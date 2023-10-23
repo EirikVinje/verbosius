@@ -7,12 +7,12 @@ import config as config
 
 
 class Dataset(torch.utils.data.Dataset):
-    def __init__(self, input_ids, attention_mask, labels, targets, sentiment):
+    def __init__(self, input_ids, attention_mask, labels): #, targets, sentiment):
         self.input_ids = input_ids
         self.attention_mask = attention_mask
         self.labels = labels
-        self.targets = targets
-        self.sentiment = sentiment
+        #self.targets = targets
+        #self.sentiment = sentiment
 
     def __len__(self):
         return len(self.labels)
@@ -21,14 +21,14 @@ class Dataset(torch.utils.data.Dataset):
         input_ids = self.input_ids[idx]
         attention_mask = self.attention_mask[idx]
         labels = self.labels[idx]
-        targets = self.targets[idx]
-        sentiment = self.sentiment[idx]
+        #targets = self.targets[idx]
+        #sentiment = self.sentiment[idx]
         return {
             'input_ids': input_ids,
             'attention_mask': attention_mask,
             'labels': labels,
-            'targets': targets,
-            'sentiment': sentiment
+            #'targets': targets,
+            #'sentiment': sentiment
         }
 
 
@@ -152,8 +152,8 @@ def tokenize_and_align_labels(data, tokenizer, orig_labels:bool = False):
     output["input_ids"] = tokenized_inputs["input_ids"] 
     output["attention_mask"] = tokenized_inputs["attention_mask"]
     output["labels"] = tokenized_inputs["labels"]
-    output["targets"] = tokenized_inputs["targets"]
-    output["sentiment"] = Y
+    #output["targets"] = tokenized_inputs["targets"]
+    #output["sentiment"] = Y
 
     #print("Tokenized inputs: ", len(output["input_ids"]))
     #print("attention_mask: ", len(output["attention_mask"]))
@@ -218,3 +218,5 @@ def custom_data_collator(batch_input):
     }
 
     return new_batch_input
+
+

@@ -14,6 +14,22 @@ import config as config
 
 def rulemaker(train_x, train_y, error_params : bool = False):
     
+    """
+    Generates the RulePredictor from the Tsetlin Machine. This enables us to wieght the tokens in the data.
+
+    Parameters:
+    -----------
+    train_x : list
+
+    train_y : list
+
+    error_params : bool
+        If True, the parameters for the Tsetlin Machine will be the error parameters.
+
+    """
+
+
+
     MAX_FEATURES = config.MAX_FEATURES
     CV_MAX_FEATURES = config.CV_MAX_FEATURES
     MAX_DF = config.MAX_DF
@@ -81,7 +97,7 @@ def rulemaker(train_x, train_y, error_params : bool = False):
                          seed=SEED, 
                          n_jobs=N_JOBS, 
                          early_exit_acc=EARLY_STOP_ACC,
-                         progress_bar= False)
+                         progress_bar= True)
 
     trainer.train(tm)    
 
@@ -336,13 +352,27 @@ def do_weighting(train_data, feature_names, rm):
 
     
 def make_weighted_data(train_data, error_params : bool = False):
+    """
+    Trains the Tsetlin Machine and weights the tokens in the data.
+
+    Parameters:
+    -----------
+    train_data : list
+        list of dicts with the data
+    
+    error_params : bool
+        If True, the parameters for the Tsetlin Machine will be the error parameters.
+
+    """
+
+
 
     train_x = [instance["lemmas"] for instance in train_data]
     train_y = [instance["sentiment"] for instance in train_data]
     
     rm, feature_names, train_x_bin = rulemaker(train_x=train_x, 
-                                                            train_y=train_y, 
-                                                            error_params=error_params)
+                                                train_y=train_y, 
+                                                error_params=error_params)
     
     for i in range(len(train_data)):
         train_data[i]["bin"] = train_x_bin[i]

@@ -43,7 +43,7 @@ def stage_validation(model_path : str, model_name : str, batch_size_pred : int):
     train_x_bin = vectorizer.fit_transform(train_x)
     test_x_bin = vectorizer.transform(test_x)
 
-    logreg = LogisticRegression(verbose=1, 
+    logreg = LogisticRegression(verbose=0, 
                                 max_iter=1000, 
                                 penalty='l2', 
                                 random_state=42, 

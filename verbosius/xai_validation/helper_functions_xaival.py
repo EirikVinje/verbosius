@@ -103,7 +103,6 @@ def get_prediction_outputs(model, x, batch_size_pred):
 
 def tokenize_to_model(data, tokenizer, device):
     
-
     tokenized_inputs = tokenizer(data, 
                                  truncation=True, 
                                  padding="longest", 

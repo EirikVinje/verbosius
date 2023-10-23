@@ -13,9 +13,6 @@ from sklearn.model_selection import train_test_split
 from collections import Counter
 
 
-
-    
-
 def shuffle_unison(a: list, seed : int = 42):
     rng = np.random.default_rng(seed)
     p = rng.permutation(len(a[0]))

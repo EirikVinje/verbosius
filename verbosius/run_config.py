@@ -4,14 +4,14 @@ import os
 # ********** Global ********** #
 dataset = "imdb"
 user = os.environ.get("USER")
-chunkdist_n = 5555
+chunkdist_n = 800016
 
 # *********** Chunker ********** #
 
 input_raw = f"/home/{user}/data/verbosius/imdb/"
 output_chunk = f"/home/{user}/data/verbosius/imdb/chunking/"
 chunk_size = 8000
-chunk_amount = 5
+chunk_amount = 16
 
 # *********** Preprocess ********** #
 input_chunk = f"/home/{user}/data/verbosius/imdb/chunking/"
