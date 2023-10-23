@@ -4,7 +4,7 @@ import os
 # ********** Global ********** #
 dataset = "amazon"
 user = os.environ.get("USER")
-chunkdist_n = 800016
+chunkdist_n = 8000162352345
 
 # *********** Chunker ********** #
 
