@@ -4,7 +4,7 @@ import os
 # ********** Global ********** #
 dataset = "imdb"
 user = os.environ.get("USER")
-chunkdist_n = 239485
+chunkdist_n = 5555
 
 # *********** Chunker ********** #
 
