@@ -39,7 +39,7 @@ def chunk_data(n_chunks_per_mix, n_classes, split_ind_input, texts, labels, data
         split_label = labels[split_ind]
         
         if dataset.n_classes > 3:
-            split_label_orig = dataset.train_all_labels[split_ind]
+            split_label_orig = dataset.load_orig_labels()
             split_text, split_label, split_label_orig = shuffle_unison([split_text, split_label, split_label_orig], seed)
             
             train_x.append(split_text)

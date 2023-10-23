@@ -1,5 +1,6 @@
 import gzip
 import json
+import pickle
 
 import datasets as ds
 import numpy as np
@@ -262,41 +263,34 @@ class Amazon:
         self.test_data = None
         self.n_classes = 5
 
-    def raw_amazon_iterator(self, data_path):
-        with gzip.open(data_path, mode="rt") as zp:
-            for line in zp:
-                d = json.loads(line)
-                yield d
+
 
     def load_test(self):
+        
+        store_dir = "/home/tobxtra/data/verbosius/amazon/pre_chunking/small/"
+
+        with open(f"{store_dir}test_data.pkl", "rb") as f:
+            self.test_data = pickle.load(f)
+
         return self.test_data
     
-    def load_data(self, path: str, data_size = 4):
+    def load_orig_labels(self):
 
-        train_data = []
-        orig_labels = []
+        store_dir = "/home/tobxtra/data/verbosius/amazon/pre_chunking/small/"
 
-        class_lookup = {
-            1: 0,
-            2: 0,
-            3: 1,
-            4: 2,
-            5: 2
-        }
+        with open(f"{store_dir}train_orig_labels.pkl", "rb") as f:
+            train_orig_labels = pickle.load(f)
 
-        # remove texts above ~400 cahracters
-        # keep list of original labels
+        return train_orig_labels
 
-        for index, d in enumerate(self.raw_amazon_iterator(path)):
-            if index == data_size:
-                break
-            orig_labels.append(int(d["overall"]))
-            train_data.append([d["reviewText"], class_lookup[int(d["overall"])]])
+    def load_data(self, path: str, test: bool = False, test_size: float = 0.2):
 
+        store_dir = "/home/tobxtra/data/verbosius/amazon/pre_chunking/small/"
 
-        train_data = np.array(train_data)
+        with open(f"{store_dir}train_data.pkl", "rb") as f:
+            train_data = pickle.load(f)
 
-        return train_data, None, orig_labels
+        return train_data, None
     
 
     
