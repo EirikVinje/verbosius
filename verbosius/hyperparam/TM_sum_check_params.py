@@ -123,7 +123,7 @@ if __name__ == "__main__":
         os.system("cd ~ && ./projects/verbosius/make_env_HP.sh")
         print('yo')
 
-    seeds = [42, 43, 44, 45, 46]
+    seeds = [42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55]
     res_1 = []
     res_2 = []
 
