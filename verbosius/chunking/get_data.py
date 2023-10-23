@@ -1,8 +1,10 @@
-import datasets as ds
-from time import perf_counter
+import gzip
+import json
 
+import datasets as ds
 import numpy as np
 
+from time import perf_counter
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 
@@ -254,24 +256,68 @@ class SST5:
 class Amazon:
 
     def __init__(self, two_cat : bool) -> None:
-        
         self.two_cat = two_cat
         self.exists_test_set = False
         self.exists_validation_set = False
         self.test_data = None
+        self.n_classes = 5
+
+    def raw_amazon_iterator(self, data_path):
+        with gzip.open(data_path, mode="rt") as zp:
+            for line in zp:
+                d = json.loads(line)
+                yield d
 
     def load_test(self):
         return self.test_data
     
-    def load_data(self, path: str):
+    def load_data(self, path: str, data_size = 4):
 
-        return None, None
+        train_data = []
+        orig_labels = []
+
+        class_lookup = {
+            1: 0,
+            2: 0,
+            3: 1,
+            4: 2,
+            5: 2
+        }
+
+        # remove texts above ~400 cahracters
+        # keep list of original labels
+
+        for index, d in enumerate(self.raw_amazon_iterator(path)):
+            if index == data_size:
+                break
+            orig_labels.append(int(d["overall"]))
+            train_data.append([d["reviewText"], class_lookup[int(d["overall"])]])
+
+
+        train_data = np.array(train_data)
+
+        return train_data, None, orig_labels
     
 
     
 
 def dataset(dataset : str):
+    """Function to pick which dataset to use in the pipeline. Returns class object which needs to be instantiated.
 
+    ex: 
+    amazon = dataset("amazon")
+    amazon = amazon(two_cat=True)
+    train_data, val_data = amazon.load_data(path=path, data_size=data_size)
+
+    Args:
+        dataset (str): string of dataset name
+
+    Raises:
+        ValueError: if dataset is not one of the following: imdb, rottentomatoes, amazon, mnist
+
+    Returns:
+        Class object: Returns class for chosen dataset
+    """
     if dataset == "imdb":
         return IMDB
     elif dataset == "rottentomatoes":
