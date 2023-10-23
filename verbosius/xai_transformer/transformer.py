@@ -5,12 +5,15 @@ from transformers import TrainingArguments, Trainer
 import torch
 import numpy as np
 from sklearn.metrics import accuracy_score
+from transformers import AutoModelForTokenClassification
 
 import config as config
 import xai_transformer.xai_model as xm
 import xai_transformer.helper_functions as hf
+from xai_transformer.xai_model import CustomTrainer_Tokenclassifier
 
-def transformer_pipeline(output_dir, train_data, test_x, test_y, val_data):
+
+def transformer_pipeline_custom(output_dir, train_data, test_x, test_y, val_data):
     
     device = config.device
     learning_rate = config.learning_rate
@@ -82,3 +85,5 @@ def transformer_pipeline(output_dir, train_data, test_x, test_y, val_data):
     torch.save(model, output_dir)
 
     return seq_acc
+
+

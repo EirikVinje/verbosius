@@ -15,8 +15,6 @@ validation=True
 
 # *************** GENERATE TRAINING DATA ***************
 
-
-# with 5 * 8000 (n_chunks * chunk_size(number of docs in each chunk))
 MAX_FEATURES = 1750
 MAX_DF = 0.7086319286046587
 MIN_DF = 22
@@ -32,13 +30,12 @@ ERROR_MAX_DF = 0.437663961421369
 ERROR_MIN_DF = 30
 SKB_score_func = mutual_info_classif
 
-
 STOPWORDS = None
 N_JOBS = 5
 EARLY_STOP_ACC=1.0
 error_chunk=True
 n_badtexts=2000
-CV_MAX_FEATURES=30000
+CV_MAX_FEATURES=40000
 N_GRAM_RANGE=(1, 2)
 LITERAL_BUDGET=6
 ERROR_LITERAL_BUDGET = 6
@@ -60,8 +57,8 @@ warmup_steps = 500
 load_best_model_at_end = True
 eval_accumulation_steps = 16
 label_names = ['labels', 'sentiment']
-neutral_weight = 0.001 
-loss_weight = 10.0
+neutral_weight = 0.0001 
+loss_weight = 5.0
 num_labels = 3
 num_seq_labels = 2
 

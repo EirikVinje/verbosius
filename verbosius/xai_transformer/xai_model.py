@@ -2,9 +2,11 @@ import torch
 from torch import nn
 from transformers.modeling_outputs import TokenClassifierOutput
 from transformers import AutoModel
+from transformers import Trainer
 
 
 class CustomModel(nn.Module):
+
     def __init__(self, num_labels, num_seq_labels, neutral_weight, loss_weight=1): 
         super(CustomModel,self).__init__() 
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -78,3 +80,5 @@ class CustomModel(nn.Module):
         
         else:
             return TokenClassifierOutput(logits=logits)
+        
+

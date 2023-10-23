@@ -13,7 +13,7 @@ import preprocessing.preprocess_functions as pf
 def stage_preprocess(dataset:str, input:str, output:str, chunkdist_n : int):
 
     """
-    Preprocesses data for training.
+    Preprocesses data for training. Lemmatizes text, and maps tokens to ids.
 
     Parameters
     ----------
@@ -27,7 +27,7 @@ def stage_preprocess(dataset:str, input:str, output:str, chunkdist_n : int):
         Path to output of this module. Must be absolute path to directory.
     
     chunkdist_n : int
-        ID of chunkdistribution. Must be an integer.
+        ID of chunkdistribution. Must be an integer. Will be used to name the output directory, e.g "path/to/output/{dataset}_chunkdist_{chunkdist_n}".
     """
 
     new_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{chunkdist_n}")

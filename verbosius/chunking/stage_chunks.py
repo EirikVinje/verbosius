@@ -32,13 +32,14 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
         Path to output of this module. Must be absolute path to directory.
     
     chunkdist_n : int
-        ID of chunkdistribution. Must be an integer.
-
+        ID of chunkdistribution. Must be an integer. Will be used to name the output directory, e.g "path/to/output/{dataset}_chunkdist_{chunkdist_n}".
     """
+
+    print("Chunk size: ", chunk_size)
+    print("Chunk amount: ", chunk_amount)
 
     ds = get_data.dataset(dataset)
     ds = ds(two_cat=True)
-    
     
     chunked_data = chunker_functions.chunk_data_multiclass_supersample(dataset = ds,
                                                     n_chunks_per_mix=chunk_amount,
