@@ -8,7 +8,7 @@ chunkdist_n = 800016
 
 # *********** Chunker ********** #
 
-input_raw = f"/home/{user}/data/verbosius/imdb/"
+input_raw = f"/home/{user}/data/verbosius/amazon/"
 output_chunk = f"/home/{user}/data/verbosius/imdb/chunking/"
 chunk_size = 8000
 chunk_amount = 16
