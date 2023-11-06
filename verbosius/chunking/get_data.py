@@ -1,8 +1,11 @@
-import datasets as ds
-from time import perf_counter
+import gzip
+import json
+import pickle
 
+import datasets as ds
 import numpy as np
 
+from time import perf_counter
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 
@@ -254,24 +257,61 @@ class SST5:
 class Amazon:
 
     def __init__(self, two_cat : bool) -> None:
-        
         self.two_cat = two_cat
         self.exists_test_set = False
         self.exists_validation_set = False
         self.test_data = None
+        self.n_classes = 5
+
+
 
     def load_test(self):
+        
+        store_dir = "/home/tobxtra/data/verbosius/amazon/pre_chunking/small/"
+
+        with open(f"{store_dir}test_data.pkl", "rb") as f:
+            self.test_data = pickle.load(f)
+
         return self.test_data
     
-    def load_data(self, path: str):
+    def load_orig_labels(self):
 
-        return None, None
+        store_dir = "/home/tobxtra/data/verbosius/amazon/pre_chunking/small/"
+
+        with open(f"{store_dir}train_orig_labels.pkl", "rb") as f:
+            train_orig_labels = pickle.load(f)
+
+        return train_orig_labels
+
+    def load_data(self, path: str, test: bool = False, test_size: float = 0.2):
+
+        store_dir = "/home/tobxtra/data/verbosius/amazon/pre_chunking/small/"
+
+        with open(f"{store_dir}train_data.pkl", "rb") as f:
+            train_data = pickle.load(f)
+
+        return train_data, None
     
 
     
 
 def dataset(dataset : str):
+    """Function to pick which dataset to use in the pipeline. Returns class object which needs to be instantiated.
 
+    ex: 
+    amazon = dataset("amazon")
+    amazon = amazon(two_cat=True)
+    train_data, val_data = amazon.load_data(path=path, data_size=data_size)
+
+    Args:
+        dataset (str): string of dataset name
+
+    Raises:
+        ValueError: if dataset is not one of the following: imdb, rottentomatoes, amazon, mnist
+
+    Returns:
+        Class object: Returns class for chosen dataset
+    """
     if dataset == "imdb":
         return IMDB
     elif dataset == "rottentomatoes":

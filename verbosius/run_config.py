@@ -2,31 +2,31 @@ import os
 
 
 # ********** Global ********** #
-dataset = "imdb"
+dataset = "amazon"
 user = os.environ.get("USER")
-chunkdist_n = 800016
+chunkdist_n = 8000162352345
 
 # *********** Chunker ********** #
 
-input_raw = f"/home/{user}/data/verbosius/amazon/"
-output_chunk = f"/home/{user}/data/verbosius/imdb/chunking/"
+input_raw = f"/home/{user}/data/verbosius/{dataset}/"
+output_chunk = f"/home/{user}/data/verbosius/{dataset}/chunking/"
 chunk_size = 8000
-chunk_amount = 16
+chunk_amount = 1
 
 # *********** Preprocess ********** #
-input_chunk = f"/home/{user}/data/verbosius/imdb/chunking/"
-output_preproc = f"/home/{user}/data/verbosius/imdb/preprocess/"
+input_chunk = f"/home/{user}/data/verbosius/{dataset}/chunking/"
+output_preproc = f"/home/{user}/data/verbosius/{dataset}/preprocess/"
 
 # *********** Trainingdata ********** #
-input_preproc = f"/home/{user}/data/verbosius/imdb/preprocess/"
-output_traindata = f"/home/{user}/data/verbosius/imdb/trainingdata/"
+input_preproc = f"/home/{user}/data/verbosius/{dataset}/preprocess/"
+output_traindata = f"/home/{user}/data/verbosius/{dataset}/trainingdata/"
 
 # *********** Transformer ********** #
-input_traindata = f"/home/{user}/data/verbosius/imdb/trainingdata"
-input_testdata = f"/home/{user}/data/verbosius/imdb/chunking"
-model_output = f"/home/{user}/data/verbosius/imdb/models"
+input_traindata = f"/home/{user}/data/verbosius/{dataset}/trainingdata"
+input_testdata = f"/home/{user}/data/verbosius/{dataset}/chunking"
+model_output = f"/home/{user}/data/verbosius/{dataset}/models"
 
 # *********** XAI score ********** #
-input_xai_val_model = f"/home/{user}/data/verbosius/imdb/models"
+input_xai_val_model = f"/home/{user}/data/verbosius/{dataset}/models"
 model_name = f"{dataset}_model_dist_{chunkdist_n}"
 batch_size = 32
