@@ -11,7 +11,7 @@ seed = 69
 shuffle=True
 test_size=0.2
 val_size=0.2
-validation=True
+validation=False
 
 # *************** GENERATE TRAINING DATA ***************
 

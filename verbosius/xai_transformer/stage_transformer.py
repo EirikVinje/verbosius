@@ -56,9 +56,7 @@ def stage_transformer(dataset : str, train_val_input : str, test_input : str, mo
         assert False, f"Directory {model_dir} already exists, please remove it before continuing"
     
     model_path = os.path.join(model_dir, "model")
-
     trainingdata_dist = os.path.join(train_val_input, f"{dataset}_chunkdist_{chunkdist_n}", "train_val")
-    
     chunks = sorted(os.listdir(trainingdata_dist))
     
     all_train_data = []
@@ -68,11 +66,10 @@ def stage_transformer(dataset : str, train_val_input : str, test_input : str, mo
         train_data = pickle.load(open(chunk, "rb"))        
         all_train_data.extend(train_data)
 
-        
     train_data, val_data = train_test_split(all_train_data, test_size=0.2, random_state=config.seed, shuffle=True)
 
-    train_tokenized = hf.tokenize_and_align_labels(train_data, config.tokenizer)
-    val_tokenized = hf.tokenize_and_align_labels(val_data, config.tokenizer) 
+    train_tokenized = hf.tokenize_and_align_labels(train_data, config.tokenizer, orig_labels=True)
+    val_tokenized = hf.tokenize_and_align_labels(val_data, config.tokenizer, orig_labels=True) 
 
     test_x = {"input_ids": [], "attention_mask": [], "targets": []}
     test_y = []

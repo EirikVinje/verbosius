@@ -313,7 +313,7 @@ def do_weighting(train_data, feature_names, rm):
         y = inst["sentiment"]
         tokens_x = inst["tokens"]
         orig_label = inst["orig_labels"]
-        
+
         lemmas_x = inst["lemmas"]
         tokenmap_x = inst["token_ids"]
         bin_x = inst["bin"]
@@ -364,8 +364,6 @@ def make_weighted_data(train_data, error_params : bool = False):
         If True, the parameters for the Tsetlin Machine will be the error parameters.
 
     """
-
-
 
     train_x = [instance["lemmas"] for instance in train_data]
     train_y = [instance["sentiment"] for instance in train_data]

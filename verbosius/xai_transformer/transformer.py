@@ -10,7 +10,6 @@ from transformers import AutoModelForTokenClassification
 import config as config
 import xai_transformer.xai_model as xm
 import xai_transformer.helper_functions as hf
-from xai_transformer.xai_model import CustomTrainer_Tokenclassifier
 
 
 def transformer_pipeline_custom(output_dir, train_data, test_x, test_y, val_data):

@@ -36,9 +36,9 @@ def distribute_rest(counts, rest, rng):
 def split_train_orig_test(temp_data, counts, test_counts):
 
     class_lookup = {
-        1: 0,
-        2: 0,
-        3: 1,
+        1: 1,
+        2: 1,
+        3: 0,
         4: 2,
         5: 2
     }

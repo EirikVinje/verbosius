@@ -40,18 +40,18 @@ def stage_preprocess(dataset:str, input:str, output:str, chunkdist_n : int):
     chunk_dist = os.path.join(input, f"{dataset}_chunkdist_{chunkdist_n}", "train_val")
     chunks = sorted(os.listdir(chunk_dist))
 
+    print(f"\nPreprocessing {dataset}_chunkdist_{chunkdist_n}.......")
     for i, chunk in enumerate(tqdm(chunks)):
         
         chunk = os.path.join(chunk_dist, chunk)
         data = pickle.load(open(chunk, "rb"))
 
         raw_train_x = list(data["train_x"])
+        print(f"chunk : {i} size : {len(raw_train_x)}")
+        
         train_y = list(data["train_y"])
         orig_train_y = data["orig_train_y"]
 
-        raw_train_x.extend(list(data["val_x"]))
-        train_y.extend(list(data["val_y"]))
-        
         cleaned_train_x = preprocess_functions.clean_text(raw_train_x)
 
         split_train_x, token_train_x, lemma_train_x = preprocess_functions.lemmatize(cleaned_train_x, lemmatizer="en_core_web_sm")
