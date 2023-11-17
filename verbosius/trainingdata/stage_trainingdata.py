@@ -76,7 +76,7 @@ def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : i
 
         print("train: ", len(train_data), "error: ", len(train_error_data))
 
-        #correct_x += len(train_data)
+        correct_x += len(train_data)
 
         gen_data.write_chunk(train_data, trainingdata_chunkdist, n)
     

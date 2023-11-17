@@ -4,14 +4,14 @@ import os
 # ********** Global ********** #
 dataset = "amazon"
 user = os.environ.get("USER")
-chunkdist_n = 8000162352345
+chunkdist_n = 10
 
 # *********** Chunker ********** #
 
 input_raw = f"/home/{user}/data/verbosius/{dataset}/"
 output_chunk = f"/home/{user}/data/verbosius/{dataset}/chunking/"
 chunk_size = 8000
-chunk_amount = 1
+chunk_amount = 100
 
 # *********** Preprocess ********** #
 input_chunk = f"/home/{user}/data/verbosius/{dataset}/chunking/"

@@ -71,8 +71,8 @@ def stage_transformer(dataset : str, train_val_input : str, test_input : str, mo
         
     train_data, val_data = train_test_split(all_train_data, test_size=0.2, random_state=config.seed, shuffle=True)
 
-    train_tokenized = hf.tokenize_and_align_labels(train_data, config.tokenizer)
-    val_tokenized = hf.tokenize_and_align_labels(val_data, config.tokenizer) 
+    train_tokenized = hf.tokenize_and_align_labels(train_data, config.tokenizer, orig_labels=True)
+    val_tokenized = hf.tokenize_and_align_labels(val_data, config.tokenizer, orig_labels=True) 
 
     test_x = {"input_ids": [], "attention_mask": [], "targets": []}
     test_y = []

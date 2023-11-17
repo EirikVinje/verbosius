@@ -60,7 +60,7 @@ class CustomModel(nn.Module):
         #print('token_labels_pred', token_labels_pred.size())
         logits = (token_labels_pred, seq_label_pred)
         #print(logits)
-        
+
         if labels is not None:
             seq_loss = self.seq_cel(seq_label_pred, sentiment)
             #print('seq_loss',seq_loss.size())

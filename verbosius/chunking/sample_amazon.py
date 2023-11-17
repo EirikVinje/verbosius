@@ -4,13 +4,21 @@ import pickle
 
 import numpy as np
 
+from tqdm import tqdm
 
 
 
 def raw_amazon_iterator(data_path):
+    k = 0
     with gzip.open(data_path, mode="rt") as zp:
         for line in zp:
-            d = json.loads(line)
+            try:
+                d = json.loads(line)
+            except json.decoder.JSONDecodeError:
+                print(f"Skipped line {k}, len: {len(line)}")
+                k+=1
+                continue
+            k += 1
             yield d
 
 
@@ -33,12 +41,12 @@ def distribute_rest(counts, rest, rng):
     
     return counts
 
-def split_train_orig_test(temp_data, counts, test_counts):
+def split_train_orig_test(temp_data, counts, test_counts, rng):
 
     class_lookup = {
-        1: 0,
-        2: 0,
-        3: 1,
+        1: 1,
+        2: 1,
+        3: 0,
         4: 2,
         5: 2
     }
@@ -50,38 +58,43 @@ def split_train_orig_test(temp_data, counts, test_counts):
 
     for index, text, label in temp_data:
         if counts[label] > 0:
-            train_data.append([text, class_lookup[label]])
+            train_data.append([text, int(class_lookup[label])])
             orig_labels.append([index, label])
             counts[label] -= 1
 
-    train_data = np.array(train_data)
-    orig_labels = np.array(orig_labels)
+
+    train_data = np.array(train_data, dtype=object)
+    orig_labels = np.array(orig_labels, dtype=object)
+    
+    # remove the indices that are in the train data
+    remove_ind = set(orig_labels[:, 0])    
+    temp_data = [d for d in temp_data if d[0] not in remove_ind]
+    rng.shuffle(temp_data)
 
     for index, text, label in temp_data:
-        if test_counts[label] > 0 and index not in orig_labels[:, 0]:
+        if test_counts[label] > 0:
             test_data.append([text, label])
             test_counts[label] -= 1
 
 
-    
-    test_data = np.array(test_data)
+    test_data = np.array(test_data, dtype=object)
 
     return train_data, orig_labels, test_data
 
 
-def sample_amazon(path, rng, data_size: int  = 1000, test_size: int = 200, load_size: int = 90000000, max_text_len: int = 400):
+def sample_amazon(path, rng, data_size: int  = 1000, test_size: int = 200, load_size: int = 90000000, max_text_len: int = 300):
     
     temp_data = []
     
 
-    # define counts for each class, to ensure class balance
-    counts = np.zeros(5, dtype=np.uint32)
 
-    max_count = data_size // 3
-    max_count_combined_classes = max_count // 2
-
-    for index, d in enumerate(raw_amazon_iterator(path)):
-        if len(d["reviewText"]) > max_text_len:
+    
+    for index, d in enumerate(tqdm(raw_amazon_iterator(path))):
+        try: 
+            if len(d["reviewText"].split(" ")) > max_text_len:
+                continue
+        except:
+            print(f"KeyError + {index}")
             continue
 
         # orig_labels.append([index, int(d["overall"])])
@@ -122,7 +135,7 @@ def sample_amazon(path, rng, data_size: int  = 1000, test_size: int = 200, load_
     # shuffle the data
     rng.shuffle(temp_data)
 
-    train_data, orig_labels, test_data = split_train_orig_test(temp_data, counts, test_counts)
+    train_data, orig_labels, test_data = split_train_orig_test(temp_data, counts, test_counts, rng)
 
     return train_data, orig_labels, test_data
 
@@ -142,11 +155,11 @@ def save_to_pickle(train_data, train_orig_labels, test_data, store_dir):
     
 
 if __name__ == "__main__":
-    store_dir = "/home/tobxtra/data/verbosius/amazon/pre_chunking/small/"
+    store_dir = "/home/tobxtra/data/verbosius/amazon/pre_chunking/big/"
     path = "/home/bigtech/aggressive_dedup.json.gz"
 
     rng = np.random.default_rng(42)
     
-    train_data, train_orig_labels, test_data = sample_amazon(path, rng=rng, data_size=8000, test_size=2000, load_size=100000)
+    train_data, train_orig_labels, test_data = sample_amazon(path, rng=rng, data_size=5000000, test_size=800000, load_size=60000000)
     save_to_pickle(train_data, train_orig_labels, test_data, store_dir)
 

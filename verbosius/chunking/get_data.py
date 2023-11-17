@@ -267,7 +267,7 @@ class Amazon:
 
     def load_test(self):
         
-        store_dir = "/home/tobxtra/data/verbosius/amazon/pre_chunking/small/"
+        store_dir = "/home/tobxtra/data/verbosius/amazon/pre_chunking/medium/"
 
         with open(f"{store_dir}test_data.pkl", "rb") as f:
             self.test_data = pickle.load(f)
@@ -276,7 +276,7 @@ class Amazon:
     
     def load_orig_labels(self):
 
-        store_dir = "/home/tobxtra/data/verbosius/amazon/pre_chunking/small/"
+        store_dir = "/home/tobxtra/data/verbosius/amazon/pre_chunking/medium/"
 
         with open(f"{store_dir}train_orig_labels.pkl", "rb") as f:
             train_orig_labels = pickle.load(f)
@@ -285,7 +285,7 @@ class Amazon:
 
     def load_data(self, path: str, test: bool = False, test_size: float = 0.2):
 
-        store_dir = "/home/tobxtra/data/verbosius/amazon/pre_chunking/small/"
+        store_dir = "/home/tobxtra/data/verbosius/amazon/pre_chunking/medium/"
 
         with open(f"{store_dir}train_data.pkl", "rb") as f:
             train_data = pickle.load(f)
