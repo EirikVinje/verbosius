@@ -11,16 +11,16 @@ from xai_validation.helper_functions_xaival import tokenize_to_model
 def main():
 
     user = os.environ.get("USER")
-    dataset = "imdb"
-    dist_n = 0
+    dataset = "amazon"
+    dist_n = 10
 
-    with open("pred_docs.json", "r") as f:
+    with open("/home/tobxtra/projects/verbosius/verbosius/tokenclassifier/pred_docs.json", "r") as f:
         testdata = json.load(f)
     
     device = config.device
     tokenizer = config.tokenizer
 
-    model = torch.load(f"/home/{user}/data/verbosius/{dataset}_testing/models/{dataset}_model_dist_{dist_n}/model").to(device=device)
+    model = torch.load(f"/home/{user}/data/verbosius/{dataset}/models/{dataset}_model_dist_{dist_n}/model").to(device=device)
 
     testdata = tokenizer(testdata, padding="longest", truncation=True, return_tensors="pt").to(device=device)
 

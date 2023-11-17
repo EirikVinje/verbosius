@@ -105,7 +105,7 @@ def tokenize_and_align_labels(data, tokenizer, orig_labels : bool = False):
         return None
 
     if orig_labels:
-        Y = np.array([i['orig_label'] for i in data])
+        Y = np.array([(i['orig_label'][1] - 1) for i in data])
     else:
         Y = np.array([i['sentiment'] for i in data])
 
@@ -179,7 +179,7 @@ def extend_test(data, new_chunk):
 
 
 def custom_data_collator(batch_input):
-    
+
     input_ids = [torch.tensor(inst["input_ids"], dtype=torch.long) for inst in batch_input]
     attention_mask = [torch.tensor(inst["attention_mask"], dtype=torch.long) for inst in batch_input]
     targets = [torch.tensor(inst["targets"], dtype=torch.long) for inst in batch_input]

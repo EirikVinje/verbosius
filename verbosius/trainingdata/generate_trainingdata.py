@@ -68,6 +68,7 @@ def rulemaker(train_x, train_y, error_params : bool = False):
     
 
     train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x])
+
     _feature_names = vectorizer.get_feature_names_out()
 
     SKB = SelectKBest(score_func=SKB_score_func, k=MAX_FEATURES)
@@ -235,11 +236,17 @@ def label_tokens(sentiment, weights, threshold : float = 0.0):
         list of labels for each n-gram
     """
 
-    if sentiment == 1:
+    # if sentiment == 1:
+    #     labels = [2 if x > threshold else 1 if x < -threshold else 0 for x in weights]
+    # else:
+    #     labels = [1 if x > threshold else 2 if x < -threshold else 0 for x in weights]
+
+    if sentiment == 2 or sentiment == 0:
         labels = [2 if x > threshold else 1 if x < -threshold else 0 for x in weights]
-    else:
+    
+    elif sentiment == 1:
         labels = [1 if x > threshold else 2 if x < -threshold else 0 for x in weights]
-        
+    
     return labels
 
 
@@ -282,7 +289,7 @@ def do_weighting(train_data, feature_names, rm):
         votes = rm._inference.get_votes()
 
         n_votes = votes[prediction]
-
+        
         if y == prediction and n_votes > 0: 
             true_x_idx.append([n_votes, idx])
         

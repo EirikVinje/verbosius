@@ -17,7 +17,7 @@ validation=False
 
 MAX_FEATURES = 1750
 MAX_DF = 0.7086319286046587
-MIN_DF = 22
+MIN_DF = 2
 NUMBER_OF_CLAUSES = 4000
 S = 17.7
 T = 5000
@@ -27,7 +27,7 @@ ERROR_NUMBER_OF_CLAUSES = 3200
 ERROR_S = 25.61065
 ERROR_T = 1750
 ERROR_MAX_DF = 0.437663961421369
-ERROR_MIN_DF = 30
+ERROR_MIN_DF = 2
 SKB_score_func = mutual_info_classif
 
 STOPWORDS = None
@@ -60,7 +60,7 @@ label_names = ['labels', 'sentiment']
 neutral_weight = 0.0001 
 loss_weight = 5.0
 num_labels = 3
-num_seq_labels = 2
+num_seq_labels = 5
 
 # *************** TESTING ***************
 #MAX_DF = 0.9
