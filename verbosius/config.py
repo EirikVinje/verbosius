@@ -21,7 +21,7 @@ MIN_DF = 2
 NUMBER_OF_CLAUSES = 4000
 S = 17.7
 T = 5000
-TM_EPOCHS = 20
+TM_EPOCHS = 5
 ERROR_MAX_FEATURES = 700
 ERROR_NUMBER_OF_CLAUSES = 3200
 ERROR_S = 25.61065
@@ -49,7 +49,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True, de
 learning_rate = 1.539e-5
 per_device_train_batch_size = 4
 per_device_eval_batch_size = 4
-num_train_epochs = 1
+num_train_epochs = 10
 evaluation_strategy = "epoch"
 save_strategy = "epoch"
 load_best_model_at_end = True

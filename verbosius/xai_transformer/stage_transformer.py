@@ -69,6 +69,8 @@ def stage_transformer(dataset : str, train_val_input : str, model_output : str, 
     print()    
     print("Train size: ", len(train_tokenized["input_ids"]))
     print("Validation size: ", len(val_tokenized["input_ids"]))
+    print("Epochs: ", config.num_train_epochs)
+    print("Batch size: ", config.per_device_train_batch_size)
     print()
     
     tf.transformer_pipeline_custom(output_dir=model_path, 

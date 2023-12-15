@@ -69,12 +69,7 @@ def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : i
         chunk = os.path.join(preproc_dist, chunk) if not error_params else None
         train_data = pickle.load(open(chunk, "rb")) if not error_params else dir[n]
 
-        # print("train: ", len(train_data))
-
         train_data, train_error_data = gen_data.make_weighted_data(train_data, error_params)
-
-        # print("train: ", len(train_data), "error: ", len(train_error_data))
-        # print()
 
         correct_x += len(train_data)
 
