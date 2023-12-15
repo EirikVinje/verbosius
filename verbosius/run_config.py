@@ -10,8 +10,8 @@ chunkdist_n = 696969696
 
 input_raw = f"/home/{user}/data/verbosius/{dataset}/"
 output_chunk = f"/home/{user}/data/verbosius/{dataset}/chunking/"
-chunk_size = 200
-chunk_amount = 2
+chunk_size = 8000
+chunk_amount = 125
 
 # *********** Preprocess ********** #
 input_chunk = f"/home/{user}/data/verbosius/{dataset}/chunking/"
@@ -23,10 +23,11 @@ output_traindata = f"/home/{user}/data/verbosius/{dataset}/trainingdata/"
 
 # *********** Transformer ********** #
 input_traindata = f"/home/{user}/data/verbosius/{dataset}/trainingdata"
-input_testdata = f"/home/{user}/data/verbosius/{dataset}/chunking"
 model_output = f"/home/{user}/data/verbosius/{dataset}/models"
+
+# *********** accuracy score ********** #
+input_testdata = f"/home/{user}/data/verbosius/{dataset}/chunking"
 
 # *********** XAI score ********** #
 input_xai_val_model = f"/home/{user}/data/verbosius/{dataset}/models"
 model_name = f"{dataset}_model_dist_{chunkdist_n}"
-batch_size = 32

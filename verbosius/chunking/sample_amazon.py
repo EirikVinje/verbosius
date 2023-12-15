@@ -59,7 +59,7 @@ def split_train_orig_test(temp_data, counts, test_counts, rng):
     for index, text, label in temp_data:
         if counts[label] > 0:
             train_data.append([text, int(class_lookup[label])])
-            orig_labels.append([index, label])
+            orig_labels.append([index, label-1])
             counts[label] -= 1
 
 
@@ -73,7 +73,7 @@ def split_train_orig_test(temp_data, counts, test_counts, rng):
 
     for index, text, label in temp_data:
         if test_counts[label] > 0:
-            test_data.append([text, label])
+            test_data.append([text, label-1])
             test_counts[label] -= 1
 
 
@@ -85,9 +85,6 @@ def split_train_orig_test(temp_data, counts, test_counts, rng):
 def sample_amazon(path, rng, data_size: int  = 1000, test_size: int = 200, load_size: int = 90000000, max_text_len: int = 300):
     
     temp_data = []
-    
-
-
     
     for index, d in enumerate(tqdm(raw_amazon_iterator(path))):
         try: 
@@ -155,11 +152,13 @@ def save_to_pickle(train_data, train_orig_labels, test_data, store_dir):
     
 
 if __name__ == "__main__":
-    store_dir = "/home/tobxtra/data/verbosius/amazon/pre_chunking/big/"
+    
+    store_dir = "/home/bigtech/data/verbosius/amazon/pre_chunking/big/"
+    
     path = "/home/bigtech/aggressive_dedup.json.gz"
 
     rng = np.random.default_rng(42)
     
-    train_data, train_orig_labels, test_data = sample_amazon(path, rng=rng, data_size=5000000, test_size=800000, load_size=60000000)
+    train_data, train_orig_labels, test_data = sample_amazon(path, rng=rng, data_size=2000000, test_size=400000, load_size=20000000)
     save_to_pickle(train_data, train_orig_labels, test_data, store_dir)
 

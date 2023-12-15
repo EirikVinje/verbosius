@@ -270,7 +270,7 @@ class Amazon:
         
         user = os.environ.get('USER')
 
-        store_dir = f"/home/{user}/data/verbosius/amazon/pre_chunking/small/"
+        store_dir = f"/home/{user}/data/verbosius/amazon/pre_chunking/big/"
 
         with open(f"{store_dir}test_data.pkl", "rb") as f:
             self.test_data = pickle.load(f)
@@ -281,7 +281,7 @@ class Amazon:
 
         user = os.environ.get('USER')
 
-        store_dir = f"/home/{user}/data/verbosius/amazon/pre_chunking/small/"
+        store_dir = f"/home/{user}/data/verbosius/amazon/pre_chunking/big/"
 
         with open(f"{store_dir}train_orig_labels.pkl", "rb") as f:
             train_orig_labels = pickle.load(f)
@@ -292,7 +292,7 @@ class Amazon:
         
         user = os.environ.get('USER')
 
-        store_dir = f"/home/{user}/data/verbosius/amazon/pre_chunking/small/"
+        store_dir = f"/home/{user}/data/verbosius/amazon/pre_chunking/big/"
 
         with open(f"{store_dir}train_data.pkl", "rb") as f:
             train_data = pickle.load(f)

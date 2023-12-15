@@ -21,7 +21,7 @@ MIN_DF = 2
 NUMBER_OF_CLAUSES = 4000
 S = 17.7
 T = 5000
-TM_EPOCHS = 15
+TM_EPOCHS = 20
 ERROR_MAX_FEATURES = 700
 ERROR_NUMBER_OF_CLAUSES = 3200
 ERROR_S = 25.61065
@@ -47,16 +47,14 @@ model_name_ = "distilroberta-base"
 tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True, device=device)
 
 learning_rate = 1.539e-5
-per_device_train_batch_size = 32
-per_device_eval_batch_size = 32
-num_train_epochs = 5
-weight_decay = 0.01
+per_device_train_batch_size = 4
+per_device_eval_batch_size = 4
+num_train_epochs = 1
 evaluation_strategy = "epoch"
 save_strategy = "epoch"
-warmup_steps = 500
 load_best_model_at_end = True
-eval_accumulation_steps = 16
 label_names = ['labels', 'sentiment']
+
 neutral_weight = 0.0001 
 loss_weight = 5.0
 num_labels = 3

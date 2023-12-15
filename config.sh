@@ -27,4 +27,3 @@ model_output="$(python -c 'import run_config; print(run_config.model_output)')"
 # *********** XAI score ********** #
 input_xai_val_model="$(python -c 'import run_config; print(run_config.input_xai_val_model)')" 
 model_name="$(python -c 'import run_config; print(run_config.model_name)')"
-batch_size="$(python -c 'import run_config; print(run_config.batch_size)')"

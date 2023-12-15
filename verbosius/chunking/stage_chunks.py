@@ -72,11 +72,6 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
         orig_train_y = chunked_data[2][i] if chunked_data[2] is not None else None
         orig_val_y = None #chunked_data[5][i] if chunked_data[5] is not None else None
 
-        print(orig_train_y)
-        print(train_y)
-
-        assert False
-
         train_val = {"train_x": train_x,
                      "train_y": train_y,
                      "val_x": val_x,

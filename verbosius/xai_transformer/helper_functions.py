@@ -55,6 +55,7 @@ class Test_Dataset(torch.utils.data.Dataset):
 
 
 def compute_metrics(eval_preds):
+    
     metric = evaluate.load("accuracy")
     logits, labels = eval_preds
     predictions = np.argmax(logits[1], axis=1)
@@ -67,7 +68,7 @@ def compute_metrics(eval_preds):
 
     seqeval = evaluate.load("seqeval")
     
-    label_list = ["neutral", "positive", "negative"]
+    label_list = ["neutral", "negative", "positive"]
 
     true_predictions = [
 
@@ -94,8 +95,7 @@ def compute_metrics(eval_preds):
         "token_negative": token_negative,
         "token_positive": token_positive
     }
-    #df = pd.DataFrame(output, index=[0])
-    #df.to_csv("eval_results.csv", mode="a", header=not os.path.exists("eval_results.csv"))
+    
     return output
 
 
@@ -105,7 +105,7 @@ def tokenize_and_align_labels(data, tokenizer, orig_labels : bool = False):
         return None
 
     if orig_labels:
-        Y = np.array([(i['orig_label'][1] - 1) for i in data])
+        Y = np.array([(i['orig_label']) for i in data])
     else:
         Y = np.array([i['sentiment'] for i in data])
 
@@ -212,5 +212,6 @@ def custom_data_collator(batch_input):
     }
 
     return new_batch_input
+
 
 
