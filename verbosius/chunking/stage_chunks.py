@@ -35,8 +35,8 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
         ID of chunkdistribution. Must be an integer. Will be used to name the output directory, e.g "path/to/output/{dataset}_chunkdist_{chunkdist_n}".
     """
 
-    print("Chunk size: ", chunk_size)
-    print("Chunk amount: ", chunk_amount)
+    print("\nStaging chunks.......")
+
 
     ds = get_data.dataset(dataset)
     ds = ds(two_cat=True)
@@ -64,11 +64,13 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
         train_x = chunked_data[0][i]
         train_y = chunked_data[1][i]
 
-        val_x = chunked_data[2][i] if chunked_data[2] is not None else None
-        val_y = chunked_data[3][i] if chunked_data[3] is not None else None
+        val_x = None #chunked_data[2][i] if chunked_data[2] is not None else None
+        val_y = None #chunked_data[3][i] if chunked_data[3] is not None else None
 
-        orig_train_y = chunked_data[4][i] if chunked_data[4] is not None else None
-        orig_val_y = chunked_data[5][i] if chunked_data[5] is not None else None
+        #assert val_x == None , "Validation data is not None"
+
+        orig_train_y = chunked_data[2][i] if chunked_data[2] is not None else None
+        orig_val_y = None #chunked_data[5][i] if chunked_data[5] is not None else None
 
         train_val = {"train_x": train_x,
                      "train_y": train_y,
@@ -80,16 +82,24 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
         
         chunker_functions.write_chunks(new_chunkdist, train_val, test=False)
     
-    
     train_length = len(chunked_data[0][0])
-    test_length = len(chunked_data[2][0])
-    validation_length = len(chunked_data[4][0]) if chunked_data[4] is not None else 0
+    chunk_amount = len(chunked_data[0])
+    validation_length = 0 #len(chunked_data[2][0]) if chunked_data[2] is not None else 0
     n_classes = chunked_data[-1]
-    
+
+    print()
+    print("**************************************************************")
+    print(f"name:                       {dataset}_chunkdist_{chunkdist_n}")
+    print(f"size per train-chunk:       {train_length}")
+    print(f"size per validation-chunk:  {validation_length}")
+    print(f"number of chunks:           {chunk_amount}")
+    print(f"number of classes:          {n_classes}")
+    print("**************************************************************")
+    print()
+
     chunker_functions.write_meta_chunks(new_chunkdist, 
                                         train_length, 
                                         validation_length, 
-                                        test_length, 
                                         dataset, 
                                         n_classes, 
                                         config.seed, 

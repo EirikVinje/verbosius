@@ -7,12 +7,12 @@ import config as config
 
 
 class Dataset(torch.utils.data.Dataset):
-    def __init__(self, input_ids, attention_mask, labels): #, targets, sentiment):
+    def __init__(self, input_ids, attention_mask, labels, targets, sentiment):
         self.input_ids = input_ids
         self.attention_mask = attention_mask
         self.labels = labels
-        #self.targets = targets
-        #self.sentiment = sentiment
+        self.targets = targets
+        self.sentiment = sentiment
 
     def __len__(self):
         return len(self.labels)
@@ -21,14 +21,15 @@ class Dataset(torch.utils.data.Dataset):
         input_ids = self.input_ids[idx]
         attention_mask = self.attention_mask[idx]
         labels = self.labels[idx]
-        #targets = self.targets[idx]
-        #sentiment = self.sentiment[idx]
+        targets = self.targets[idx]
+        sentiment = self.sentiment[idx]
+        
         return {
             'input_ids': input_ids,
             'attention_mask': attention_mask,
             'labels': labels,
-            #'targets': targets,
-            #'sentiment': sentiment
+            'targets': targets,
+            'sentiment': sentiment
         }
 
 
@@ -45,6 +46,7 @@ class Test_Dataset(torch.utils.data.Dataset):
         input_ids = self.input_ids[idx]
         attention_mask = self.attention_mask[idx]
         targets = self.targets[idx]
+        
         return {
             'input_ids': input_ids,
             'attention_mask': attention_mask,
@@ -53,6 +55,7 @@ class Test_Dataset(torch.utils.data.Dataset):
 
 
 def compute_metrics(eval_preds):
+    
     metric = evaluate.load("accuracy")
     logits, labels = eval_preds
     predictions = np.argmax(logits[1], axis=1)
@@ -65,7 +68,7 @@ def compute_metrics(eval_preds):
 
     seqeval = evaluate.load("seqeval")
     
-    label_list = ["neutral", "positive", "negative"]
+    label_list = ["neutral", "negative", "positive"]
 
     true_predictions = [
 
@@ -92,30 +95,24 @@ def compute_metrics(eval_preds):
         "token_negative": token_negative,
         "token_positive": token_positive
     }
-    #df = pd.DataFrame(output, index=[0])
-    #df.to_csv("eval_results.csv", mode="a", header=not os.path.exists("eval_results.csv"))
+    
     return output
 
 
-def tokenize_and_align_labels(data, tokenizer, orig_labels:bool = False):
+def tokenize_and_align_labels(data, tokenizer, orig_labels : bool = False):
     
     if type(data) == type(None):
         return None
 
     if orig_labels:
-        Y = np.array([i['orig_label'] for i in data])
+        Y = np.array([(i['orig_label']) for i in data])
     else:
         Y = np.array([i['sentiment'] for i in data])
 
     tokenized_inputs = tokenizer([inst["tokens"] for inst in data], truncation=True, padding=False, is_split_into_words=True)
 
-    #print("Tokenized inputs: ", len(tokenized_inputs["input_ids"]))
-    #print("attention_mask: ", len(tokenized_inputs["attention_mask"]))
-
     labels = []
     targets = []
-
-    #print("Tokenized inputs: ", len(tokenized_inputs["input_ids"]))
     
     for i, label in enumerate([inst["labels"] for inst in data]):
         
@@ -152,12 +149,9 @@ def tokenize_and_align_labels(data, tokenizer, orig_labels:bool = False):
     output["input_ids"] = tokenized_inputs["input_ids"] 
     output["attention_mask"] = tokenized_inputs["attention_mask"]
     output["labels"] = tokenized_inputs["labels"]
-    #output["targets"] = tokenized_inputs["targets"]
-    #output["sentiment"] = Y
+    output["targets"] = tokenized_inputs["targets"]
+    output["sentiment"] = Y
 
-    #print("Tokenized inputs: ", len(output["input_ids"]))
-    #print("attention_mask: ", len(output["attention_mask"]))
-    
     return output
 
 
@@ -185,7 +179,7 @@ def extend_test(data, new_chunk):
 
 
 def custom_data_collator(batch_input):
-    
+
     input_ids = [torch.tensor(inst["input_ids"], dtype=torch.long) for inst in batch_input]
     attention_mask = [torch.tensor(inst["attention_mask"], dtype=torch.long) for inst in batch_input]
     targets = [torch.tensor(inst["targets"], dtype=torch.long) for inst in batch_input]
@@ -218,5 +212,6 @@ def custom_data_collator(batch_input):
     }
 
     return new_batch_input
+
 
 

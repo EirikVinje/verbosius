@@ -68,6 +68,7 @@ def rulemaker(train_x, train_y, error_params : bool = False):
     
 
     train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x])
+
     _feature_names = vectorizer.get_feature_names_out()
 
     SKB = SelectKBest(score_func=SKB_score_func, k=MAX_FEATURES)
@@ -235,11 +236,20 @@ def label_tokens(sentiment, weights, threshold : float = 0.0):
         list of labels for each n-gram
     """
 
-    if sentiment == 1:
+    # if sentiment == 1:
+    #     labels = [2 if x > threshold else 1 if x < -threshold else 0 for x in weights]
+    # else:
+    #     labels = [1 if x > threshold else 2 if x < -threshold else 0 for x in weights]
+
+    if sentiment == 2 or sentiment == 0:
         labels = [2 if x > threshold else 1 if x < -threshold else 0 for x in weights]
-    else:
+    
+    elif sentiment == 1:
         labels = [1 if x > threshold else 2 if x < -threshold else 0 for x in weights]
-        
+
+    elif sentiment == 0:
+        labels = [0 for x in weights]
+    
     return labels
 
 
@@ -271,18 +281,32 @@ def do_weighting(train_data, feature_names, rm):
 
     true_x_idx = []
     false_x_idx = []
+    explanations = []
 
     for idx, inst in enumerate(train_data):
     
         bin_x = inst["bin"]
         y = inst["sentiment"]
     
-        prediction, expl = rm.predict(bin_x, explain=True)
+        prediction = rm.predict(bin_x, explain=False)
+        
+        expl = rm.explain(bin_x, [0, 1, 2])
+        
+        if prediction == 2:
+            expl  = expl[2] - (expl[1] + expl[0])
+        
+        if prediction == 1:
+            expl = expl[1] - (expl[2] + expl[0])
+        
+        if prediction == 0:
+            expl = np.array([0 for _ in range(len(feature_names))])
 
+        
+        explanations.append(expl)
+        
         votes = rm._inference.get_votes()
-
         n_votes = votes[prediction]
-
+        
         if y == prediction and n_votes > 0: 
             true_x_idx.append([n_votes, idx])
         
@@ -290,14 +314,14 @@ def do_weighting(train_data, feature_names, rm):
             false_x_idx.append(idx)
     
     true_x_idx = np.array(true_x_idx)
-
+    
     percentile_25 = np.percentile(true_x_idx[:, 0], 25)
 
     is_75_percentile = np.where(true_x_idx[:, 0] >= percentile_25)[0]
     is_25_percentile = np.where(true_x_idx[:, 0] < percentile_25)[0]
 
     true_x = true_x_idx[is_75_percentile]
-    true_x = list(true_x[:, 1])
+    true_x = list(true_x[:, 1:3])
 
     is_25_percentile = true_x_idx[is_25_percentile]
     is_25_percentile = list(is_25_percentile[:, 1])
@@ -313,7 +337,7 @@ def do_weighting(train_data, feature_names, rm):
         y = inst["sentiment"]
         tokens_x = inst["tokens"]
         orig_label = inst["orig_labels"]
-        
+
         lemmas_x = inst["lemmas"]
         tokenmap_x = inst["token_ids"]
         bin_x = inst["bin"]
@@ -321,9 +345,11 @@ def do_weighting(train_data, feature_names, rm):
         orig_x = inst["orig_text"]
 
         if idx in true_x:
+
+            expl = explanations[idx]
             
             vocabulary = {feature_names[i]: expl[i] for i in range(len(feature_names))}
-
+        
             newtokens_x, weights_x = weight_tokens(lemmas_x, tokens_x, vocabulary, tokenmap_x)
 
             labels = label_tokens(y, weights_x)
@@ -347,7 +373,7 @@ def do_weighting(train_data, feature_names, rm):
                            "orig_text" : orig_x}
 
             false_data.append(false_inst)
-        
+    
     return true_data, false_data
 
     
@@ -364,8 +390,6 @@ def make_weighted_data(train_data, error_params : bool = False):
         If True, the parameters for the Tsetlin Machine will be the error parameters.
 
     """
-
-
 
     train_x = [instance["lemmas"] for instance in train_data]
     train_y = [instance["sentiment"] for instance in train_data]

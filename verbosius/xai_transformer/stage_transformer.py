@@ -3,6 +3,7 @@ import pickle
 import os
 import json
 import datetime
+import gc
 
 from sklearn.model_selection import train_test_split
 
@@ -13,9 +14,7 @@ import xai_transformer.helper_functions as hf
 import xai_transformer.transformer as tf
 import xai_validation.helper_functions_xaival as hf_xaival
 
-
-
-def stage_transformer(dataset : str, train_val_input : str, test_input : str, model_output : str, chunkdist_n : int, return_seq_acc : bool = True):
+def stage_transformer(dataset : str, train_val_input : str, model_output : str, chunkdist_n : int):
 
     """
     Train transformer on weigthed trainingdata.
@@ -42,25 +41,19 @@ def stage_transformer(dataset : str, train_val_input : str, test_input : str, mo
 
     """
     
-    ds = gd.dataset(dataset)
-    ds = ds(two_cat=True)
-
-    test = ds.load_test()
-
     model_dir = os.path.join(model_output, f"{dataset}_model_dist_{chunkdist_n}")
-    
+
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
     
     else:
         assert False, f"Directory {model_dir} already exists, please remove it before continuing"
-    
+
     model_path = os.path.join(model_dir, "model")
 
     trainingdata_dist = os.path.join(train_val_input, f"{dataset}_chunkdist_{chunkdist_n}", "train_val")
     
     chunks = sorted(os.listdir(trainingdata_dist))
-    
     all_train_data = []
     for _, chunk in enumerate(chunks):
         
@@ -68,36 +61,22 @@ def stage_transformer(dataset : str, train_val_input : str, test_input : str, mo
         train_data = pickle.load(open(chunk, "rb"))        
         all_train_data.extend(train_data)
 
-        
     train_data, val_data = train_test_split(all_train_data, test_size=0.2, random_state=config.seed, shuffle=True)
 
-    train_tokenized = hf.tokenize_and_align_labels(train_data, config.tokenizer)
-    val_tokenized = hf.tokenize_and_align_labels(val_data, config.tokenizer) 
-
-    test_x = {"input_ids": [], "attention_mask": [], "targets": []}
-    test_y = []
-
-    new_test_x = hf_xaival.tokenize_to_model([text for text, _ in test], config.tokenizer, config.device)
-
-    test_x = hf.extend_test(test_x, new_test_x)
-    test_y = [label for _, label in test]
+    train_tokenized = hf.tokenize_and_align_labels(train_data, config.tokenizer, orig_labels=True)
+    val_tokenized = hf.tokenize_and_align_labels(val_data, config.tokenizer, orig_labels=True) 
 
     print()    
     print("Train size: ", len(train_tokenized["input_ids"]))
-    print("Test size: ", len(test_x["input_ids"]))
     print("Validation size: ", len(val_tokenized["input_ids"]))
+    print("Epochs: ", config.num_train_epochs)
+    print("Batch size: ", config.per_device_train_batch_size)
     print()
     
-    seq_acc = tf.transformer_pipeline_custom(output_dir=model_path, 
-                                               train_data=train_tokenized, 
-                                               val_data=val_tokenized, 
-                                               test_x=test_x,
-                                               test_y=test_y)
+    tf.transformer_pipeline_custom(output_dir=model_path, 
+                                    train_data=train_tokenized, 
+                                    val_data=val_tokenized)
     
-    if return_seq_acc:
-        return seq_acc
-
-    return None
     
 
 
@@ -135,7 +114,6 @@ if __name__ == "__main__":
 
     parser.add_argument("--dataset", type=str, help="Dataset to train on")
     parser.add_argument("--input_traindata", type=str, help="train and val data path")
-    parser.add_argument("--input_testdata", type=str, help="test data path")
     parser.add_argument("--model_output", type=str, help="Path to output model, must be a path to a directory that exists and is writable.")
     parser.add_argument("--chunkdist_n", type=int, help="Select chunkdist to train on")
 
@@ -143,8 +121,7 @@ if __name__ == "__main__":
 
     dataset_checker(args.dataset)
     input_checker(args.input_traindata)
-    input_checker(args.input_testdata)
     output_checker(args.model_output)
     chunkdist_checker(args.dataset, args.input_traindata, args.chunkdist_n)
 
-    stage_transformer(args.dataset, args.input_traindata, args.input_testdata, args.model_output, args.chunkdist_n)
+    stage_transformer(args.dataset, args.input_traindata, args.model_output, args.chunkdist_n)
