@@ -301,7 +301,6 @@ def do_weighting(train_data, feature_names, rm):
         if prediction == 0:
             expl = np.array([0 for _ in range(len(feature_names))])
 
-        
         explanations.append(expl)
         
         votes = rm._inference.get_votes()
