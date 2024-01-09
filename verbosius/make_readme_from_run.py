@@ -1,31 +1,53 @@
 import os
 import argparse
 import json
+from datetime import datetime
 
 import config as config
 import xai_transformer.model_accuracy as md
 import arg_funcs as af
 
 
-def make_readme_from_run(dataset, model_path, chunkdist_n):
+def make_readme_from_run(dataset, chunkdist_n):
 
-    timedelta = json.load(open(os.path.join(model_path, "time.json"), "r"))
+    root = config.root
+    user = config.user
 
-    month = timedelta["month"][0]
-    day = timedelta["day"][0]
-    hour = timedelta["hour"][0]
-    minute = timedelta["minute"][0]
+    models_folder = os.path.join(root, dataset, "models")
+    if not os.path.exists(models_folder):
+        assert False, f"Models folder {models_folder} does not exist, please check your input"
 
-    model_acc = md.model_accuracy(dataset, chunkdist_n)
+    model_folder = os.path.join(models_folder, f"{dataset}_model_dist_{chunkdist_n}")
+    if not os.path.exists(model_folder):
+        assert False, f"Model folder {model_folder} does not exist, please check your input"
 
-    user = os.environ.get("USER")
+    model_path = os.path.join(model_folder, "model")
+    if not os.path.exists(model_path):
+        assert False, f"Model {model_path} does not exist, please check your input"
+    
+    model_acc = md.model_accuracy(dataset, model_path)
+
+    timedelta_path = os.path.join(model_folder, "time.json")
+    if not os.path.exists(timedelta_path):
+        assert False, f"Timedelta {timedelta_path} does not exist, please check your input"
+    
+    timedelta = json.load(open(timedelta_path, "r"))
+    timedelta = timedelta["time_hours"]
+
     path_to_markdown = f"/home/{user}/project/labs.journal/verbosius/runs/"
-    mardown_file = f"run_{dataset}_{chunkdist_n}_{month}_{day}_{hour}_{minute}.md"
+    
+    month = datetime.now().month
+    day = datetime.now().day
+    hour = datetime.now().hour
+    minute = datetime.now().minute
+    mardown_file = f"run_{dataset}_{chunkdist_n}_{minute}_{hour}_{day}_{month}.md"
     path_to_markdown = os.path.join(path_to_markdown, mardown_file)
 
-    metachunks_path = f"/home/{user}/data/verbosius/amazon/chunking/amazon_chunkdist_{chunkdist_n}"
-    meta_file = os.path.join(metachunks_path, "meta.json")
-    meta = json.load(open(meta_file, "r"))
+    metachunks_path = os.path.join(root, dataset, "chunking", f"{dataset}_chunkdist_{chunkdist_n}", "meta.json")
+    if not os.path.exists(metachunks_path):
+        assert False, f"Metachunks {metachunks_path} does not exist, please check your input"
+
+    meta = json.load(open(metachunks_path, "r"))
     chunksize = meta["train_length"]
     n_chunks = meta["chunk_amount"]
 
@@ -87,13 +109,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--dataset", type=str, required=True)
-    parser.add_argument("--model_path", type=str, required=True)
     parser.add_argument("--chunkdist_n", type=int, required=True)
 
     args = parser.parse_args()
 
     af.dataset_checker(args.dataset)
     af.chunkdist_checker(args.chunkdist_n)
-    af.input_checker(args.model_path)
 
-    make_readme_from_run(args.dataset, args.model_path, args.chunkdist_n)
+    make_readme_from_run(args.dataset, args.chunkdist_n)

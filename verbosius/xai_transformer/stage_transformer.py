@@ -17,7 +17,7 @@ import xai_validation.helper_functions_xaival as hf_xaival
 import arg_funcs as af
 
 
-def stage_transformer(dataset : str, train_val_input : str, model_output : str, chunkdist_n : int):
+def stage_transformer(dataset : str, chunkdist_n : int):
 
     """
     Train transformer on weigthed trainingdata.
@@ -52,7 +52,7 @@ def stage_transformer(dataset : str, train_val_input : str, model_output : str, 
     if not os.path.exists(models_folder):
         os.mkdir(models_folder)
 
-    model_folder = os.path.join(model_output, f"{dataset}_model_dist_{chunkdist_n}")
+    model_folder = os.path.join(models_folder, f"{dataset}_model_dist_{chunkdist_n}")
     if not os.path.exists(model_folder):
         os.mkdir(model_folder)
     else:
@@ -98,21 +98,17 @@ def stage_transformer(dataset : str, train_val_input : str, model_output : str, 
     with open(os.path.join(model_folder, "time.json"), "w") as f:
         json.dump(time_dict, f, indent=4)
         
-        
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Stage trainingdata to transformer")
 
     parser.add_argument("--dataset", type=str, help="Dataset to train on")
-    parser.add_argument("--input_traindata", type=str, help="train and val data path")
-    parser.add_argument("--model_output", type=str, help="Path to output model, must be a path to a directory that exists and is writable.")
     parser.add_argument("--chunkdist_n", type=int, help="Select chunkdist to train on")
 
     args = parser.parse_args()
 
     af.dataset_checker(args.dataset)
-    af.input_checker(args.input_traindata)
-    af.output_checker(args.model_output)
-    af.chunkdist_checker(args.dataset, args.input_traindata, args.chunkdist_n)
-
-    stage_transformer(args.dataset, args.input_traindata, args.model_output, args.chunkdist_n)
+    af.chunckdist_n_checker(args.chunkdist_n)
+    
+    stage_transformer(args.dataset, args.chunkdist_n)

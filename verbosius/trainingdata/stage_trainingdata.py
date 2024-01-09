@@ -101,6 +101,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     af.dataset_checker(args.dataset)
+    af.chunckdist_n_checker(args.chunkdist_n)
     
     stage_trainingdata(args.dataset, args.chunkdist_n)
     

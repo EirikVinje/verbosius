@@ -67,19 +67,14 @@ def accuracy(model_path, test_x, test_y):
     print("******************************")
 
 
-def model_accuracy(dataset, chunkdist_n):
+def model_accuracy(dataset, model_path):
 
     test_x, test_y = load_test(dataset)
     
-    model_path = f"/home/bigtech/data/verbosius/amazon/models/amazon_model_dist_{chunkdist_n}/model"
-
     acc = accuracy(model_path, test_x, test_y)
     
     return acc
 
 if __name__ == "__main__":
 
-    dataset = ""
-    chunkdist_n = -1
-
-    model_accuracy(dataset, chunkdist_n)
+    pass

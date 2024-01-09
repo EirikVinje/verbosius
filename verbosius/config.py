@@ -28,7 +28,7 @@ MIN_DF = 2
 NUMBER_OF_CLAUSES = 4000
 S = 17.7
 T = 5000
-TM_EPOCHS = 5
+TM_EPOCHS = 20
 ERROR_MAX_FEATURES = 700
 ERROR_NUMBER_OF_CLAUSES = 3200
 ERROR_S = 25.61065
@@ -53,32 +53,21 @@ device="cuda"
 model_name_ = "distilroberta-base"
 tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True, device=device)
 
-learning_rate = 1.539e-5
-per_device_train_batch_size = 8
-per_device_eval_batch_size = 8
 num_train_epochs = 10
 evaluation_strategy = "epoch"
 save_strategy = "epoch"
 load_best_model_at_end = True
 label_names = ['labels', 'sentiment']
 
+per_device_eval_batch_size = 8
+per_device_train_batch_size = 8
+learning_rate = 1.539e-5
 neutral_weight = 0.0001 
 loss_weight = 5.0
 num_labels = 3
 num_seq_labels = 5
 
 # *************** TESTING ***************
-
-#MAX_DF = 0.9
-#MIN_DF = 2
-#MAX_FEATURES = 50
-#NUMBER_OF_CLAUSES = 100
-#TM_EPOCHS = 2
-#ERROR_MAX_FEATURES = 50
-#ERROR_NUMBER_OF_CLAUSES = 100
-#ERROR_MAX_DF = 0.9
-#ERROR_MIN_DF = 2
-
 
 
 
