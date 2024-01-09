@@ -4,9 +4,14 @@ from sklearn.feature_selection import chi2, f_classif, mutual_info_classif
 
 # *************** GLOBAL ***************
 
+seed = 69
+
+dataset = "amazon"
+chunkdist_n = 696969696
 user = os.environ.get("USER")
 root = f"/home/{user}/data/verbosius/" 
-seed = 69
+chunk_size = 8000
+chunk_amount = 125
 
 # *************** PREPROSESSING *************** 
 

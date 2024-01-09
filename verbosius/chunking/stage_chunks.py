@@ -9,7 +9,7 @@ import config as config
 
 
 
-def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : str, output : str, chunkdist_n : int):
+def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, chunkdist_n : int):
 
     """
     Makes chunks of data for further preprocessing and training.
@@ -52,7 +52,7 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
     chunked_data = chunker_functions.chunk_data_multiclass_supersample(dataset = ds,
                                                     n_chunks_per_mix=chunk_amount,
                                                     chunk_size = chunk_size,
-                                                    path = input,
+                                                    path = "",
                                                     test_size= config.test_size,
                                                     validation = config.validation,
                                                     val_size=config.val_size,
@@ -90,7 +90,7 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
 
     train_length = len(chunked_data[0][0])
     chunk_amount = len(chunked_data[0])
-    validation_length = 0 #len(chunked_data[2][0]) if chunked_data[2] is not None else 0
+    validation_length = 0 
     n_classes = chunked_data[-1]
 
     print()
@@ -118,8 +118,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Stage data for training")
 
     parser.add_argument("--dataset", type=str, help="Dataset to stage")
-    parser.add_argument("--input", type=str, help="Path to input data, must be the absolute path to a valid directory where the datafiles are located.")
-    parser.add_argument("--output", type=str, help="Path to output data, must be a path to a directory that exists and is writable.")
     parser.add_argument("--chunk_size", type=int, nargs='?', default=10000, help="Set size for individual chunk, must be greater than 0. Default value is 10000. If used together with a train/test - split this chunk size will be split up into a train and test part accordingly. ")
     parser.add_argument("--chunk_amount", type=int, nargs ='?', default=1, help="Set amount of chunks to stage at a time. Minimum value is 1. Default value is 1.")
     parser.add_argument("--chunkdist_n", type=int, help="Set size for individual batch, must be >= 0. ")
@@ -129,9 +127,7 @@ if __name__ == "__main__":
     af.dataset_checker(args.dataset)
     af.chunk_size_checker(args.chunk_size)
     af.chunk_amount_checker(args.chunk_amount)
-    af.input_checker(args.input)
-    af.output_checker(args.output)
     af.chunckdist_n_checker(args.chunkdist_n)
 
-    stage_chunks(args.dataset, args.chunk_size, args.chunk_amount, args.input, args.output, args.chunkdist_n)
+    stage_chunks(args.dataset, args.chunk_size, args.chunk_amount, args.chunkdist_n)
     

@@ -3,6 +3,7 @@ import pickle
 import os
 import json
 from datetime import datetime
+import time
 import gc
 
 from sklearn.model_selection import train_test_split
@@ -43,25 +44,34 @@ def stage_transformer(dataset : str, train_val_input : str, model_output : str, 
 
     """
     
-    start_t = [datetime.now().year, datetime.now().month, datetime.now().day, datetime.now().hour, datetime.now().minute, datetime.now().second]
+    start_t = time.time()
 
-    model_dir = os.path.join(model_output, f"{dataset}_model_dist_{chunkdist_n}")
+    root = config.root
 
-    if not os.path.exists(model_dir):
-        os.mkdir(model_dir)
-    
+    models_folder = os.path.join(root, dataset, "models")
+    if not os.path.exists(models_folder):
+        os.mkdir(models_folder)
+
+    model_folder = os.path.join(model_output, f"{dataset}_model_dist_{chunkdist_n}")
+    if not os.path.exists(model_folder):
+        os.mkdir(model_folder)
     else:
-        assert False, f"Directory {model_dir} already exists, please remove it before continuing"
+        assert False, f"Directory {model_folder} already exists, please remove it before continuing"
 
-    model_path = os.path.join(model_dir, "model")
-
-    trainingdata_dist = os.path.join(train_val_input, f"{dataset}_chunkdist_{chunkdist_n}", "train_val")
     
-    chunks = sorted(os.listdir(trainingdata_dist))
+    model_path = os.path.join(model_folder, "model")
+
+    trainingdata_folder = os.path.join(root, dataset, "trainingdata")
+    if not os.path.exists(trainingdata_folder):
+        assert False, f"Trainingdata folder {trainingdata_folder} does not exist, please check your input"
+
+    chunk_dist = os.path.join(trainingdata_folder, f"{dataset}_chunkdist_{chunkdist_n}")
+
+    chunks = sorted(os.listdir(chunk_dist))
     all_train_data = []
     for _, chunk in enumerate(chunks):
         
-        chunk = os.path.join(trainingdata_dist, chunk)
+        chunk = os.path.join(chunk_dist, chunk)
         train_data = pickle.load(open(chunk, "rb"))        
         all_train_data.extend(train_data)
 
@@ -81,18 +91,13 @@ def stage_transformer(dataset : str, train_val_input : str, model_output : str, 
                                 train_data=train_tokenized, 
                                 val_data=val_tokenized)
     
-    end_t = [datetime.now().year, datetime.now().month, datetime.now().day, datetime.now().hour, datetime.now().minute, datetime.now().second]
+    end_t = time.time()
 
-    time_dict = {
-                "year" : [start_t[0], end_t[0]],
-                "month" : [start_t[1], end_t[1]],
-                "day" : [start_t[2], end_t[2]],
-                "hour" : [start_t[3], end_t[3]],
-                "minute" : [start_t[4], end_t[4]],
-                }
+    time_dict = {"time_hours" : (end_t - start_t) / 3600}
     
-    with open(os.path.join(model_dir, "time.json"), "w") as f:
+    with open(os.path.join(model_folder, "time.json"), "w") as f:
         json.dump(time_dict, f, indent=4)
+        
         
 if __name__ == "__main__":
 

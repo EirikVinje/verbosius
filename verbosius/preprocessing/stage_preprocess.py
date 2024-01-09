@@ -9,9 +9,10 @@ from tqdm import tqdm
 import preprocessing.preprocess_functions as preprocess_functions
 import preprocessing.preprocess_functions as pf
 import arg_funcs as af
+import config as config
 
 
-def stage_preprocess(dataset:str, input:str, output:str, chunkdist_n : int):
+def stage_preprocess(dataset:str, chunkdist_n : int):
 
     """
     Preprocesses data for training. Lemmatizes text, and maps tokens to ids.
@@ -31,20 +32,33 @@ def stage_preprocess(dataset:str, input:str, output:str, chunkdist_n : int):
         ID of chunkdistribution. Must be an integer. Will be used to name the output directory, e.g "path/to/output/{dataset}_chunkdist_{chunkdist_n}".
     """
 
-    new_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{chunkdist_n}")
-
+    root = config.root
+    
+    preprocess_folder = os.path.join(root, dataset, "preprocess")
+    if not os.path.exists(preprocess_folder):
+        os.mkdir(preprocess_folder)
+    
+    new_chunkdist = os.path.join(preprocess_folder, f"{dataset}_chunkdist_{chunkdist_n}")
     if not os.path.exists(new_chunkdist):
         os.mkdir(new_chunkdist)
     else:
         assert False, f"Directory {new_chunkdist} already exists, please remove it before continuing" 
 
-    chunk_dist = os.path.join(input, f"{dataset}_chunkdist_{chunkdist_n}", "train_val")
-    chunks = sorted(os.listdir(chunk_dist))
+    
+    chunking_folder = os.path.join(root, dataset, "chunking")
+    if not os.path.exists(chunking_folder):
+        assert False, f"Chunking folder {chunking_folder} does not exist, please check your input"
 
-    print(f"\nPreprocessing {dataset}_chunkdist_{chunkdist_n}.......")
+    chunk_dist = os.path.join(chunking_folder, f"{dataset}_chunkdist_{chunkdist_n}")
+    if not os.path.exists(chunk_dist):
+        assert False, f"Chunk distribution {chunk_dist} does not exist, please check your input"
+
+    chunk_dist_data = os.path.join(chunk_dist, "train")
+    chunks = sorted(os.listdir(chunk_dist_data))
+
     for i, chunk in enumerate(tqdm(chunks)):
         
-        chunk = os.path.join(chunk_dist, chunk)
+        chunk = os.path.join(chunk_dist_data, chunk)
         data = pickle.load(open(chunk, "rb"))
 
         raw_train_x = list(data["train_x"])
@@ -70,22 +84,16 @@ def stage_preprocess(dataset:str, input:str, output:str, chunkdist_n : int):
         pf.write_data(data=train_data, path=new_chunkdist, n=i)
 
     
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Stage data for training")
 
     parser.add_argument("--dataset", type=str, help="Dataset to stage")
-    parser.add_argument("--input", type=str, help="Path to input data, must be the absolute path to a valid directory where the datafiles are located.")
-    parser.add_argument("--output", type=str, help="Path to output data, must be a path to a directory that exists and is writable.")
     parser.add_argument("--chunkdist_n", type=int, help="Which chunk to stage")
 
     args = parser.parse_args()
 
     af.dataset_checker(args.dataset)
-    af.input_checker(args.input)
-    af.output_checker(args.output)
-    af.chunkdist_checker(args.dataset, args.input, args.chunkdist_n)
-
-    stage_preprocess(args.dataset, args.input, args.output, args.chunkdist_n)
+    
+    stage_preprocess(args.dataset, args.chunkdist_n)
     

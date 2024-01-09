@@ -310,35 +310,19 @@ def chunk_data_multiclass_supersample(dataset,
 
 
 
-def write_chunks(output, data, test : bool = False):
+def write_chunks(output, data):
     
-    if test:
+    output = os.path.join(output, "train")
 
-        output = os.path.join(output, "test")
+    if not os.path.exists(output):
+        os.mkdir(output)
+    
+    dir = os.listdir(output)
 
-        if not os.path.exists(output):
-            os.mkdir(output)
-        
-        dir = os.listdir(output)
+    n = len(dir)
 
-        n = len(dir)
-
-        with open(f"{output}/test_chunk_{n}.pkl", "wb") as f:
-            pickle.dump(data, f)
-
-    else:
-
-        output = os.path.join(output, "train_val")
-
-        if not os.path.exists(output):
-            os.mkdir(output)
-        
-        dir = os.listdir(output)
-
-        n = len(dir)
-
-        with open(f"{output}/train_val_chunk_{n}.pkl", "wb") as f:
-            pickle.dump(data, f)
+    with open(f"{output}/train_chunk_{n}.pkl", "wb") as f:
+        pickle.dump(data, f)
 
 
 def write_meta_chunks(output, train_length, validation_length, dataset, n_classes, seed, shuffle, chunk_amount):
