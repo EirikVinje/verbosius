@@ -2,9 +2,10 @@ import os
 
 
 # ********** Global ********** #
-dataset = "amazon"
 user = os.environ.get("USER")
+dataset = "amazon"
 chunkdist_n = 696969696
+rootdir = f"/home/{user}/data/verbosius/{dataset}/"
 
 # *********** Chunker ********** #
 

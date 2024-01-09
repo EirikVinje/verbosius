@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 import preprocessing.preprocess_functions as preprocess_functions
 import preprocessing.preprocess_functions as pf
+import arg_funcs as af
 
 
 def stage_preprocess(dataset:str, input:str, output:str, chunkdist_n : int):
@@ -69,33 +70,6 @@ def stage_preprocess(dataset:str, input:str, output:str, chunkdist_n : int):
         pf.write_data(data=train_data, path=new_chunkdist, n=i)
 
     
-def dataset_checker(dataset):
-    valid_datasets = ['imdb', 'rottentomatoes', 'amazon', 'mnist']
-    if dataset.lower() not in valid_datasets:
-        raise argparse.ArgumentTypeError(f"Invalid dataset, available datasets are: {(i for i in valid_datasets)}")
-    return dataset.lower()
-
-
-def input_checker(input):
-    if os.access(os.path.dirname(input), os.W_OK) and os.path.isdir(input):
-        return input
-    else:
-        raise argparse.ArgumentTypeError(f'Invalid input path, "{input}" is not writable or is not a directory')
-
-
-def output_checker(output):
-    if os.access(os.path.dirname(output), os.W_OK) and os.path.isdir(output):
-        return output
-    else:
-        raise argparse.ArgumentTypeError(f'Invalid output path, "{output}" is not writable or is not a directory')
-
-
-def chunkdist_checker(dataset, input, chunkdist_n):
-
-    if not os.path.exists(os.path.join(input, f"{dataset}_chunkdist_{chunkdist_n}")):
-        raise argparse.ArgumentTypeError(f"Invalid chunk dist, {dataset}_chunkdist_{chunkdist_n} does not exist") 
-
-    return chunkdist_n
 
 if __name__ == "__main__":
 
@@ -108,10 +82,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    dataset_checker(args.dataset)
-    input_checker(args.input)
-    output_checker(args.output)
-    chunkdist_checker(args.dataset, args.input, args.chunkdist_n)
+    af.dataset_checker(args.dataset)
+    af.input_checker(args.input)
+    af.output_checker(args.output)
+    af.chunkdist_checker(args.dataset, args.input, args.chunkdist_n)
 
     stage_preprocess(args.dataset, args.input, args.output, args.chunkdist_n)
-    # stage_preprocess(dataset:str, input:str, output:str, chunkdist_n : int)
+    

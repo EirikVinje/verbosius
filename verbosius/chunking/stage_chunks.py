@@ -2,11 +2,11 @@ import argparse
 import os
 import numpy as np
 
-
 import chunking.chunker_functions as chunker_functions
 import chunking.get_data as get_data
-
+import arg_funcs as af
 import config as config
+
 
 
 def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : str, output : str, chunkdist_n : int):
@@ -35,9 +35,17 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
         ID of chunkdistribution. Must be an integer. Will be used to name the output directory, e.g "path/to/output/{dataset}_chunkdist_{chunkdist_n}".
     """
 
-    print("\nStaging chunks.......")
+    root = config.root
+    dataset_folder = os.path.join(root, dataset)
+    
+    if not os.path.exists(dataset_folder):
+        os.mkdir(dataset_folder)
 
+    chunking_folder = os.path.join(dataset_folder, "chunking")
 
+    if not os.path.exists(chunking_folder):
+        os.mkdir(chunking_folder)
+    
     ds = get_data.dataset(dataset)
     ds = ds(two_cat=True)
     
@@ -45,32 +53,29 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
                                                     n_chunks_per_mix=chunk_amount,
                                                     chunk_size = chunk_size,
                                                     path = input,
-                                                    test_size=config.test_size,
+                                                    test_size= config.test_size,
                                                     validation = config.validation,
                                                     val_size=config.val_size,
                                                     shuffle=config.shuffle,
                                                     seed=config.seed)
     
-    new_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{chunkdist_n}")
+    new_chunkdist = os.path.join(chunking_folder, f"{dataset}_chunkdist_{chunkdist_n}")
 
     if not os.path.exists(new_chunkdist):
         os.mkdir(new_chunkdist)
     else:
         assert False, f"Directory {new_chunkdist} already exists, please remove it before continuing"
 
-
     for i, _ in enumerate(range(len(chunked_data[0]))):
 
         train_x = chunked_data[0][i]
         train_y = chunked_data[1][i]
 
-        val_x = None #chunked_data[2][i] if chunked_data[2] is not None else None
-        val_y = None #chunked_data[3][i] if chunked_data[3] is not None else None
-
-        #assert val_x == None , "Validation data is not None"
+        val_x = None 
+        val_y = None 
 
         orig_train_y = chunked_data[2][i] if chunked_data[2] is not None else None
-        orig_val_y = None #chunked_data[5][i] if chunked_data[5] is not None else None
+        orig_val_y = None 
 
         train_val = {"train_x": train_x,
                      "train_y": train_y,
@@ -82,6 +87,7 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
         
         chunker_functions.write_chunks(new_chunkdist, train_val, test=False)
     
+
     train_length = len(chunked_data[0][0])
     chunk_amount = len(chunked_data[0])
     validation_length = 0 #len(chunked_data[2][0]) if chunked_data[2] is not None else 0
@@ -107,53 +113,6 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : st
                                         chunk_amount)
 
 
-def dataset_checker(dataset):
-    valid_datasets = ['imdb', 'rottentomatoes', 'amazon', 'mnist']
-    if dataset.lower() not in valid_datasets:
-        raise argparse.ArgumentTypeError(f"Invalid dataset, available datasets are: {(i for i in valid_datasets)}")
-    return dataset.lower()
-
-
-def chunk_size_checker(chunk_size):
-    
-    if chunk_size <= 0:
-        raise argparse.ArgumentTypeError(f"Invalid chunk size, chunk size must be greater than 0")
-
-    return chunk_size
-
-
-def chunk_amount_checker(chunk_amount):
-    
-    if chunk_amount <= 0:
-        raise argparse.ArgumentTypeError(f"Invalid chunk amount, chunk amount must be greater than 0")
-    
-    return chunk_amount
-
-
-def input_checker(input):
-    
-    if os.access(os.path.dirname(input), os.W_OK) and os.path.isdir(input):
-        return input
-    else:
-        raise argparse.ArgumentTypeError(f'Invalid input path, "{input}" is not writable or is not a directory')
-
-
-def output_checker(output):
-    
-    if os.access(os.path.dirname(output), os.W_OK) and os.path.isdir(output):
-        return output
-    else:
-        raise argparse.ArgumentTypeError(f'Invalid output path, "{output}" is not writable or is not a directory')
-
-
-def chunckdist_n_checker(chunkdist_n):
-    
-    if chunkdist_n < 0:
-        raise argparse.ArgumentTypeError(f"Invalid chunkdist_n, chunkdist_n must be greater than or equal to 0")
-    
-    return chunkdist_n
-
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Stage data for training")
@@ -167,12 +126,12 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    dataset_checker(args.dataset)
-    chunk_size_checker(args.chunk_size)
-    chunk_amount_checker(args.chunk_amount)
-    input_checker(args.input)
-    output_checker(args.output)
-    chunckdist_n_checker(args.chunkdist_n)
+    af.dataset_checker(args.dataset)
+    af.chunk_size_checker(args.chunk_size)
+    af.chunk_amount_checker(args.chunk_amount)
+    af.input_checker(args.input)
+    af.output_checker(args.output)
+    af.chunckdist_n_checker(args.chunkdist_n)
 
     stage_chunks(args.dataset, args.chunk_size, args.chunk_amount, args.input, args.output, args.chunkdist_n)
-    # stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, input : str, output : str, chunkdist_n : int)
+    

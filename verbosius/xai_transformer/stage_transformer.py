@@ -2,7 +2,7 @@ import argparse
 import pickle
 import os
 import json
-import datetime
+from datetime import datetime
 import gc
 
 from sklearn.model_selection import train_test_split
@@ -13,6 +13,8 @@ import chunking.get_data as gd
 import xai_transformer.helper_functions as hf
 import xai_transformer.transformer as tf
 import xai_validation.helper_functions_xaival as hf_xaival
+import arg_funcs as af
+
 
 def stage_transformer(dataset : str, train_val_input : str, model_output : str, chunkdist_n : int):
 
@@ -41,6 +43,8 @@ def stage_transformer(dataset : str, train_val_input : str, model_output : str, 
 
     """
     
+    start_t = [datetime.now().year, datetime.now().month, datetime.now().day, datetime.now().hour, datetime.now().minute, datetime.now().second]
+
     model_dir = os.path.join(model_output, f"{dataset}_model_dist_{chunkdist_n}")
 
     if not os.path.exists(model_dir):
@@ -74,40 +78,22 @@ def stage_transformer(dataset : str, train_val_input : str, model_output : str, 
     print()
     
     tf.transformer_pipeline_custom(output_dir=model_path, 
-                                    train_data=train_tokenized, 
-                                    val_data=val_tokenized)
+                                train_data=train_tokenized, 
+                                val_data=val_tokenized)
     
+    end_t = [datetime.now().year, datetime.now().month, datetime.now().day, datetime.now().hour, datetime.now().minute, datetime.now().second]
+
+    time_dict = {
+                "year" : [start_t[0], end_t[0]],
+                "month" : [start_t[1], end_t[1]],
+                "day" : [start_t[2], end_t[2]],
+                "hour" : [start_t[3], end_t[3]],
+                "minute" : [start_t[4], end_t[4]],
+                }
     
-
-
-def dataset_checker(dataset):
-    valid_datasets = ['imdb', 'rottentomatoes', 'amazon']
-    if dataset.lower() not in valid_datasets:
-        raise argparse.ArgumentTypeError(f"Invalid dataset, available datasets are: {(i for i in valid_datasets)}")
-    return dataset.lower()
-
-
-def input_checker(input):
-    if os.access(os.path.dirname(input), os.W_OK) and os.path.isdir(input):
-        return input
-    else:
-        raise argparse.ArgumentTypeError(f'Invalid input path, "{input}" is not writable or is not a directory')
-
-
-def output_checker(output):
-    if os.access(os.path.dirname(output), os.W_OK) and os.path.isdir(output):
-        return output
-    else:
-        raise argparse.ArgumentTypeError(f'Invalid output path, "{output}" is not writable or is not a directory')
-
-
-def chunkdist_checker(dataset, input, chunkdist_n):
-    if not os.path.exists(os.path.join(input, f"{dataset}_chunkdist_{chunkdist_n}")):
-        raise argparse.ArgumentTypeError(f"Invalid chunk dist, {dataset}_chunkdist_{chunkdist_n} does not exist") 
-
-    return chunkdist_n
-
-    
+    with open(os.path.join(model_dir, "time.json"), "w") as f:
+        json.dump(time_dict, f, indent=4)
+        
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Stage trainingdata to transformer")
@@ -119,9 +105,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    dataset_checker(args.dataset)
-    input_checker(args.input_traindata)
-    output_checker(args.model_output)
-    chunkdist_checker(args.dataset, args.input_traindata, args.chunkdist_n)
+    af.dataset_checker(args.dataset)
+    af.input_checker(args.input_traindata)
+    af.output_checker(args.model_output)
+    af.chunkdist_checker(args.dataset, args.input_traindata, args.chunkdist_n)
 
     stage_transformer(args.dataset, args.input_traindata, args.model_output, args.chunkdist_n)

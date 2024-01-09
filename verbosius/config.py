@@ -1,9 +1,11 @@
+import os
 from transformers import AutoTokenizer
 from sklearn.feature_selection import chi2, f_classif, mutual_info_classif
-import os
 
 # *************** GLOBAL ***************
 
+user = os.environ.get("USER")
+root = f"/home/{user}/data/verbosius/" 
 seed = 69
 
 # *************** PREPROSESSING *************** 
@@ -47,8 +49,8 @@ model_name_ = "distilroberta-base"
 tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True, device=device)
 
 learning_rate = 1.539e-5
-per_device_train_batch_size = 4
-per_device_eval_batch_size = 4
+per_device_train_batch_size = 8
+per_device_eval_batch_size = 8
 num_train_epochs = 10
 evaluation_strategy = "epoch"
 save_strategy = "epoch"
@@ -61,6 +63,7 @@ num_labels = 3
 num_seq_labels = 5
 
 # *************** TESTING ***************
+
 #MAX_DF = 0.9
 #MIN_DF = 2
 #MAX_FEATURES = 50
