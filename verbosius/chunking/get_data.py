@@ -300,8 +300,6 @@ class Amazon:
         return train_data
     
 
-    
-
 def dataset(dataset : str):
     """Function to pick which dataset to use in the pipeline. Returns class object which needs to be instantiated.
 

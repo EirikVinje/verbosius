@@ -7,9 +7,10 @@ from sklearn.model_selection import train_test_split
 
 import trainingdata.generate_trainingdata as gen_data
 import config as config
+import arg_funcs as af
 
 
-def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : int):
+def stage_trainingdata(dataset : str, chunkdist_n : int):
 
     """
     Stage trainingdata for transformer.
@@ -32,29 +33,37 @@ def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : i
     
     """
 
-    trainingdata_chunkdist = os.path.join(output, f"{dataset}_chunkdist_{chunkdist_n}")
+    root = config.root
 
+    trainingdata_folder = os.path.join(root, dataset, "trainingdata")
+    if not os.path.exists(trainingdata_folder):
+        os.mkdir(trainingdata_folder)
+
+    trainingdata_chunkdist = os.path.join(trainingdata_folder, f"{dataset}_chunkdist_{chunkdist_n}")
     if not os.path.exists(trainingdata_chunkdist):
         os.mkdir(trainingdata_chunkdist)
-
     else:
         assert False, f"Directory {trainingdata_chunkdist} already exists, please remove it before continuing"
     
-    trainingdata_chunkdist = os.path.join(trainingdata_chunkdist, "train_val")
-
+    
+    trainingdata_chunkdist = os.path.join(trainingdata_chunkdist, "train")
     if not os.path.exists(trainingdata_chunkdist):
         os.mkdir(trainingdata_chunkdist)
     
-    n = 0
+    preprocess_folder = os.path.join(root, dataset, "preprocess")
+    if not os.path.exists(preprocess_folder):
+        assert False, f"Preprocess folder {preprocess_folder} does not exist, please check your input"
 
-    preproc_dist = os.path.join(input, f"{dataset}_chunkdist_{chunkdist_n}", "train_val")
+    chunk_dist = os.path.join(preprocess_folder, f"{dataset}_chunkdist_{chunkdist_n}")
+    if not os.path.exists(chunk_dist):
+        assert False, f"Chunk distribution {chunk_dist} does not exist, please check your input"
 
-    if not os.path.exists(preproc_dist):
-        raise FileNotFoundError(f"Directory {preproc_dist} does not exist")
+    chunk_dist = os.path.join(chunk_dist, "train")
 
-    dir = sorted(os.listdir(preproc_dist))
+    dir = sorted(os.listdir(chunk_dist))
     dir_len = len(dir)
 
+    n = 0
     correct_x = 0
 
     while True:
@@ -66,7 +75,7 @@ def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : i
 
         error_params = True if type(dir[n]) != type(dir[0]) else False
 
-        chunk = os.path.join(preproc_dist, chunk) if not error_params else None
+        chunk = os.path.join(chunk_dist, chunk) if not error_params else None
         train_data = pickle.load(open(chunk, "rb")) if not error_params else dir[n]
 
         train_data, train_error_data = gen_data.make_weighted_data(train_data, error_params)
@@ -82,49 +91,17 @@ def stage_trainingdata(dataset : str, input : str, output : str, chunkdist_n : i
     return correct_x
 
 
-def dataset_checker(dataset):
-    valid_datasets = ['imdb', 'rottentomatoes', 'amazon']
-    if dataset.lower() not in valid_datasets:
-        raise argparse.ArgumentTypeError(f"Invalid dataset, available datasets are: {(i for i in valid_datasets)}")
-    return dataset.lower()
-
-
-def chunkdist_checker(dataset, input, chunkdist_n):
-    if not os.path.exists(os.path.join(input, f"{dataset}_chunkdist_{chunkdist_n}")):
-        raise argparse.ArgumentTypeError(f"Invalid chunk dist, {dataset}_chunkdist_{chunkdist_n} does not exist") 
-
-    return chunkdist_n
-
-
-def input_checker(input):
-    if os.access(os.path.dirname(input), os.W_OK) and os.path.isdir(input):
-        return input
-    else:
-        raise argparse.ArgumentTypeError(f'Invalid input path, "{input}" is not writable or is not a directory')
-
-
-def output_checker(output):
-    if os.access(os.path.dirname(output), os.W_OK) and os.path.isdir(output):
-        return output
-    else:
-        raise argparse.ArgumentTypeError(f'Invalid output path, "{output}" is not writable or is not a directory')
-
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Stage trainingdata to transformer")
 
     parser.add_argument("--dataset", type=str, help="Dataset to make trainingdata")
-    parser.add_argument("--input", type=str, help="Path to batchdistros of dataset, must be the absolute path to a valid directory where the datafiles are located.")
-    parser.add_argument("--output", type=str, help="Path to output data, must be a path to a directory that exists and is writable.")
     parser.add_argument("--chunkdist_n", type=int, help="Set size for individual batch, must be greater than 0. Default value is 10000")
 
     args = parser.parse_args()
 
-    dataset_checker(args.dataset)
-    input_checker(args.input)
-    output_checker(args.output)
-    chunkdist_checker(args.dataset, args.input, args.chunkdist_n)
-
-    stage_trainingdata(args.dataset, args.input, args.output, args.chunkdist_n)
+    af.dataset_checker(args.dataset)
+    af.chunckdist_n_checker(args.chunkdist_n)
+    
+    stage_trainingdata(args.dataset, args.chunkdist_n)
     
