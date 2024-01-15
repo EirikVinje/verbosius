@@ -65,7 +65,7 @@ def stage_transformer(dataset : str, chunkdist_n : int):
     if not os.path.exists(trainingdata_folder):
         assert False, f"Trainingdata folder {trainingdata_folder} does not exist, please check your input"
 
-    chunk_dist = os.path.join(trainingdata_folder, f"{dataset}_chunkdist_{chunkdist_n}")
+    chunk_dist = os.path.join(trainingdata_folder, f"{dataset}_chunkdist_{chunkdist_n}", "train")
 
     chunks = sorted(os.listdir(chunk_dist))
     all_train_data = []

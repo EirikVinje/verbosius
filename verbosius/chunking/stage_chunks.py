@@ -25,12 +25,6 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, chunkdist_
     chunk_amount : int
         Amount of chunks to stage at a time. Must be greater than 0.
     
-    input : str
-        Path to input data. Must be absolute path to directory.
-    
-    output : str
-        Path to output of this module. Must be absolute path to directory.
-    
     chunkdist_n : int
         ID of chunkdistribution. Must be an integer. Will be used to name the output directory, e.g "path/to/output/{dataset}_chunkdist_{chunkdist_n}".
     """
@@ -85,7 +79,7 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, chunkdist_
                      "orig_val_y": orig_val_y
                      }
         
-        chunker_functions.write_chunks(new_chunkdist, train_val, test=False)
+        chunker_functions.write_chunks(new_chunkdist, train_val)
     
 
     train_length = len(chunked_data[0][0])

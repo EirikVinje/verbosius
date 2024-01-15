@@ -28,8 +28,6 @@ def rulemaker(train_x, train_y, error_params : bool = False):
 
     """
 
-
-
     MAX_FEATURES = config.MAX_FEATURES
     CV_MAX_FEATURES = config.CV_MAX_FEATURES
     MAX_DF = config.MAX_DF
@@ -45,6 +43,7 @@ def rulemaker(train_x, train_y, error_params : bool = False):
     N_JOBS = config.N_JOBS
     SEED = config.seed
     SKB_score_func = config.SKB_score_func
+    NUM_TM_LABELS = config.NUM_TM_LABELS
 
     if error_params:
         
@@ -81,7 +80,7 @@ def rulemaker(train_x, train_y, error_params : bool = False):
     
     tm = gt.TsetlinMachine(n_literals=train_x_bin.shape[1], 
                            n_clauses=NUMBER_OF_CLAUSES, 
-                           n_classes=len(np.unique(train_y)),
+                           n_classes=NUM_TM_LABELS,
                            s=S,
                            n_literal_budget=LITERAL_BUDGET)
 
@@ -110,8 +109,8 @@ def rulemaker(train_x, train_y, error_params : bool = False):
     
 
 def weight_tokens(lemmas, tokens, vocabulary, token_map):
+    
     """
-
     Weights each token separated by a space in the text based on the weights of the n-grams in the vocabulary.
 
     Parameters:
@@ -132,7 +131,6 @@ def weight_tokens(lemmas, tokens, vocabulary, token_map):
     
     new_weights : list
         List of weights for new tokens
-    
     """
 
     weights = np.zeros(len(lemmas))
@@ -161,10 +159,12 @@ def weight_tokens(lemmas, tokens, vocabulary, token_map):
             weights[i] += uni_w
 
     new_toks, new_weights = connect_tokens(tokens, weights, token_map)
+    
     return new_toks, new_weights
 
 
 def connect_tokens(tokens, weights, token_map):
+    
     """
     Converts the lemma tokens to the original tokens and connects the tokens that are connected by the same id.
 
@@ -187,8 +187,6 @@ def connect_tokens(tokens, weights, token_map):
     new_weights : list
         List of weights for new tokens
     """
-
-
 
     new_toks = []
     new_weights = []

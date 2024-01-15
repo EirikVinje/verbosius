@@ -1,3 +1,5 @@
+import os
+
 import torch
 import numpy as np
 from sklearn.metrics import accuracy_score
@@ -13,6 +15,8 @@ import config as config
 def load_test(dataset):
 
     test = gd.dataset(dataset)(two_cat=True).load_test()
+
+    test = test[:100000]
     
     new_test_x = hf_xaival.tokenize_to_model([text for text, _ in test], config.tokenizer, config.device)
 
@@ -26,7 +30,14 @@ def load_test(dataset):
     return test_x, test_y
 
 
-def accuracy(model_path, test_x, test_y):
+def accuracy(test_x, test_y, chunkdist_n):
+
+    root = config.root
+    dataset = config.dataset
+    
+    model_path = os.path.join(root, dataset, "models", f"{dataset}_model_dist_{chunkdist_n}", "model")
+    if not os.path.exists(model_path):
+        assert False, f"Model path {model_path} does not exist."
 
     model = torch.load(model_path)
     
@@ -66,12 +77,14 @@ def accuracy(model_path, test_x, test_y):
     print("Sequence accuracy: ", seq_acc)
     print("******************************")
 
+    return seq_acc
 
-def model_accuracy(dataset, model_path):
+
+def model_accuracy(dataset, chunkdist_n):
 
     test_x, test_y = load_test(dataset)
     
-    acc = accuracy(model_path, test_x, test_y)
+    acc = accuracy(test_x, test_y, chunkdist_n)
     
     return acc
 

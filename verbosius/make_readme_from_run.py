@@ -114,6 +114,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     af.dataset_checker(args.dataset)
-    af.chunkdist_checker(args.chunkdist_n)
+    af.chunckdist_n_checker(args.chunkdist_n)
 
     make_readme_from_run(args.dataset, args.chunkdist_n)
