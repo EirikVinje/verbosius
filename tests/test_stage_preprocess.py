@@ -1,4 +1,4 @@
-from preprocessing.stage_preprocess import stage_preprocess
+from preprocess.stage_preprocess import stage_preprocess
 
 def test_stage_preprocess():
     

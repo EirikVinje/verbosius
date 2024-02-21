@@ -2,18 +2,13 @@ import argparse
 import pickle
 import os
 import json
-from datetime import datetime
 import time
-import gc
 
 from sklearn.model_selection import train_test_split
 
 import config as config
-import chunking.chunker_functions as cf
-import chunking.get_data as gd
 import xai_transformer.helper_functions as hf
 import xai_transformer.transformer as tf
-import xai_validation.helper_functions_xaival as hf_xaival
 import arg_funcs as af
 
 
@@ -47,6 +42,8 @@ def stage_transformer(dataset : str, chunkdist_n : int):
     start_t = time.time()
 
     root = config.root
+    seed = config.seed
+    tokenizer = config.tokenizer
 
     models_folder = os.path.join(root, dataset, "models")
     if not os.path.exists(models_folder):
@@ -65,7 +62,7 @@ def stage_transformer(dataset : str, chunkdist_n : int):
     if not os.path.exists(trainingdata_folder):
         assert False, f"Trainingdata folder {trainingdata_folder} does not exist, please check your input"
 
-    chunk_dist = os.path.join(trainingdata_folder, f"{dataset}_chunkdist_{chunkdist_n}", "train")
+    chunk_dist = os.path.join(trainingdata_folder, f"{dataset}_chunkdist_{chunkdist_n}")
 
     chunks = sorted(os.listdir(chunk_dist))
     all_train_data = []
@@ -75,16 +72,14 @@ def stage_transformer(dataset : str, chunkdist_n : int):
         train_data = pickle.load(open(chunk, "rb"))        
         all_train_data.extend(train_data)
 
-    train_data, val_data = train_test_split(all_train_data, test_size=0.2, random_state=config.seed, shuffle=True)
+    train_data, val_data = train_test_split(all_train_data, test_size=0.2, random_state=seed, shuffle=True)
 
-    train_tokenized = hf.tokenize_and_align_labels(train_data, config.tokenizer, orig_labels=True)
-    val_tokenized = hf.tokenize_and_align_labels(val_data, config.tokenizer, orig_labels=True) 
+    train_tokenized = hf.tokenize_and_align_labels(train_data, tokenizer, orig_labels=True)
+    val_tokenized = hf.tokenize_and_align_labels(val_data, tokenizer, orig_labels=True) 
 
     print()    
     print("Train size: ", len(train_tokenized["input_ids"]))
     print("Validation size: ", len(val_tokenized["input_ids"]))
-    print("Epochs: ", config.num_train_epochs)
-    print("Batch size: ", config.per_device_train_batch_size)
     print()
     
     tf.transformer_pipeline_custom(output_dir=model_path, 

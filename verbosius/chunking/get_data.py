@@ -257,20 +257,19 @@ class SST5:
 
 class Amazon:
 
-    def __init__(self, two_cat : bool) -> None:
+    def __init__(self, two_cat : bool, size : str) -> None:
         self.two_cat = two_cat
         self.exists_test_set = False
         self.exists_validation_set = False
         self.test_data = None
         self.n_classes = 5
-
-
+        self.size = size
 
     def load_test(self):
         
         user = os.environ.get('USER')
 
-        store_dir = f"/home/{user}/data/verbosius/amazon/pre_chunking/big/"
+        store_dir = f"/home/{user}/data/verbosius/amazon/pre_chunking/{self.size}/"
 
         with open(f"{store_dir}test_data.pkl", "rb") as f:
             self.test_data = pickle.load(f)
@@ -281,18 +280,18 @@ class Amazon:
 
         user = os.environ.get('USER')
 
-        store_dir = f"/home/{user}/data/verbosius/amazon/pre_chunking/big/"
+        store_dir = f"/home/{user}/data/verbosius/amazon/pre_chunking/{self.size}/"
 
         with open(f"{store_dir}train_orig_labels.pkl", "rb") as f:
             train_orig_labels = pickle.load(f)
 
         return train_orig_labels
 
-    def load_data(self, path: str, test: bool = False, test_size: float = 0.2):
+    def load_data(self):
         
         user = os.environ.get('USER')
 
-        store_dir = f"/home/{user}/data/verbosius/amazon/pre_chunking/big/"
+        store_dir = f"/home/{user}/data/verbosius/amazon/pre_chunking/{self.size}/"
 
         with open(f"{store_dir}train_data.pkl", "rb") as f:
             train_data = pickle.load(f)

@@ -1,5 +1,5 @@
-import preprocessing.preprocess_functions as preprocess_functions
-import preprocessing.stage_preprocess as stage_preprocess
+import preprocess.preprocess_functions as preprocess_functions
+import preprocess.stage_preprocess as stage_preprocess
 
 
 def test_clean_text():

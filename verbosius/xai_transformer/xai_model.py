@@ -2,12 +2,11 @@ import torch
 from torch import nn
 from transformers.modeling_outputs import TokenClassifierOutput
 from transformers import AutoModel
-from transformers import Trainer
 
 
 class CustomModel(nn.Module):
 
-    def __init__(self, num_labels, num_seq_labels, neutral_weight, loss_weight=1): 
+    def __init__(self, num_tok_labels, num_seq_labels, neutral_weight, loss_weight=1): 
         super(CustomModel,self).__init__() 
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.loss_weight = loss_weight
@@ -18,7 +17,7 @@ class CustomModel(nn.Module):
         #self.token_model = AutoModelForTokenClassification.from_pretrained('distilroberta-base')
         self.token_model = AutoModel.from_pretrained('distilroberta-base')
 
-        self.classifier = nn.Linear(768, num_labels) 
+        self.classifier = nn.Linear(768, num_tok_labels) 
         self.seq_classifier = nn.Linear(768, num_seq_labels)
         self.to_evidence = nn.Sequential(nn.Linear(2, 1),
                                          nn.Sigmoid())

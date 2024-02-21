@@ -1,4 +1,4 @@
-from preprocessing.stage_preprocess import stage_preprocess
+from preprocess.stage_preprocess import stage_preprocess
 from trainingdata.stage_trainingdata import stage_trainingdata
 from xai_transformer.stage_transformer import stage_transformer
 from chunking.stage_chunks import stage_chunks

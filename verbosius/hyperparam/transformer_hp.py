@@ -9,7 +9,7 @@ import green_tsetlin as gt
 import config as config
 
 from chunking.stage_chunks import stage_chunks
-from preprocessing.stage_preprocess import stage_preprocess
+from preprocess.stage_preprocess import stage_preprocess
 from trainingdata.stage_trainingdata import stage_trainingdata
 from xai_transformer.stage_transformer import stage_transformer
 from xai_validation.stage_validation import stage_validation
@@ -44,25 +44,25 @@ if __name__ == "__main__":
     config.chunkdist_n = 6147
     config.dataset = "amazon"
     config.chunk_size = 8000
-    config.chunk_amount = 75
-    config.TM_EPOCHS = 20
+    config.chunk_amount = 25
+    
     config.num_train_epochs = 5
     config.per_device_train_batch_size = 8
     config.per_device_eval_batch_size = 8
     
-    study = optuna.create_study(study_name="transformer_params_hpsearch_cs8000_ca125_t20_final", direction="maximize", storage=f"sqlite:////home/{config.user}/projects/verbosius/sqlite3.db", load_if_exists=True)
+    study = optuna.create_study(study_name="transformer_params_hpsearch_cs8000_ca125_t20_new_params_TM", direction="maximize", storage=f"sqlite:////home/{config.user}/projects/verbosius/sqlite3.db", load_if_exists=True)
 
-    stage_chunks(dataset=config.dataset,
-                 chunk_size=config.chunk_size,
-                 chunk_amount=config.chunk_amount,
-                 chunkdist_n=config.chunkdist_n)
+    # stage_chunks(dataset=config.dataset,
+    #              chunk_size=config.chunk_size,
+    #              chunk_amount=config.chunk_amount,
+    #              chunkdist_n=config.chunkdist_n)
     
-    stage_preprocess(dataset=config.dataset,
-                     chunkdist_n=config.chunkdist_n)
+    # stage_preprocess(dataset=config.dataset,
+    #                  chunkdist_n=config.chunkdist_n)
     
     
     stage_trainingdata(dataset=config.dataset,
-                       chunkdist_n=config.chunkdist_n)
+                         chunkdist_n=config.chunkdist_n)
 
 
     study.optimize(objective, n_trials=20, show_progress_bar=True)

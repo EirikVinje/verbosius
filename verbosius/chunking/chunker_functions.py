@@ -221,17 +221,7 @@ def chunk_data_multiclass(dataset,
     return train_x, train_y, val_x, val_y, train_y_orig, val_y_orig, n_classes
 
 
-def chunk_data_multiclass_supersample(dataset, 
-                                        n_chunks_per_mix : int, 
-                                        chunk_size : int, 
-                                        path : str, 
-                                        validation : bool = True,
-                                        test_chunk_size: int = -1,
-                                        test_size: float = 0.2, 
-                                        val_size: float = 0.5, 
-                                        shuffle : bool = True, 
-                                        seed : int = 42,
-                                        val_chunk_size : int = -1):  
+def chunk_data_multiclass_supersample(dataset, n_chunks_per_mix : int, chunk_size : int, shuffle : bool = True, seed : int = 42):  
     
     """
     dataset : dataset class
@@ -265,7 +255,7 @@ def chunk_data_multiclass_supersample(dataset,
     orig_chunk_size = chunk_size
     rng = np.random.default_rng(seed)
 
-    un_chunked_mix = dataset.load_data(path, test_size=test_size)
+    un_chunked_mix = dataset.load_data()
     train_data = un_chunked_mix
 
 

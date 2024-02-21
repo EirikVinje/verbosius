@@ -65,7 +65,6 @@ def rulemaker(train_x, train_y, error_params : bool = False):
                                  dtype=np.uint8,
                                  stop_words =STOPWORDS)
     
-
     train_x_bin = vectorizer.fit_transform([" ".join(x) for x in train_x])
 
     _feature_names = vectorizer.get_feature_names_out()

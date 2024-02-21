@@ -1,13 +1,10 @@
 import pickle
 import os
 import argparse
-import re
 
-import numpy as np
 from tqdm import tqdm
 
-import preprocessing.preprocess_functions as preprocess_functions
-import preprocessing.preprocess_functions as pf
+import preprocess.preprocess_functions as pf
 import arg_funcs as af
 import config as config
 
@@ -62,16 +59,15 @@ def stage_preprocess(dataset:str, chunkdist_n : int):
         data = pickle.load(open(chunk, "rb"))
 
         raw_train_x = list(data["train_x"])
-        print(f"chunk : {i} size : {len(raw_train_x)}")
         
         train_y = list(data["train_y"])
         orig_train_y = data["orig_train_y"]
 
-        cleaned_train_x = preprocess_functions.clean_text(raw_train_x)
+        cleaned_train_x = pf.clean_text(raw_train_x)
 
-        split_train_x, token_train_x, lemma_train_x = preprocess_functions.lemmatize(cleaned_train_x, lemmatizer="en_core_web_sm")
+        split_train_x, token_train_x, lemma_train_x = pf.lemmatize(cleaned_train_x, lemmatizer="en_core_web_sm")
 
-        token_ids_train_x = preprocess_functions.map_tokens(split_train_x, token_train_x)
+        token_ids_train_x = pf.map_tokens(split_train_x, token_train_x)
 
         train_data = pf.stage_data(token_x=token_train_x, 
                                       lemma_x=lemma_train_x, 

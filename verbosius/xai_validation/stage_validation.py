@@ -9,7 +9,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 import datasets
 
-import preprocessing.preprocess_functions as preprocess_functions
+import preprocess.preprocess_functions as preprocess_functions
 import config as config
 import xai_validation.helper_functions_xaival as vf
 

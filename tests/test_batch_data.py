@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from verbosius.preprocessing import datasource
+from verbosius.preprocess import datasource
 from pathlib import Path
 
 from time import perf_counter

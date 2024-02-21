@@ -1,9 +1,6 @@
 import os
 import pickle 
 import argparse
-from tqdm import tqdm
-
-from sklearn.model_selection import train_test_split
 
 import trainingdata.generate_trainingdata as gen_data
 import config as config
@@ -46,7 +43,7 @@ def stage_trainingdata(dataset : str, chunkdist_n : int):
         assert False, f"Directory {trainingdata_chunkdist} already exists, please remove it before continuing"
     
     
-    trainingdata_chunkdist = os.path.join(trainingdata_chunkdist, "train")
+    trainingdata_chunkdist = os.path.join(trainingdata_chunkdist)
     if not os.path.exists(trainingdata_chunkdist):
         os.mkdir(trainingdata_chunkdist)
     
@@ -58,7 +55,7 @@ def stage_trainingdata(dataset : str, chunkdist_n : int):
     if not os.path.exists(chunk_dist):
         assert False, f"Chunk distribution {chunk_dist} does not exist, please check your input"
 
-    chunk_dist = os.path.join(chunk_dist, "train")
+    chunk_dist = os.path.join(chunk_dist)
 
     dir = sorted(os.listdir(chunk_dist))
     dir_len = len(dir)

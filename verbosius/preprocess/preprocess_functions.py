@@ -180,12 +180,12 @@ def stage_data(token_x, lemma_x, token_ids_x, y, orig_labels, x):
 
 def write_data(data, path, n):
     
-    dir = os.path.join(path, "train")
-
-    if not os.path.exists(dir):
+    if not os.path.exists(path):
         os.mkdir(dir)
 
-    with open(f"{dir}/train_chunk_{n}.pkl", "wb") as f:
+    dir = os.path.join(path, f"train_chunk_{n}.pkl")
+
+    with open(dir, "wb") as f:
         pickle.dump(data, f)
 
 
