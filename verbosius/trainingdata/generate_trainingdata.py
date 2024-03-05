@@ -2,6 +2,7 @@ from collections import Counter
 from copy import deepcopy
 import pickle
 import os
+import gzip
 
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
@@ -374,6 +375,7 @@ def do_weighting(train_data, feature_names, rm):
 
     
 def make_weighted_data(train_data, error_params : bool = False):
+    
     """
     Trains the Tsetlin Machine and weights the tokens in the data.
 
@@ -403,15 +405,17 @@ def make_weighted_data(train_data, error_params : bool = False):
 
 
 def write_chunk(data, output, n):
-    
-    file = open(os.path.join(output, f"train_val_chunk_{n}.pkl"), "wb")
-    pickle.dump(data, file)
+
+    filepath = os.path.join(output, f"trainingdata_chunk_{n}_.pkl")
+    with gzip.open(filepath, "wb") as file:
+        pickle.dump(data, file)
 
 
 def write_error_chunk(data, output, n):
     
-    file = open(os.path.join(output, f"train_val_chunk_{n}_e.pkl"), "wb")
-    pickle.dump(data, file)
+    filepath = os.path.join(output, f"preprocess_chunk_{n+100000}_e.pkl")
+    with gzip.open(filepath, "wb") as file:
+        pickle.dump(data, file)
 
 
 if __name__ == "__main__":

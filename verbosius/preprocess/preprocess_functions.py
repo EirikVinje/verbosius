@@ -1,6 +1,7 @@
 import re
 import pickle
 import os
+import gzip
 
 import spacy
 from bs4 import BeautifulSoup
@@ -183,32 +184,10 @@ def write_data(data, path, n):
     if not os.path.exists(path):
         os.mkdir(dir)
 
-    dir = os.path.join(path, f"train_chunk_{n}.pkl")
+    dir = os.path.join(path, f"preprocess_chunk_{n}_.pkl")
 
-    with open(dir, "wb") as f:
+    with gzip.open(dir, "wb") as f:
         pickle.dump(data, f)
-
-
-def load_chunk(dataset, chunk_n, dir):
-
-    reg = f"{dataset}_chunkdata_{chunk_n}_.*\.pkl"
-    regex = re.compile(reg)
-
-    listdir = os.listdir(dir)
-
-    path = None
-    for file in listdir:
-        if regex.match(file) is not None:
-            path = os.path.join(dir, file)
-    
-    if path is None:
-        assert False, f"{dataset} chunk {chunk_n} does not exist in {dir}"
-
-    with open(path, "rb") as f:
-        data = pickle.load(f)
-
-    return data
-
 
 if __name__ == "__main__":
 

@@ -6,21 +6,17 @@ from transformers import AutoModel
 
 class CustomModel(nn.Module):
 
-    def __init__(self, num_tok_labels, num_seq_labels, neutral_weight, loss_weight=1): 
+    def __init__(self, num_tok_labels, num_seq_labels, neutral_weight, loss_weight): 
         super(CustomModel,self).__init__() 
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.loss_weight = loss_weight
         
-        #Load Model with given checkpoint and extract its body
         self.seq_model = AutoModel.from_pretrained('distilroberta-base')
-        #self.token_model = None
-        #self.token_model = AutoModelForTokenClassification.from_pretrained('distilroberta-base')
         self.token_model = AutoModel.from_pretrained('distilroberta-base')
 
         self.classifier = nn.Linear(768, num_tok_labels) 
         self.seq_classifier = nn.Linear(768, num_seq_labels)
-        self.to_evidence = nn.Sequential(nn.Linear(2, 1),
-                                         nn.Sigmoid())
+        self.to_evidence = nn.Sequential(nn.Linear(2, 1), nn.Sigmoid())
         
         self.cel = nn.CrossEntropyLoss(weight=torch.tensor([neutral_weight, 1.0, 1.0]).to(self.device))
         self.seq_cel = nn.CrossEntropyLoss()
@@ -48,6 +44,7 @@ class CustomModel(nn.Module):
         logits = (token_labels_pred, seq_label_pred)
         
         if labels is not None:
+            
             seq_loss = self.seq_cel(seq_label_pred, sentiment)
             
             token_loss = self.cel(token_labels_pred.view(-1, 3), labels.view(-1))

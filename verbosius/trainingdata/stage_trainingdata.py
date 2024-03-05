@@ -1,6 +1,8 @@
 import os
 import pickle 
 import argparse
+import gc
+import gzip
 
 import trainingdata.generate_trainingdata as gen_data
 import config as config
@@ -17,17 +19,9 @@ def stage_trainingdata(dataset : str, chunkdist_n : int):
     ----------
     dataset : str
         Name of dataset to stage trainingdata for.
-    
-    input : str
-        Path to input data from preprocessed chunk. Must be absolute path to directory.
 
-    output : str
-        Path to output of this module. Must be absolute path to directory.
-    
     chunkdist_n : int
-        ID of chunkdist to use for trainingdata. Must be an integer. Will be used to name the output directory, e.g "path/to/output/{dataset}_chunkdist_{chunkdist_n}".
-    
-    
+        ID (int) of chunkdist to use for trainingdata. Must be an integer. Will be used to name the output directory, e.g "path/to/output/{dataset}_chunkdist_{chunkdist_n}".
     """
 
     root = config.root
@@ -42,49 +36,65 @@ def stage_trainingdata(dataset : str, chunkdist_n : int):
     else:
         assert False, f"Directory {trainingdata_chunkdist} already exists, please remove it before continuing"
     
-    
     trainingdata_chunkdist = os.path.join(trainingdata_chunkdist)
     if not os.path.exists(trainingdata_chunkdist):
         os.mkdir(trainingdata_chunkdist)
-    
+
     preprocess_folder = os.path.join(root, dataset, "preprocess")
     if not os.path.exists(preprocess_folder):
         assert False, f"Preprocess folder {preprocess_folder} does not exist, please check your input"
 
-    chunk_dist = os.path.join(preprocess_folder, f"{dataset}_chunkdist_{chunkdist_n}")
-    if not os.path.exists(chunk_dist):
-        assert False, f"Chunk distribution {chunk_dist} does not exist, please check your input"
+    preprocess_chunkdist = os.path.join(preprocess_folder, f"{dataset}_chunkdist_{chunkdist_n}")
+    if not os.path.exists(preprocess_chunkdist):
+        assert False, f"Chunk distribution {preprocess_chunkdist} does not exist, please check your input"
 
-    chunk_dist = os.path.join(chunk_dist)
+    preprocess_chunkdist = os.path.join(preprocess_chunkdist)
 
-    dir = sorted(os.listdir(chunk_dist))
-    dir_len = len(dir)
+    dir_len = len(os.listdir(preprocess_chunkdist))
 
     n = 0
     correct_x = 0
 
     while True:
+        
+        dir = sorted(os.listdir(preprocess_chunkdist), key=lambda x: int(x.split("_")[2]))
 
         if n >= dir_len * 2:
             break
         
         chunk = dir[n]
+        print(chunk)
+        chunk = os.path.join(preprocess_chunkdist, chunk)
 
-        error_params = True if type(dir[n]) != type(dir[0]) else False
+        with gzip.open(chunk, "rb") as f:
+            train_data = pickle.load(f)
 
-        chunk = os.path.join(chunk_dist, chunk) if not error_params else None
-        train_data = pickle.load(open(chunk, "rb")) if not error_params else dir[n]
+        if train_data is None:
+            assert False, "Data is None, please check your input."
 
-        train_data, train_error_data = gen_data.make_weighted_data(train_data, error_params)
+        if chunk[-5] != "e":
+            
+            error_params = False
+            train_data, train_error_data = gen_data.make_weighted_data(train_data, error_params)
+            correct_x += len(train_data)
+            
+            gen_data.write_chunk(train_data, trainingdata_chunkdist, n)
+            gen_data.write_error_chunk(train_error_data, preprocess_chunkdist, n)
 
-        correct_x += len(train_data)
+        elif chunk[-5] == "e":
 
-        gen_data.write_chunk(train_data, trainingdata_chunkdist, n)
-    
-        dir.append(train_error_data)
+            error_params = True
+            train_data, train_error_data = gen_data.make_weighted_data(train_data, error_params)
+            correct_x += len(train_data)
+
+            gen_data.write_chunk(train_data, trainingdata_chunkdist, n)
 
         n += 1
-    
+
+        train_data = None
+        train_error_data = None
+        gc.collect()
+
     return correct_x
 
 

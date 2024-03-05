@@ -3,8 +3,10 @@ import pickle
 import os
 import json
 import time
+import gzip
 
 from sklearn.model_selection import train_test_split
+from tqdm import tqdm
 
 import config as config
 import xai_transformer.helper_functions as hf
@@ -55,7 +57,6 @@ def stage_transformer(dataset : str, chunkdist_n : int):
     else:
         assert False, f"Directory {model_folder} already exists, please remove it before continuing"
 
-    
     model_path = os.path.join(model_folder, "model")
 
     trainingdata_folder = os.path.join(root, dataset, "trainingdata")
@@ -66,10 +67,18 @@ def stage_transformer(dataset : str, chunkdist_n : int):
 
     chunks = sorted(os.listdir(chunk_dist))
     all_train_data = []
-    for _, chunk in enumerate(chunks):
+
+    print("Loading trainingdata...")
+    for (_, chunk) in enumerate(tqdm(chunks)):
         
         chunk = os.path.join(chunk_dist, chunk)
-        train_data = pickle.load(open(chunk, "rb"))        
+
+        with gzip.open(chunk, "rb") as f:
+            train_data = pickle.load(f)
+
+        if train_data is None:
+            assert False, "Data is None, please check your input."
+        
         all_train_data.extend(train_data)
 
     train_data, val_data = train_test_split(all_train_data, test_size=0.2, random_state=seed, shuffle=True)

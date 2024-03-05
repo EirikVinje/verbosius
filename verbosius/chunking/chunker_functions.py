@@ -3,6 +3,7 @@ import datasets as ds
 import pickle
 import json
 from time import perf_counter
+import gzip
 
 import pandas as pd
 import numpy as np
@@ -311,7 +312,9 @@ def write_chunks(output, data):
 
     n = len(dir)
 
-    with open(f"{output}/train_chunk_{n}.pkl", "wb") as f:
+    file = os.path.join(output, f"train_chunk_{n}_.pkl")
+
+    with gzip.open(file, "wb") as f:
         pickle.dump(data, f)
 
 
@@ -325,5 +328,7 @@ def write_meta_chunks(output, train_length, validation_length, dataset, n_classe
             "shuffle": shuffle,
             "chunk_amount": chunk_amount}
     
-    with open(f"{output}/meta.json", "w") as f:
+    file = os.path.join(output, "meta.json")
+
+    with open(file, "w") as f:
          json.dump(meta, f)

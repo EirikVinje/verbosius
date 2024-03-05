@@ -18,7 +18,7 @@ def transformer_pipeline_custom(output_dir, train_data, val_data):
     
     device = config.device
     tokenizer = config.tokenizer
-    num_tok_labels = config.num_labels
+    num_tok_labels = config.num_tok_labels
     num_seq_labels = config.num_seq_labels
     neutral_weight = config.neutral_weight
     loss_weight = config.loss_weight
@@ -63,7 +63,6 @@ def transformer_pipeline_custom(output_dir, train_data, val_data):
 
     trainer.train()
 
-    #os.system(f"rm -rf {output_dir}")
     torch.save(model, output_dir)
 
     del train_data

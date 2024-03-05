@@ -1,14 +1,15 @@
 #!/bin/bash
 
-echo "Setting up environment..."
+
+dist=235987
+echo "clearing up chunkdist $dist..."
 
 cd ~
 mkdir -p data && cd data
 mkdir -p verbosius && cd verbosius
-# mkdir -p hpsearch_env && cd hpsearch_env
 mkdir -p amazon && cd amazon
 
-mkdir -p chunking && rm -rf chunking/*
-mkdir -p preprocess && rm -rf preprocess/*
-mkdir -p trainingdata && rm -rf trainingdata/*
-mkdir -p models && rm -rf models/*
+mkdir -p chunking && rm -rf chunking/amazon_chunkdist_$dist
+mkdir -p preprocess && rm -rf preprocess/amazon_chunkdist_$dist
+mkdir -p trainingdata && rm -rf trainingdata/amazon_chunkdist_$dist
+mkdir -p models && rm -rf models/

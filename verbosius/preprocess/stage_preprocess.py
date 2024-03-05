@@ -1,6 +1,7 @@
 import pickle
 import os
 import argparse
+import gzip
 
 from tqdm import tqdm
 
@@ -51,12 +52,17 @@ def stage_preprocess(dataset:str, chunkdist_n : int):
         assert False, f"Chunk distribution {chunk_dist} does not exist, please check your input"
 
     chunk_dist_data = os.path.join(chunk_dist, "train")
-    chunks = sorted(os.listdir(chunk_dist_data))
+    chunks = sorted(os.listdir(chunk_dist_data), key=lambda x: int(x.split("_")[2]))
 
     for i, chunk in enumerate(tqdm(chunks)):
         
         chunk = os.path.join(chunk_dist_data, chunk)
-        data = pickle.load(open(chunk, "rb"))
+        
+        with gzip.open(chunk, "rb") as f:
+            data = pickle.load(f)
+        
+        if data is None:
+            assert False, "Data is None, please check your input."
 
         raw_train_x = list(data["train_x"])
         
@@ -70,11 +76,11 @@ def stage_preprocess(dataset:str, chunkdist_n : int):
         token_ids_train_x = pf.map_tokens(split_train_x, token_train_x)
 
         train_data = pf.stage_data(token_x=token_train_x, 
-                                      lemma_x=lemma_train_x, 
-                                      token_ids_x=token_ids_train_x, 
-                                      y=train_y, 
-                                      orig_labels=orig_train_y,
-                                      x=raw_train_x)
+                                    lemma_x=lemma_train_x, 
+                                    token_ids_x=token_ids_train_x, 
+                                    y=train_y, 
+                                    orig_labels=orig_train_y,
+                                    x=raw_train_x)
                 
 
         pf.write_data(data=train_data, path=new_chunkdist, n=i)
