@@ -8,8 +8,8 @@ seed = 69
 
 dataset = "amazon"
 user = os.environ.get("USER")
-root = f"/home/{user}/data/verbosius/" 
-TM_EPOCHS = 5
+root = f"/home/{user}/data/verbosius/amazon" 
+TM_EPOCHS = 50
 num_train_epochs = 5
 
 num_tok_labels = 3 # transformer
@@ -53,8 +53,7 @@ save_strategy = "epoch"
 load_best_model_at_end = True
 label_names = ['labels', 'sentiment']
 
-per_device_eval_batch_size = 8
-per_device_train_batch_size = 8
+trainer_batch_size = 8
 
 learning_rate = 1.9729419811296342e-05
 neutral_weight = 0.0419 

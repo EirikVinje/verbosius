@@ -90,7 +90,7 @@ def split_train_orig_test(temp_data, counts, test_counts, rng):
     return train_data, orig_labels, test_data
 
 
-def sample_amazon(path, rng, data_size: int, test_size: int, load_size: int, max_text_len: int):
+def sample_amazon(path, rng, data_size: int, test_size: int, load_size: int):
     
     temp_data = []
     
@@ -98,7 +98,7 @@ def sample_amazon(path, rng, data_size: int, test_size: int, load_size: int, max
         
         try:
 
-            if len(d["reviewText"].split(" ")) > max_text_len + 100:
+            if len(d["reviewText"].split(" ")) > 400:
                  continue    
                                 
             temp_data.append([index, str(d["reviewText"]), int(d["overall"])])
@@ -163,16 +163,13 @@ def save_to_pickle(train_data, train_orig_labels, test_data, store_dir):
 
 if __name__ == "__main__":
     
-    # make args
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--name", type=str, required=True)
-    args = parser.parse_args()
-
     rng = np.random.default_rng(42)
     user = os.environ["USER"]
-
     store_path = f"/home/{user}/data/verbosius/amazon/pre_chunking/"
-    store_dir = os.path.join(store_path, args.name)
+    
+    name = "small"
+    
+    store_dir = os.path.join(store_path, name)
 
     if not os.path.exists(store_dir):
         os.makedirs(store_dir)
@@ -183,10 +180,9 @@ if __name__ == "__main__":
 
     train_data, train_orig_labels, test_data = sample_amazon(datapath, 
                                                              rng=rng, 
-                                                             data_size=15_000_000, 
-                                                             test_size=1_000_000, 
-                                                             load_size=80_000_000,
-                                                             max_text_len=300)
-    
+                                                             data_size=30_000, 
+                                                             test_size=3000, 
+                                                             load_size=500_000)
+                                                             
     save_to_pickle(train_data, train_orig_labels, test_data, store_dir)
 

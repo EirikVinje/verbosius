@@ -418,5 +418,30 @@ def write_error_chunk(data, output, n):
         pickle.dump(data, file)
 
 
+def set_directory(chunkdist_name):
+
+    trainingdata_folder = os.path.join(config.root, "trainingdata")
+    if not os.path.exists(trainingdata_folder):
+        os.mkdir(trainingdata_folder)
+
+    trainingdata_chunkdist = os.path.join(trainingdata_folder, chunkdist_name)
+    if not os.path.exists(trainingdata_chunkdist):
+        os.mkdir(trainingdata_chunkdist)
+    else:
+        assert False, f"Directory {trainingdata_chunkdist} already exists, please remove it before continuing"
+
+    preprocess_folder = os.path.join(config.root, "preprocess")
+    if not os.path.exists(preprocess_folder):
+        assert False, f"Preprocess folder {preprocess_folder} does not exist, please check your input"
+
+    preprocess_chunkdist = os.path.join(preprocess_folder, chunkdist_name)
+    if not os.path.exists(preprocess_chunkdist):
+        assert False, f"Chunk distribution {preprocess_chunkdist} does not exist, please check your input"
+
+
+
+
+
+
 if __name__ == "__main__":
     print("Module")

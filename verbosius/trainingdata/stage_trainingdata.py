@@ -4,6 +4,9 @@ import argparse
 import gc
 import gzip
 
+
+from trainingdata.generate_trainingdata import make_weighted_data, write_chunk, write_error_chunk, set_directory
+from xai_transformer.helper_functions import tokenize_and_align_labels
 import trainingdata.generate_trainingdata as gen_data
 import config as config
 import arg_funcs as af
@@ -14,6 +17,7 @@ def stage_trainingdata(dataset : str, chunkdist_n : int):
     """
     Stage trainingdata for transformer.
     Uses TM to weight individual tokens in a sequence of text.
+    Prepares trainingdata for transformer by tokenizing and aligning labels.    
 
     Parameters
     ----------
@@ -24,75 +28,53 @@ def stage_trainingdata(dataset : str, chunkdist_n : int):
         ID (int) of chunkdist to use for trainingdata. Must be an integer. Will be used to name the output directory, e.g "path/to/output/{dataset}_chunkdist_{chunkdist_n}".
     """
 
-    root = config.root
+    chunkdist_name = f"{dataset}_chunkdist_{chunkdist_n}"
 
-    trainingdata_folder = os.path.join(root, dataset, "trainingdata")
-    if not os.path.exists(trainingdata_folder):
-        os.mkdir(trainingdata_folder)
+    set_directory(chunkdist_name)
 
-    trainingdata_chunkdist = os.path.join(trainingdata_folder, f"{dataset}_chunkdist_{chunkdist_n}")
-    if not os.path.exists(trainingdata_chunkdist):
-        os.mkdir(trainingdata_chunkdist)
-    else:
-        assert False, f"Directory {trainingdata_chunkdist} already exists, please remove it before continuing"
-    
-    trainingdata_chunkdist = os.path.join(trainingdata_chunkdist)
-    if not os.path.exists(trainingdata_chunkdist):
-        os.mkdir(trainingdata_chunkdist)
+    preprocess_path = os.path.join(config.root, "preprocess", chunkdist_name)
+    trainingdata_path = os.path.join(config.root, "trainingdata", chunkdist_name)
 
-    preprocess_folder = os.path.join(root, dataset, "preprocess")
-    if not os.path.exists(preprocess_folder):
-        assert False, f"Preprocess folder {preprocess_folder} does not exist, please check your input"
-
-    preprocess_chunkdist = os.path.join(preprocess_folder, f"{dataset}_chunkdist_{chunkdist_n}")
-    if not os.path.exists(preprocess_chunkdist):
-        assert False, f"Chunk distribution {preprocess_chunkdist} does not exist, please check your input"
-
-    preprocess_chunkdist = os.path.join(preprocess_chunkdist)
-
-    dir_len = len(os.listdir(preprocess_chunkdist))
-
+    dir_len = len(os.listdir(preprocess_path))
     n = 0
     correct_x = 0
 
     while True:
         
-        dir = sorted(os.listdir(preprocess_chunkdist), key=lambda x: int(x.split("_")[2]))
+        dir = sorted(os.listdir(preprocess_path), key=lambda x: int(x.split("_")[2]))
 
         if n >= dir_len * 2:
             break
         
         chunk = dir[n]
-        print(chunk)
-        chunk = os.path.join(preprocess_chunkdist, chunk)
+        chunk = os.path.join(preprocess_path, chunk)
 
         with gzip.open(chunk, "rb") as f:
-            train_data = pickle.load(f)
-
-        if train_data is None:
-            assert False, "Data is None, please check your input."
+            train = pickle.load(f)
 
         if chunk[-5] != "e":
             
-            error_params = False
-            train_data, train_error_data = gen_data.make_weighted_data(train_data, error_params)
-            correct_x += len(train_data)
+            train, train_error = make_weighted_data(train, error_params=False)
+            correct_x += len(train)
+
+            tokenized_train = tokenize_and_align_labels(train, config.tokenizer, orig_labels=True)
             
-            gen_data.write_chunk(train_data, trainingdata_chunkdist, n)
-            gen_data.write_error_chunk(train_error_data, preprocess_chunkdist, n)
+            write_chunk(tokenized_train, trainingdata_path, n)
+            write_error_chunk(train_error, preprocess_path, n)
 
         elif chunk[-5] == "e":
 
-            error_params = True
-            train_data, train_error_data = gen_data.make_weighted_data(train_data, error_params)
-            correct_x += len(train_data)
+            train_e, _ = make_weighted_data(train, error_params=True)
+            correct_x += len(train)
 
-            gen_data.write_chunk(train_data, trainingdata_chunkdist, n)
+            tokenized_train_e = tokenize_and_align_labels(train_e, config.tokenizer, orig_labels=True)
+
+            write_chunk(tokenized_train_e, trainingdata_path, n)
 
         n += 1
 
-        train_data = None
-        train_error_data = None
+        train = None
+        train_error = None
         gc.collect()
 
     return correct_x

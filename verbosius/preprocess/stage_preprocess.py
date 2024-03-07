@@ -5,7 +5,7 @@ import gzip
 
 from tqdm import tqdm
 
-import preprocess.preprocess_functions as pf
+from preprocess.preprocess_functions import clean_text, lemmatize, map_tokens, stage_data, write_data, set_directory
 import arg_funcs as af
 import config as config
 
@@ -30,28 +30,14 @@ def stage_preprocess(dataset:str, chunkdist_n : int):
         ID of chunkdistribution. Must be an integer. Will be used to name the output directory, e.g "path/to/output/{dataset}_chunkdist_{chunkdist_n}".
     """
 
-    root = config.root
-    
-    preprocess_folder = os.path.join(root, dataset, "preprocess")
-    if not os.path.exists(preprocess_folder):
-        os.mkdir(preprocess_folder)
-    
-    new_chunkdist = os.path.join(preprocess_folder, f"{dataset}_chunkdist_{chunkdist_n}")
-    if not os.path.exists(new_chunkdist):
-        os.mkdir(new_chunkdist)
-    else:
-        assert False, f"Directory {new_chunkdist} already exists, please remove it before continuing" 
+    chunkdist_name = f"{dataset}_chunkdist_{chunkdist_n}"
 
-    
-    chunking_folder = os.path.join(root, dataset, "chunking")
-    if not os.path.exists(chunking_folder):
-        assert False, f"Chunking folder {chunking_folder} does not exist, please check your input"
+    set_directory(chunkdist_name)    
 
-    chunk_dist = os.path.join(chunking_folder, f"{dataset}_chunkdist_{chunkdist_n}")
-    if not os.path.exists(chunk_dist):
-        assert False, f"Chunk distribution {chunk_dist} does not exist, please check your input"
+    preprocess_path = os.path.join(config.root, "preprocess", chunkdist_name)
+    chunking_path = os.path.join(config.root, "chunking", chunkdist_name)
 
-    chunk_dist_data = os.path.join(chunk_dist, "train")
+    chunk_dist_data = os.path.join(chunking_path, "train")
     chunks = sorted(os.listdir(chunk_dist_data), key=lambda x: int(x.split("_")[2]))
 
     for i, chunk in enumerate(tqdm(chunks)):
@@ -69,13 +55,13 @@ def stage_preprocess(dataset:str, chunkdist_n : int):
         train_y = list(data["train_y"])
         orig_train_y = data["orig_train_y"]
 
-        cleaned_train_x = pf.clean_text(raw_train_x)
+        cleaned_train_x = clean_text(raw_train_x)
 
-        split_train_x, token_train_x, lemma_train_x = pf.lemmatize(cleaned_train_x, lemmatizer="en_core_web_sm")
+        split_train_x, token_train_x, lemma_train_x = lemmatize(cleaned_train_x, lemmatizer="en_core_web_sm")
 
-        token_ids_train_x = pf.map_tokens(split_train_x, token_train_x)
+        token_ids_train_x = map_tokens(split_train_x, token_train_x)
 
-        train_data = pf.stage_data(token_x=token_train_x, 
+        train_data = stage_data(token_x=token_train_x, 
                                     lemma_x=lemma_train_x, 
                                     token_ids_x=token_ids_train_x, 
                                     y=train_y, 
@@ -83,7 +69,7 @@ def stage_preprocess(dataset:str, chunkdist_n : int):
                                     x=raw_train_x)
                 
 
-        pf.write_data(data=train_data, path=new_chunkdist, n=i)
+        write_data(train_data, preprocess_path, i)
 
     
 if __name__ == "__main__":

@@ -6,13 +6,13 @@ from transformers import AutoModel
 
 class CustomModel(nn.Module):
 
-    def __init__(self, num_tok_labels, num_seq_labels, neutral_weight, loss_weight): 
+    def __init__(self, num_tok_labels, num_seq_labels, neutral_weight, loss_weight, model_name='distilroberta-base'): 
         super(CustomModel,self).__init__() 
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.loss_weight = loss_weight
         
-        self.seq_model = AutoModel.from_pretrained('distilroberta-base')
-        self.token_model = AutoModel.from_pretrained('distilroberta-base')
+        self.seq_model = AutoModel.from_pretrained(model_name)
+        self.token_model = AutoModel.from_pretrained(model_name)
 
         self.classifier = nn.Linear(768, num_tok_labels) 
         self.seq_classifier = nn.Linear(768, num_seq_labels)

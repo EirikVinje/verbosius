@@ -3,11 +3,10 @@ import os
 
 from tqdm import tqdm
 
-import chunking.chunker_functions as chunker_functions
+from chunking.chunker_functions import chunk_data_multiclass_supersample, write_chunks, write_meta_chunks
 import chunking.get_data as get_data
 import arg_funcs as af
 import config as config
-
 
 
 def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, chunkdist_n : int, size : str):
@@ -30,32 +29,31 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, chunkdist_
         ID of chunkdistribution. Must be an integer. Will be used to name the output directory, e.g "path/to/output/{dataset}_chunkdist_{chunkdist_n}".
     """
 
-    root = config.root
-    dataset_folder = os.path.join(root, dataset)
+    chunkdist_name = f"{dataset}_chunkdist_{chunkdist_n}"
+
+    if not os.path.exists(config.root):
+        assert False, f"Directory {config.root} does not exist, please create it before continuing"
+
+    chunking_path = os.path.join(config.root, "chunking")
+
+    if not os.path.exists(chunking_path):
+        os.mkdir(chunking_path)
     
-    if not os.path.exists(dataset_folder):
-        os.mkdir(dataset_folder)
-
-    chunking_folder = os.path.join(dataset_folder, "chunking")
-
-    if not os.path.exists(chunking_folder):
-        os.mkdir(chunking_folder)
+    chunking_path = os.path.join(chunking_path, chunkdist_name)
+    if not os.path.exists(chunking_path):
+        os.mkdir(chunking_path)
+    else:
+        assert False, f"Directory {chunking_path} already exists, please remove it before continuing"
     
     ds = get_data.dataset(dataset)
     ds = ds(two_cat=True, size=size)
     
-    chunked_data = chunker_functions.chunk_data_multiclass_supersample(dataset = ds,
+    chunked_data = chunk_data_multiclass_supersample(dataset = ds,
                                                     n_chunks_per_mix=chunk_amount,
                                                     chunk_size = chunk_size,
                                                     shuffle=config.shuffle,
                                                     seed=config.seed)
     
-    new_chunkdist = os.path.join(chunking_folder, f"{dataset}_chunkdist_{chunkdist_n}")
-
-    if not os.path.exists(new_chunkdist):
-        os.mkdir(new_chunkdist)
-    else:
-        assert False, f"Directory {new_chunkdist} already exists, please remove it before continuing"
 
     for i in tqdm(range(len(chunked_data[0]))):
 
@@ -76,32 +74,22 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, chunkdist_
                      "orig_val_y": orig_val_y
                      }
         
-        chunker_functions.write_chunks(new_chunkdist, train_val)
+        write_chunks(chunking_path, train_val)
     
-
+    
     train_length = len(chunked_data[0][0])
     chunk_amount = len(chunked_data[0])
     validation_length = 0 
     n_classes = chunked_data[-1]
 
-    print()
-    print("**************************************************************")
-    print(f"name:                       {dataset}_chunkdist_{chunkdist_n}")
-    print(f"size per train-chunk:       {train_length}")
-    print(f"size per validation-chunk:  {validation_length}")
-    print(f"number of chunks:           {chunk_amount}")
-    print(f"number of classes:          {n_classes}")
-    print("**************************************************************")
-    print()
-
-    chunker_functions.write_meta_chunks(new_chunkdist, 
-                                        train_length, 
-                                        validation_length, 
-                                        dataset, 
-                                        n_classes, 
-                                        config.seed, 
-                                        config.shuffle, 
-                                        chunk_amount)
+    write_meta_chunks(chunking_path, 
+                    train_length, 
+                    validation_length, 
+                    dataset, 
+                    n_classes, 
+                    config.seed, 
+                    config.shuffle, 
+                    chunk_amount)
 
 
 if __name__ == "__main__":
@@ -113,7 +101,6 @@ if __name__ == "__main__":
     parser.add_argument("--chunk_amount", type=int, nargs ='?', default=1, help="Set amount of chunks to stage at a time. Minimum value is 1. Default value is 1.")
     parser.add_argument("--chunkdist_n", type=int, help="Set size for individual batch, must be >= 0. ")
     parser.add_argument("--size", type=str, help="Size of dataset to use")
-
     
     args = parser.parse_args()
 

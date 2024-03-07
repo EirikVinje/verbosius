@@ -6,6 +6,7 @@ import gzip
 import spacy
 from bs4 import BeautifulSoup
 
+import config as config
 
 def strip_html(textdata):
     
@@ -188,6 +189,31 @@ def write_data(data, path, n):
 
     with gzip.open(dir, "wb") as f:
         pickle.dump(data, f)
+
+
+def set_directory(chunkdist_name):
+
+        if not os.path.exists(config.root):
+            assert False, f"Directory {config.root} does not exist, please create it before continuing"
+
+        preprocess_path = os.path.join(config.root, "preprocess")
+        if not os.path.exists(preprocess_path):
+            os.mkdir(preprocess_path)
+        
+        preprocess_path = os.path.join(preprocess_path, chunkdist_name)
+        if not os.path.exists(preprocess_path):
+            os.mkdir(preprocess_path)
+        else:
+            assert False, f"Directory {preprocess_path} already exists, please remove it before continuing" 
+
+        chunking_path = os.path.join(config.root, "chunking")
+        if not os.path.exists(chunking_path):
+            assert False, f"Chunking folder {chunking_path} does not exist, please check your input"
+
+        chunking_path = os.path.join(chunking_path, chunkdist_name)
+        if not os.path.exists(chunking_path):
+            assert False, f"Chunk distribution {chunking_path} does not exist, please check your input"
+
 
 if __name__ == "__main__":
 

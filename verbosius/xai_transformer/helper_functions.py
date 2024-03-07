@@ -37,6 +37,47 @@ class Dataset(torch.utils.data.Dataset):
         }
     
 
+class IterableDataset(torch.utils.data.IterableDataset):
+    def __init__(self, chunks, dir, seed):        
+        
+        self.rng = np.random.default_rng(seed=seed)
+
+        self.chunks = chunks
+        self.rng.shuffle(self.chunks)
+        
+        self.dir = dir
+    
+    def __len__(self):
+
+        length = 0
+
+        for chunk in self.chunks:
+
+            with gzip.open(os.path.join(self.dir, chunk), "rb") as f:
+                data = pickle.load(f)
+
+            length += len(data)
+
+        return length
+            
+    def load_chunk(self, chunks):
+        
+        for chunk in chunks:
+            
+            with gzip.open(os.path.join(self.dir, chunk), "rb") as f:
+                data = pickle.load(f)
+
+            self.rng.shuffle(data)
+
+            for sample in data:
+                yield sample
+
+    def __iter__(self):
+        
+        for sample in self.load_chunk(self.chunks):
+            yield sample
+
+
 class Test_Dataset(torch.utils.data.Dataset):
     def __init__(self, input_ids, attention_mask, targets):
         self.input_ids = input_ids
@@ -156,6 +197,21 @@ def tokenize_and_align_labels(data, tokenizer, orig_labels : bool = False):
     output["targets"] = tokenized_inputs["targets"]
     output["sentiment"] = Y
 
+    # convert to list of dicts
+    temp = []
+    for i in range(len(output["input_ids"])):
+        temp.append(
+            {
+                "input_ids": output["input_ids"][i],
+                "attention_mask": output["attention_mask"][i],
+                "labels": output["labels"][i],
+                "targets": output["targets"][i],
+                "sentiment": output["sentiment"][i]
+            }
+        )    
+
+    output = temp
+
     return output
 
 
@@ -185,6 +241,17 @@ def extend_test(data, new_chunk):
 def custom_data_collator(batch_input):
 
     device = config.device
+
+    try:
+        batch_input[0]["input_ids"]
+        batch_input[0]["attention_mask"]
+        batch_input[0]["labels"]
+        batch_input[0]["targets"]
+        batch_input[0]["sentiment"]
+
+    except:
+        print(batch_input)
+        assert False, "Batch input does not contain all required keys"
 
     input_ids = [torch.tensor(inst["input_ids"], dtype=torch.long) for inst in batch_input]
     attention_mask = [torch.tensor(inst["attention_mask"], dtype=torch.long) for inst in batch_input]
@@ -220,4 +287,18 @@ def custom_data_collator(batch_input):
     return new_batch_input
 
 
+def set_directory(root, chunkdist_name):
 
+    models_folder = os.path.join(root, "models")
+    if not os.path.exists(models_folder):
+        os.mkdir(models_folder)
+
+    model_folder = os.path.join(models_folder, chunkdist_name)
+    if not os.path.exists(model_folder):
+        os.mkdir(model_folder)
+    else:
+        assert False, f"Directory {model_folder} already exists, please remove it before continuing"
+
+    trainingdata_folder = os.path.join(root, "trainingdata")
+    if not os.path.exists(trainingdata_folder):
+        assert False, f"Trainingdata folder {trainingdata_folder} does not exist, please check your input"
