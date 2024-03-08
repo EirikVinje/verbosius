@@ -10,6 +10,7 @@ import gc
 from sklearn.model_selection import train_test_split
 from transformers import TrainingArguments, Trainer
 from torch.utils.data import DataLoader
+from torch.optim import AdamW
 from tqdm import tqdm
 import torch
 
@@ -43,15 +44,14 @@ def stage_transformer(dataset : str, chunkdist_n : int):
 
     set_directory(config.root, chunkdist_name)
 
-    trainingdata_path = os.path.join(config.root, "trainingdata", chunkdist_name)
-    chunks_list = os.listdir(trainingdata_path)
-
-    dataset = IterableDataset(chunks_list, trainingdata_path, config.seed)
-
-    # dataloader = DataLoader(dataset=dataset, 
-    #                         batch_size=config.trainer_batch_size, 
-    #                         collate_fn=custom_data_collator)
+    train_path = os.path.join(config.root, "trainingdata", chunkdist_name, "train")
+    train_chunks = os.listdir(train_path)
+    train_dataset = IterableDataset(train_chunks, train_path)
     
+    eval_path = os.path.join(config.root, "trainingdata", chunkdist_name, "eval")
+    eval_chunks = os.listdir(eval_path)
+    eval_dataset = IterableDataset(eval_chunks, eval_path)
+
     model = CustomModel(config.num_tok_labels, config.num_seq_labels, config.neutral_weight, config.loss_weight).to(config.device)
     
     model_dir = os.path.join(config.root, "models", chunkdist_name)
@@ -74,22 +74,25 @@ def stage_transformer(dataset : str, chunkdist_n : int):
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=dataset,
+        train_dataset=train_dataset,
+        eval_dataset=eval_dataset,
         tokenizer=config.tokenizer,
         compute_metrics=compute_metrics,
-        data_collator=custom_data_collator)
+        data_collator=custom_data_collator,
+        optimizers=(AdamW(model.parameters(), lr=config.learning_rate), None)
+        )
 
     trainer.train()
 
     torch.save(model, os.path.join(model_dir, "model_t"))
 
-    del train_data
-    del val_data
-    del model
+    train_dataset = None
+    eval_dataset = None
+    model = None
+    trainer = None
     
     gc.collect()
-    torch.cuda.empty_cache()
-
+    
     end_t = time.time()
 
     time_dict = {"time_hours" : (end_t - start_t) / 3600}

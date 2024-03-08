@@ -3,12 +3,14 @@ from copy import deepcopy
 import pickle
 import os
 import gzip
+import math
 
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_selection import SelectKBest, chi2, f_classif, mutual_info_classif
 from sklearn.model_selection import train_test_split
 import green_tsetlin as gt
+from tqdm import tqdm
 
 import config as config
 
@@ -97,7 +99,7 @@ def rulemaker(train_x, train_y, error_params : bool = False):
                          seed=SEED, 
                          n_jobs=N_JOBS, 
                          early_exit_acc=EARLY_STOP_ACC,
-                         progress_bar= True)
+                         progress_bar= False)
 
     trainer.train(tm)    
 
@@ -404,9 +406,16 @@ def make_weighted_data(train_data, error_params : bool = False):
     return train_data, train_error_data
 
 
-def write_chunk(data, output, n):
+def write_train_chunk(data, output, n):
 
-    filepath = os.path.join(output, f"trainingdata_chunk_{n}_.pkl")
+    filepath = os.path.join(output, f"train_chunk_{n}_.pkl")
+    with gzip.open(filepath, "wb") as file:
+        pickle.dump(data, file)
+
+
+def write_eval_chunk(data, output, n):
+    
+    filepath = os.path.join(output, f"eval_chunk_{n}_.pkl")
     with gzip.open(filepath, "wb") as file:
         pickle.dump(data, file)
 
@@ -414,6 +423,10 @@ def write_chunk(data, output, n):
 def write_error_chunk(data, output, n):
     
     filepath = os.path.join(output, f"preprocess_chunk_{n+100000}_e.pkl")
+    
+    if os.path.exists(filepath):
+        assert False, f"Remove all files ending with _e.pkl in {output} before continuing."
+    
     with gzip.open(filepath, "wb") as file:
         pickle.dump(data, file)
 
@@ -423,12 +436,19 @@ def set_directory(chunkdist_name):
     trainingdata_folder = os.path.join(config.root, "trainingdata")
     if not os.path.exists(trainingdata_folder):
         os.mkdir(trainingdata_folder)
-
-    trainingdata_chunkdist = os.path.join(trainingdata_folder, chunkdist_name)
-    if not os.path.exists(trainingdata_chunkdist):
-        os.mkdir(trainingdata_chunkdist)
+    
+    trainingdata_folder = os.path.join(trainingdata_folder, chunkdist_name)
+    if not os.path.exists(trainingdata_folder):
+        os.mkdir(trainingdata_folder)
     else:
-        assert False, f"Directory {trainingdata_chunkdist} already exists, please remove it before continuing"
+        assert False, f"Directory {trainingdata_folder} already exists, please remove it before continuing"
+
+    train_folder = os.path.join(trainingdata_folder, "train")
+    if not os.path.exists(train_folder):
+        os.mkdir(train_folder)
+    eval_folder = os.path.join(trainingdata_folder, "eval")
+    if not os.path.exists(eval_folder):
+        os.mkdir(eval_folder)
 
     preprocess_folder = os.path.join(config.root, "preprocess")
     if not os.path.exists(preprocess_folder):
@@ -439,7 +459,42 @@ def set_directory(chunkdist_name):
         assert False, f"Chunk distribution {preprocess_chunkdist} does not exist, please check your input"
 
 
+def make_eval(eval_path, train_path, total_size):
 
+    print("total_size", total_size)
+
+    rng = np.random.default_rng(config.seed)
+    max_eval_size = math.ceil(total_size * 0.1)
+    eval_data = []
+
+    train_dir = os.listdir(train_path)
+    rng.shuffle(train_dir)
+
+    
+    with tqdm(total=max_eval_size, desc="Making eval data") as bar:
+
+        for chunk_name in train_dir:
+            
+            chunk = os.path.join(train_path, chunk_name)
+            with gzip.open(chunk, "rb") as f:
+                data = pickle.load(f)
+
+            rng.shuffle(data)
+
+            rest = max_eval_size - (len(eval_data) + len(data))
+
+            if rest >= 0:
+                eval_data.extend(data)
+                os.remove(chunk)
+                bar.update(len(data))
+
+            elif rest < 0 and len(eval_data) < max_eval_size:
+                eval_data.extend(data[:rest])
+                os.remove(chunk)
+                write_train_chunk(data[rest:], train_path, int(chunk_name.split("_")[2]))
+                bar.update(len(data[:rest]))
+
+    write_eval_chunk(eval_data, eval_path, 0)
 
 
 

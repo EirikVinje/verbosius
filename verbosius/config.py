@@ -4,7 +4,7 @@ from sklearn.feature_selection import chi2, f_classif, mutual_info_classif
 
 # *************** INIT ***************
 
-seed = 69
+seed = 42
 
 dataset = "amazon"
 user = os.environ.get("USER")
@@ -15,10 +15,6 @@ num_train_epochs = 5
 num_tok_labels = 3 # transformer
 num_seq_labels = 5 # transformer
 NUM_TM_LABELS = 3 # TM
-
-# *************** PREPROSESSING *************** #
-
-shuffle=True
 
 # *************** GENERATE TRAINING DATA *************** #
 

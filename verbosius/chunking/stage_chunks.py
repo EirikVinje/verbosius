@@ -51,11 +51,11 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, chunkdist_
     chunked_data = chunk_data_multiclass_supersample(dataset = ds,
                                                     n_chunks_per_mix=chunk_amount,
                                                     chunk_size = chunk_size,
-                                                    shuffle=config.shuffle,
+                                                    shuffle=True,
                                                     seed=config.seed)
     
 
-    for i in tqdm(range(len(chunked_data[0]))):
+    for i in tqdm(range(len(chunked_data[0])), desc="Staging chunks"):
 
         train_x = chunked_data[0][i]
         train_y = chunked_data[1][i]
@@ -88,7 +88,7 @@ def stage_chunks(dataset : str, chunk_size : int, chunk_amount : int, chunkdist_
                     dataset, 
                     n_classes, 
                     config.seed, 
-                    config.shuffle, 
+                    True, 
                     chunk_amount)
 
 

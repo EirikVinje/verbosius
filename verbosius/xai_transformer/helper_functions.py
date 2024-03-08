@@ -38,24 +38,20 @@ class Dataset(torch.utils.data.Dataset):
     
 
 class IterableDataset(torch.utils.data.IterableDataset):
-    def __init__(self, chunks, dir, seed):        
+    def __init__(self, chunks, dir):        
         
-        self.rng = np.random.default_rng(seed=seed)
-
+        self.rng = np.random.default_rng(seed=config.seed)
         self.chunks = chunks
         self.rng.shuffle(self.chunks)
-        
         self.dir = dir
     
     def __len__(self):
 
         length = 0
-
         for chunk in self.chunks:
 
             with gzip.open(os.path.join(self.dir, chunk), "rb") as f:
                 data = pickle.load(f)
-
             length += len(data)
 
         return length
@@ -63,10 +59,9 @@ class IterableDataset(torch.utils.data.IterableDataset):
     def load_chunk(self, chunks):
         
         for chunk in chunks:
-            
+        
             with gzip.open(os.path.join(self.dir, chunk), "rb") as f:
                 data = pickle.load(f)
-
             self.rng.shuffle(data)
 
             for sample in data:
@@ -240,19 +235,6 @@ def extend_test(data, new_chunk):
 
 def custom_data_collator(batch_input):
 
-    device = config.device
-
-    try:
-        batch_input[0]["input_ids"]
-        batch_input[0]["attention_mask"]
-        batch_input[0]["labels"]
-        batch_input[0]["targets"]
-        batch_input[0]["sentiment"]
-
-    except:
-        print(batch_input)
-        assert False, "Batch input does not contain all required keys"
-
     input_ids = [torch.tensor(inst["input_ids"], dtype=torch.long) for inst in batch_input]
     attention_mask = [torch.tensor(inst["attention_mask"], dtype=torch.long) for inst in batch_input]
     targets = [torch.tensor(inst["targets"], dtype=torch.long) for inst in batch_input]
@@ -269,19 +251,19 @@ def custom_data_collator(batch_input):
     if sentiment == None and labels == None:
         
         new_batch_input = {
-        "input_ids": input_ids.to(device),
-        "attention_mask": attention_mask.to(device),
-        "targets": targets.to(device)
+        "input_ids": input_ids.to(config.device),
+        "attention_mask": attention_mask.to(config.device),
+        "targets": targets.to(config.device)
         }
 
         return new_batch_input
 
     new_batch_input = {
-        "input_ids": input_ids.to(device),
-        "attention_mask": attention_mask.to(device),
-        "labels": labels.to(device),
-        "targets": targets.to(device),
-        "sentiment": torch.stack(sentiment).to(device)
+        "input_ids": input_ids.to(config.device),
+        "attention_mask": attention_mask.to(config.device),
+        "labels": labels.to(config.device),
+        "targets": targets.to(config.device),
+        "sentiment": torch.stack(sentiment).to(config.device)
     }
 
     return new_batch_input

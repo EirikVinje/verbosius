@@ -4,7 +4,7 @@ from transformers.modeling_outputs import TokenClassifierOutput
 from transformers import AutoModel
 
 
-class CustomModel(nn.Module):
+class CustomModel(nn.Module): # transformers.modeling_utils.PreTrainedModel
 
     def __init__(self, num_tok_labels, num_seq_labels, neutral_weight, loss_weight, model_name='distilroberta-base'): 
         super(CustomModel,self).__init__() 
