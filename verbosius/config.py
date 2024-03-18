@@ -7,12 +7,12 @@ from sklearn.feature_selection import chi2, f_classif, mutual_info_classif
 seed = 69
 
 dataset = "amazon"
-chunkdist_n = 696969696
+chunkdist_n = 6165
 user = os.environ.get("USER")
 root = f"/home/{user}/data/verbosius/" 
 chunk_size = 8000
-chunk_amount = 125
-TM_EPOCHS = 20
+chunk_amount = 75
+TM_EPOCHS = 50
 num_train_epochs = 10
 
 num_labels = 3
@@ -29,19 +29,19 @@ validation=False
 
 # *************** GENERATE TRAINING DATA ***************
 
-MAX_FEATURES = 1750
-MAX_DF = 0.7086319286046587
-MIN_DF = 2
-NUMBER_OF_CLAUSES = 4000
-S = 17.7
-T = 5000
-ERROR_MAX_FEATURES = 700
-ERROR_NUMBER_OF_CLAUSES = 3200
-ERROR_S = 25.61065
-ERROR_T = 1750
-ERROR_MAX_DF = 0.437663961421369
-ERROR_MIN_DF = 2
-SKB_score_func = mutual_info_classif
+MAX_FEATURES = 1000
+MAX_DF = 0.54
+MIN_DF = 9
+NUMBER_OF_CLAUSES = 6300
+S = 28.4
+T = 4600
+ERROR_MAX_FEATURES = 900
+ERROR_NUMBER_OF_CLAUSES = 3700
+ERROR_S = 26.2
+ERROR_T = 4800
+ERROR_MAX_DF = 0.51
+ERROR_MIN_DF = 9
+SKB_score_func = f_classif
 
 STOPWORDS = None
 N_JOBS = 5
@@ -65,9 +65,9 @@ label_names = ['labels', 'sentiment']
 
 per_device_eval_batch_size = 8
 per_device_train_batch_size = 8
-learning_rate = 1.539e-5
-neutral_weight = 0.0001 
-loss_weight = 5.0
+learning_rate =  1.9729419811296342e-05
+neutral_weight = 0.0419
+loss_weight = 8.2
 
 # *************** TESTING ***************
 
