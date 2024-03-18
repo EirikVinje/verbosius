@@ -7,9 +7,8 @@ import shutil
 
 from tqdm import tqdm
 
-from trainingdata.generate_trainingdata import make_weighted_data, write_train_chunk, write_error_chunk, set_directory, make_eval
-from xai_transformer.helper_functions import tokenize_and_align_labels
-import trainingdata.generate_trainingdata as gen_data
+from trainingdata.helper_functions import make_weighted_data, write_train_chunk, write_error_chunk, set_directory, make_eval
+import trainingdata.helper_functions as gen_data
 import config as config
 import arg_funcs as af
 
@@ -39,13 +38,10 @@ def stage_trainingdata(dataset : str, chunkdist_n : int):
     preprocess_path = os.path.join(config.root, "preprocess", chunkdist_name)
     trainingdata_path = os.path.join(config.root, "trainingdata", chunkdist_name)
 
-    train_path = os.path.join(trainingdata_path, "train")
-    eval_path = os.path.join(trainingdata_path, "eval")
-
     total_size = 0
     dir_len = len(os.listdir(preprocess_path)) * 2
     
-    for n in tqdm(range(dir_len), desc="Staging trainingdata"):
+    for n in tqdm(range(dir_len), desc="weighting data with TM"):
         
         dir = sorted(os.listdir(preprocess_path), key=lambda x: int(x.split("_")[2]))
 
@@ -61,24 +57,19 @@ def stage_trainingdata(dataset : str, chunkdist_n : int):
         if chunk[-5] != "e":
             
             train, train_error = make_weighted_data(train, error_params=False)
-            tokenized_train = tokenize_and_align_labels(train, config.tokenizer, orig_labels=True)
-            write_train_chunk(tokenized_train, train_path, n)
+            write_train_chunk(train, trainingdata_path, n)
             write_error_chunk(train_error, preprocess_path, n)
-            total_size += len(tokenized_train)
+            total_size += len(train)
             
         elif chunk[-5] == "e":
 
             train, _ = make_weighted_data(train, error_params=True)
-            tokenized_train = tokenize_and_align_labels(train, config.tokenizer, orig_labels=True)
-            write_train_chunk(tokenized_train, train_path, n)
-            total_size += len(tokenized_train)
+            write_train_chunk(train, trainingdata_path, n)
+            total_size += len(train)
             
         train = None
         train_error = None
         gc.collect()
-    
-    
-    make_eval(eval_path, train_path, total_size)
     
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ import pickle
 import os
 import argparse
 import gzip
+import warnings
 
 from tqdm import tqdm
 
@@ -40,7 +41,7 @@ def stage_preprocess(dataset:str, chunkdist_n : int):
     chunk_dist_data = os.path.join(chunking_path, "train")
     chunks = sorted(os.listdir(chunk_dist_data), key=lambda x: int(x.split("_")[2]))
 
-    for i, chunk in enumerate(tqdm(chunks, desc="Staging preprocess data")):
+    for i, chunk in enumerate(tqdm(chunks, desc="preprocessing chunks")):
         
         chunk = os.path.join(chunk_dist_data, chunk)
         

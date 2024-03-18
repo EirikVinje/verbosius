@@ -443,13 +443,6 @@ def set_directory(chunkdist_name):
     else:
         assert False, f"Directory {trainingdata_folder} already exists, please remove it before continuing"
 
-    train_folder = os.path.join(trainingdata_folder, "train")
-    if not os.path.exists(train_folder):
-        os.mkdir(train_folder)
-    eval_folder = os.path.join(trainingdata_folder, "eval")
-    if not os.path.exists(eval_folder):
-        os.mkdir(eval_folder)
-
     preprocess_folder = os.path.join(config.root, "preprocess")
     if not os.path.exists(preprocess_folder):
         assert False, f"Preprocess folder {preprocess_folder} does not exist, please check your input"

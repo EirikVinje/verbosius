@@ -2,16 +2,25 @@ import re
 import pickle
 import os
 import gzip
+import warnings
 
-import spacy
 from bs4 import BeautifulSoup
+import spacy
 
 import config as config
 
+
+warnings.filterwarnings("ignore", category=UserWarning, message="MarkupResemblesLocatorWarning")
+
+
 def strip_html(textdata):
     
-    soup = BeautifulSoup(textdata, "html.parser")
-    return soup.get_text()
+    with warnings.catch_warnings():
+    
+        warnings.simplefilter("ignore")
+
+        soup = BeautifulSoup(textdata, "html.parser")
+        return soup.get_text()
 
 
 def clean_text(textdata):

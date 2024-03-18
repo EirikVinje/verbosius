@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 
-import trainingdata.generate_trainingdata as generate_trainingdata
+import trainingdata.helper_functions as helper_functions
 
 
 def test_grams1():
@@ -25,12 +25,12 @@ def test_grams1():
     sentiment = 1
     threshold = 0.0
 
-    grams, weights  = generate_trainingdata.find_grams(tokens, vocabulary)
+    grams, weights  = helper_functions.find_grams(tokens, vocabulary)
     
     expected = ["i", "was happy", "happy with the", "the movie but", "not with", "with the popcorn"]
     assert " ".join(grams) == " ".join(expected), grams
 
-    grams_fit, weights_fit = generate_trainingdata.fit_grams(grams, weights)
+    grams_fit, weights_fit = helper_functions.fit_grams(grams, weights)
     
     expected = ["i", "was", "happy with the", "movie but", "not", "with the popcorn"]
     assert " ".join(grams_fit) == " ".join(expected), grams_fit
@@ -58,13 +58,13 @@ def test_grams2():
     sentiment = 1
     threshold = 0.0
 
-    grams, weights  = generate_trainingdata.find_grams(tokens, vocabulary)
+    grams, weights  = helper_functions.find_grams(tokens, vocabulary)
     
     expected = ["i have", "have seen this", "seen this movie", "this movie and", "i liked", "liked it", "it very", "very much"]
 
     assert " ".join(grams) == " ".join(expected), grams
 
-    fit_grams, fit_weights = generate_trainingdata.fit_grams(grams, weights)
+    fit_grams, fit_weights = helper_functions.fit_grams(grams, weights)
     
     expected = ["i", "have seen this", "movie and", "i liked", "it very", "much"]
 
@@ -97,9 +97,9 @@ def test_grams3():
     sentiment = 1
     threshold = 0.0
 
-    grams, weights  = generate_trainingdata.find_grams(tokens, vocabulary)
+    grams, weights  = helper_functions.find_grams(tokens, vocabulary)
     
-    fit_grams, fit_weights = generate_trainingdata.fit_grams(grams, weights)
+    fit_grams, fit_weights = helper_functions.fit_grams(grams, weights)
 
     assert " ".join(fit_grams) == text, fit_grams
     #assert fit_weights == [1], fit_weights
@@ -137,9 +137,9 @@ def test_grams4():
     sentiment = 1
     threshold = 0.0
 
-    grams, weights  = generate_trainingdata.find_grams(tokens, vocabulary)
+    grams, weights  = helper_functions.find_grams(tokens, vocabulary)
 
-    fit_grams, fit_weights = generate_trainingdata.fit_grams(grams, weights)
+    fit_grams, fit_weights = helper_functions.fit_grams(grams, weights)
 
     assert " ".join(fit_grams) == text, fit_grams
 
@@ -151,7 +151,7 @@ def test_convert_to_not_lemma1():
     grammies = ["i have", "nt seen your", "cat", "s since yesterday"]
     weights = [1, 1, 1, 1]
     
-    new_grammies, weights = generate_trainingdata.convert_to_not_lemma(token_map, tokens, grammies, weights)
+    new_grammies, weights = helper_functions.convert_to_not_lemma(token_map, tokens, grammies, weights)
 
     expected_grammies = ["i havent", "seen your", "cats" ,"since yesterday"]
     
@@ -166,9 +166,9 @@ def test_convert_to_not_lemma2():
     
     token_map = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 143, 144]
 
-    found_grammies, weights = generate_trainingdata.find_grams(tokens, vocabulary)
+    found_grammies, weights = helper_functions.find_grams(tokens, vocabulary)
 
-    fit_grammies, fit_weights = generate_trainingdata.fit_grams(found_grammies, weights)
+    fit_grammies, fit_weights = helper_functions.fit_grams(found_grammies, weights)
 
 
 def test_fit_grams():
@@ -186,12 +186,12 @@ def test_fit_grams():
         "very" : 1
     }
 
-    found_grammies, weights = generate_trainingdata.find_grams(tokens, vocabulary)
+    found_grammies, weights = helper_functions.find_grams(tokens, vocabulary)
 
     expected = ["i have seen", "have seen this", "this movie", "movie and i ", "and i liked", "liked it very", "very", "much"]
     assert found_grammies == expected, found_grammies
 
-    fit_grammies, fit_weights = generate_trainingdata.fit_grams(found_grammies, weights)
+    fit_grammies, fit_weights = helper_functions.fit_grams(found_grammies, weights)
 
     expected = ["i have seen", "this", "movie and i", "liked it very", "very", "much"]
     assert fit_grammies == expected, fit_grammies
@@ -207,7 +207,7 @@ def test_find_grams():
         "this way" : 1
     }
 
-    grams, _ = generate_trainingdata.find_grams(toks, vocab)
+    grams, _ = helper_functions.find_grams(toks, vocab)
 
     expected = ["lets put it", "this way"]
     assert grams == expected, grams
@@ -218,7 +218,7 @@ def test_find_grams():
         "it this way" : 1
     }
 
-    grams, _ = generate_trainingdata.find_grams(toks, vocab)
+    grams, _ = helper_functions.find_grams(toks, vocab)
 
     expected = ["lets put it", "put it this", "it this way"]
     assert grams == expected, grams
@@ -230,7 +230,7 @@ def test_find_grams():
         "this way" : 1
     }
 
-    grams, _ = generate_trainingdata.find_grams(toks, vocab)
+    grams, _ = helper_functions.find_grams(toks, vocab)
 
     expected = ["lets put", "it this", "this way"]
     assert grams == expected, grams
@@ -243,7 +243,7 @@ def test_find_grams():
         "way" : 1
     }
 
-    grams, _ = generate_trainingdata.find_grams(toks, vocab)
+    grams, _ = helper_functions.find_grams(toks, vocab)
 
     expected = ["lets", "put", "it", "this", "way"]
     assert grams == expected, grams
@@ -256,7 +256,7 @@ def test_find_grams():
         "it this way" : 1,
     }
 
-    grams, _ = generate_trainingdata.find_grams(toks, vocab)
+    grams, _ = helper_functions.find_grams(toks, vocab)
 
     assert grams == [], grams
 
@@ -290,7 +290,7 @@ def test_new_new_weight_grams():
         "very much" : 2
     }
     
-    tokens, weights = generate_trainingdata.weight_tokens(lemmas, tokens, vocabulary, token_map)
+    tokens, weights = helper_functions.weight_tokens(lemmas, tokens, vocabulary, token_map)
     
     expected_tokens = ["i", "havent", "seen", "your", "cats", "since", "yesterday", "and", "i", "like", "them", "very", "very", "much", "kjell", "aage"]
     assert tokens == expected_tokens, tokens
