@@ -12,9 +12,7 @@ import config
 
 
 class Preprocess:
-    def __init__(self, 
-                 partion_n, 
-                 from_partion_n : None):
+    def __init__(self, partion_n):
 
         self.chunking_dir = os.path.join(config.root, "chunking")
         self.preprocess_dir = os.path.join(config.root, "preprocess")
@@ -25,9 +23,9 @@ class Preprocess:
         pass
 
 
-    def _load_chunk(self, name):
+    def _load_chunk(self, chunkname):
 
-        chunk_path = os.path.join(self.chunking_dir, self.partition, name)
+        chunk_path = os.path.join(self.chunking_dir, self.partition, chunkname)
         if not os.path.exists(chunk_path):
             assert False, f"Chunk does not exist : {chunk_path}"
 
@@ -151,3 +149,13 @@ class Preprocess:
             pickle.dump(train_data, f)
     
 
+    def main_loop(self):
+
+        chunks = os.listdir(os.path.join(self.chunking_dir, self.partition))
+        sorted_chunks = sorted(chunks, key=lambda x: int(x.split("_")[2]))
+
+        for chunkname in sorted_chunks:
+
+            chunk = self._load_chunk(chunkname)
+
+            
