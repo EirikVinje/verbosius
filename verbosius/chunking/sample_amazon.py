@@ -167,7 +167,7 @@ if __name__ == "__main__":
     user = os.environ["USER"]
     store_path = f"/home/{user}/data/verbosius/amazon/pre_chunking/"
     
-    name = "small"
+    name = "huge"
     
     store_dir = os.path.join(store_path, name)
 
@@ -180,9 +180,9 @@ if __name__ == "__main__":
 
     train_data, train_orig_labels, test_data = sample_amazon(datapath, 
                                                              rng=rng, 
-                                                             data_size=16_000, 
-                                                             test_size=1600, 
-                                                             load_size=500_000)
+                                                             data_size=9_000_000, 
+                                                             test_size=1_000_000, 
+                                                             load_size=80_000_000)
                                                              
     save_to_pickle(train_data, train_orig_labels, test_data, store_dir)
 
