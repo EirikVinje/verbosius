@@ -26,6 +26,16 @@ class Chunker:
         self.size = size
 
 
+    def __call__(self):
+        print("Setting up environment...")
+        self._build_environment()
+        print("Loading data...")
+        self.load_amazon()
+        print("Chunking data...")
+        self.chunk_data()
+        print("Done!")
+        
+
     def load_amazon(self):
 
         dir = os.path.join(config.root, "pre_chunking", self.size)
@@ -116,32 +126,59 @@ class Chunker:
                 self._write_chunk(i_x)
 
     
-    def _write_chunk(self, data):
+    def _write_chunk(self):
     
-        output = os.path.join(output, "train")
-
-        if not os.path.exists(output):
-            os.mkdir(output)
-        
-        dir = os.listdir(output)
-
         n = len(dir)
-
-        file = os.path.join(output, f"train_chunk_{n}_.pkl")
-
+        file = os.path.join(self.chunking_dir, f"train_chunk_{n}_.pkl")
         with gzip.open(file, "wb") as f:
-            pickle.dump(data, f)
+            pickle.dump(file, f)
+
+
+    def _build_environment(self):
+
+        if not os.path.exists(config.root):
+            assert False, f"Directory {config.root} does not exist, please create it before continuing"
+
+        self.chunking_dir = os.path.join(config.root, "chunking")
+        preprocess_dir = os.path.join(config.root, "preprocess")
+        weighted_dir = os.path.join(config.root, "weighted")
+        trainingdata_dir = os.path.join(config.root, "trainingdata")
+        models_dir = os.path.join(config.root, "models")
+
+        if not os.path.exists(self.chunking_dir):
+            os.mkdir(self.chunking_dir)
+
+        if not os.path.exists(preprocess_dir):
+            os.mkdir(preprocess_dir)
+        
+        if not os.path.exists(weighted_dir):
+            os.mkdir(weighted_dir)
+        
+        if not os.path.exists(trainingdata_dir):
+            os.mkdir(trainingdata_dir)
+        
+        train = os.path.join(trainingdata_dir, "train")
+        eval = os.path.join(trainingdata_dir, "eval")
+
+        if not os.path.exists(train):
+            os.mkdir(train)
+
+        if not os.path.exists(eval):
+            os.mkdir(eval)
+
+        if not os.path.exists(models_dir):
+            os.mkdir(models_dir)
 
     
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Stage data for training")
 
-    parser.add_argument("--dataset", type=str, help="Dataset to stage")
-    parser.add_argument("--chunk_size", type=int, nargs='?', default=10000, help="Set size for individual chunk, must be greater than 0. Default value is 10000. If used together with a train/test - split this chunk size will be split up into a train and test part accordingly. ")
-    parser.add_argument("--chunk_amount", type=int, nargs ='?', default=1, help="Set amount of chunks to stage at a time. Minimum value is 1. Default value is 1.")
-    parser.add_argument("--chunkdist_n", type=int, help="Set size for individual batch, must be >= 0. ")
-    parser.add_argument("--size", type=str, help="Size of dataset to use")
+    parser.add_argument("--dataset", type=str)
+    parser.add_argument("--chunk_size", type=int)
+    parser.add_argument("--chunk_amount", type=int)
+    parser.add_argument("--chunkdist_n", type=int)
+    parser.add_argument("--size", type=str)
     
     args = parser.parse_args()
 
@@ -150,6 +187,4 @@ if __name__ == "__main__":
     af.chunk_amount_checker(args.chunk_amount)
     af.chunckdist_n_checker(args.chunkdist_n)
 
-
-    chunker = Chunker(size=args.size, chunkdist_n=args.chunkdist_n, chunk_amount=args.chunk_amount)
-    chunker.chunk_data()
+    Chunker(size=args.size, chunkdist_n=args.chunkdist_n, chunk_amount=args.chunk_amount)
