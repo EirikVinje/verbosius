@@ -1,7 +1,4 @@
-import pickle
-import argparse
 import os
-import shutil
 
 import optuna
 import numpy as np
@@ -9,7 +6,7 @@ import green_tsetlin as gt
 from sklearn.feature_selection import chi2, f_classif, mutual_info_classif
 
 from chunking.stage_chunks import stage_chunks
-from preprocessing.stage_preprocess import stage_preprocess
+from preprocess.stage_preprocess import stage_preprocess
 from trainingdata.stage_trainingdata import stage_trainingdata
 from xai_transformer.stage_transformer import stage_transformer
 from xai_validation.stage_validation import stage_validation
@@ -56,21 +53,21 @@ if __name__ == "__main__":
     config.root = f"/home/{config.user}/data/verbosius/hpsearch_env/"
     config.seed = 42
 
-    config.chunkdist_n = 3204
+    config.chunkdist_n = 19404
     config.dataset = "amazon"
     config.chunk_size = 8000
     config.chunk_amount = 25
     config.TM_EPOCHS = 50
     
     study = optuna.create_study(study_name="TM_param_search_official_cs8000_ca75_final", direction="maximize", storage=f"sqlite:////home/{config.user}/projects/verbosius/sqlite3.db", load_if_exists=True)
-
-    stage_chunks(dataset=config.dataset,
-                 chunk_size=config.chunk_size,
-                 chunk_amount=config.chunk_amount,
-                 chunkdist_n=config.chunkdist_n)
     
-    stage_preprocess(dataset=config.dataset,
-                     chunkdist_n=config.chunkdist_n)
+    # stage_chunks(dataset=config.dataset,
+    #              chunk_size=config.chunk_size,
+    #              chunk_amount=config.chunk_amount,
+    #              chunkdist_n=config.chunkdist_n)
+    
+    # stage_preprocess(dataset=config.dataset,
+    #                  chunkdist_n=config.chunkdist_n)
 
     study.optimize(objective, n_trials=100, show_progress_bar=True)
     

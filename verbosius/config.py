@@ -4,72 +4,56 @@ from sklearn.feature_selection import chi2, f_classif, mutual_info_classif
 
 # *************** INIT ***************
 
-seed = 69
+seed = 42
 
-dataset = "amazon"
-chunkdist_n = 696969696
 user = os.environ.get("USER")
-root = f"/home/{user}/data/verbosius/" 
-chunk_size = 8000
-chunk_amount = 125
-TM_EPOCHS = 20
-num_train_epochs = 10
+root = f"/home/{user}/data/verbosius/amazon" 
+TM_EPOCHS = 1
+num_train_epochs = 1
 
-num_labels = 3
-num_seq_labels = 5
-NUM_TM_LABELS = 3
+num_tok_labels = 3 # transformer
+num_seq_labels = 5 # transformer
+NUM_TM_LABELS = 3 # TM
 
+# *************** GENERATE TRAINING DATA *************** #
 
-# *************** PREPROSESSING *************** 
-
-shuffle=True
-test_size=0.2
-val_size=0.2
-validation=False
-
-# *************** GENERATE TRAINING DATA ***************
-
-MAX_FEATURES = 1750
-MAX_DF = 0.7086319286046587
-MIN_DF = 2
-NUMBER_OF_CLAUSES = 4000
-S = 17.7
-T = 5000
-ERROR_MAX_FEATURES = 700
-ERROR_NUMBER_OF_CLAUSES = 3200
-ERROR_S = 25.61065
-ERROR_T = 1750
-ERROR_MAX_DF = 0.437663961421369
-ERROR_MIN_DF = 2
-SKB_score_func = mutual_info_classif
-
+ERROR_MAX_DF = 0.67
+ERROR_MAX_FEATURES = 900
+ERROR_MIN_DF = 9
+ERROR_NUMBER_OF_CLAUSES = 3700
+ERROR_S = 26.200000000000003
+ERROR_T = 4800
+MAX_DF = 0.54
+MAX_FEATURES = 1000
+MIN_DF = 9
+NUMBER_OF_CLAUSES = 6300
+S = 28.400000000000002
+SKB_score_func = f_classif
 STOPWORDS = None
+T = 4600
+
 N_JOBS = 5
 EARLY_STOP_ACC=1.0
-error_chunk=True
-n_badtexts=2000
-CV_MAX_FEATURES=40000
+CV_MAX_FEATURES=60000
 N_GRAM_RANGE=(1, 2)
 LITERAL_BUDGET=6
 ERROR_LITERAL_BUDGET = 6
 
-# *************** TRANSFORMER ***************
+# *************** TRANSFORMER *************** #
 
 device="cuda"
-model_name_ = "distilroberta-base"
-tokenizer = AutoTokenizer.from_pretrained(model_name_, add_prefix_space=True, device=device)
+tokenizer = AutoTokenizer.from_pretrained("distilroberta-base", add_prefix_space=True, device=device)
 evaluation_strategy = "epoch"
 save_strategy = "epoch"
 load_best_model_at_end = True
 label_names = ['labels', 'sentiment']
 
-per_device_eval_batch_size = 8
-per_device_train_batch_size = 8
-learning_rate = 1.539e-5
-neutral_weight = 0.0001 
-loss_weight = 5.0
+trainer_batch_size = 8
 
-# *************** TESTING ***************
+learning_rate = 1.9729419811296342e-05
+neutral_weight = 0.0419 
+loss_weight = 8.2
+
 
 
 

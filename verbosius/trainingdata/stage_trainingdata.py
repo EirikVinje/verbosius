@@ -1,11 +1,14 @@
 import os
 import pickle 
 import argparse
+import gc
+import gzip
+import shutil
+
 from tqdm import tqdm
 
-from sklearn.model_selection import train_test_split
-
-import trainingdata.generate_trainingdata as gen_data
+from trainingdata.helper_functions import make_weighted_data, write_train_chunk, write_error_chunk, set_directory, make_eval
+import trainingdata.helper_functions as gen_data
 import config as config
 import arg_funcs as af
 
@@ -15,81 +18,59 @@ def stage_trainingdata(dataset : str, chunkdist_n : int):
     """
     Stage trainingdata for transformer.
     Uses TM to weight individual tokens in a sequence of text.
+    Prepares trainingdata for transformer by tokenizing and aligning labels.    
 
     Parameters
     ----------
     dataset : str
         Name of dataset to stage trainingdata for.
-    
-    input : str
-        Path to input data from preprocessed chunk. Must be absolute path to directory.
 
-    output : str
-        Path to output of this module. Must be absolute path to directory.
-    
     chunkdist_n : int
-        ID of chunkdist to use for trainingdata. Must be an integer. Will be used to name the output directory, e.g "path/to/output/{dataset}_chunkdist_{chunkdist_n}".
-    
-    
+        ID (int) of chunkdist to use for trainingdata. Must be an integer. Will be used to name the output directory, e.g "path/to/output/{dataset}_chunkdist_{chunkdist_n}".
     """
 
-    root = config.root
+    os.system(f"rm -rf /home/{config.user}/data/verbosius/amazon/preprocess/amazon_chunkdist_{chunkdist_n}/*e.pkl")
 
-    trainingdata_folder = os.path.join(root, dataset, "trainingdata")
-    if not os.path.exists(trainingdata_folder):
-        os.mkdir(trainingdata_folder)
+    chunkdist_name = f"{dataset}_chunkdist_{chunkdist_n}"
 
-    trainingdata_chunkdist = os.path.join(trainingdata_folder, f"{dataset}_chunkdist_{chunkdist_n}")
-    if not os.path.exists(trainingdata_chunkdist):
-        os.mkdir(trainingdata_chunkdist)
-    else:
-        assert False, f"Directory {trainingdata_chunkdist} already exists, please remove it before continuing"
+    set_directory(chunkdist_name)
+
+    preprocess_path = os.path.join(config.root, "preprocess", chunkdist_name)
+    trainingdata_path = os.path.join(config.root, "trainingdata", chunkdist_name)
+
+    total_size = 0
+    dir_len = len(os.listdir(preprocess_path)) * 2
     
-    
-    trainingdata_chunkdist = os.path.join(trainingdata_chunkdist, "train")
-    if not os.path.exists(trainingdata_chunkdist):
-        os.mkdir(trainingdata_chunkdist)
-    
-    preprocess_folder = os.path.join(root, dataset, "preprocess")
-    if not os.path.exists(preprocess_folder):
-        assert False, f"Preprocess folder {preprocess_folder} does not exist, please check your input"
-
-    chunk_dist = os.path.join(preprocess_folder, f"{dataset}_chunkdist_{chunkdist_n}")
-    if not os.path.exists(chunk_dist):
-        assert False, f"Chunk distribution {chunk_dist} does not exist, please check your input"
-
-    chunk_dist = os.path.join(chunk_dist, "train")
-
-    dir = sorted(os.listdir(chunk_dist))
-    dir_len = len(dir)
-
-    n = 0
-    correct_x = 0
-
-    while True:
-
-        if n >= dir_len * 2:
-            break
+    for n in tqdm(range(dir_len), desc="weighting data with TM"):
         
+        dir = sorted(os.listdir(preprocess_path), key=lambda x: int(x.split("_")[2]))
+
+        if n > len(dir):
+            assert False, "Something went wrong here."
+
         chunk = dir[n]
+        chunk = os.path.join(preprocess_path, chunk)
 
-        error_params = True if type(dir[n]) != type(dir[0]) else False
+        with gzip.open(chunk, "rb") as f:
+            train = pickle.load(f)
 
-        chunk = os.path.join(chunk_dist, chunk) if not error_params else None
-        train_data = pickle.load(open(chunk, "rb")) if not error_params else dir[n]
+        if chunk[-5] != "e":
+            
+            train, train_error = make_weighted_data(train, error_params=False)
+            write_train_chunk(train, trainingdata_path, n)
+            write_error_chunk(train_error, preprocess_path, n)
+            total_size += len(train)
+            
+        elif chunk[-5] == "e":
 
-        train_data, train_error_data = gen_data.make_weighted_data(train_data, error_params)
-
-        correct_x += len(train_data)
-
-        gen_data.write_chunk(train_data, trainingdata_chunkdist, n)
+            train, _ = make_weighted_data(train, error_params=True)
+            write_train_chunk(train, trainingdata_path, n)
+            total_size += len(train)
+            
+        train = None
+        train_error = None
+        gc.collect()
     
-        dir.append(train_error_data)
-
-        n += 1
-    
-    return correct_x
-
 
 if __name__ == "__main__":
 

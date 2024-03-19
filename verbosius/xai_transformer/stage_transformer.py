@@ -1,20 +1,26 @@
 import argparse
+import logging
 import pickle
 import os
 import json
-from datetime import datetime
 import time
+import gzip
 import gc
 
 from sklearn.model_selection import train_test_split
+from transformers import TrainingArguments, Trainer
+from torch.utils.data import DataLoader
+from torch.optim import AdamW
+from tqdm import tqdm
+import torch
 
+from xai_transformer.helper_functions import custom_data_collator, IterableDataset, set_directory, compute_metrics
+from xai_transformer.xai_model import CustomModel
 import config as config
-import chunking.chunker_functions as cf
-import chunking.get_data as gd
-import xai_transformer.helper_functions as hf
-import xai_transformer.transformer as tf
-import xai_validation.helper_functions_xaival as hf_xaival
 import arg_funcs as af
+
+
+logging.getLogger("transformers.modeling_utils").setLevel(logging.ERROR)
 
 
 def stage_transformer(dataset : str, chunkdist_n : int):
@@ -27,75 +33,71 @@ def stage_transformer(dataset : str, chunkdist_n : int):
     dataset : str
         Name of dataset to train on.
 
-    train_val_input : str
-        Path to trainingdata. Must be absolute path to directory.
-    
-    test_input : str
-        Path to testdata. Must be absolute path to directory.
-    
-    model_output : str
-        Path to output of this module. Must be absolute path to directory.
-    
     chunkdist_n : int
         ID of chunkdist to use for trainingdata. Must be an integer.
     
-    return_seq_acc : bool
-        If True, returns the sequence accuracy of the trained model. If False, returns None.
-
     """
     
     start_t = time.time()
 
-    root = config.root
+    chunkdist_name = f"{dataset}_chunkdist_{chunkdist_n}"
 
-    models_folder = os.path.join(root, dataset, "models")
-    if not os.path.exists(models_folder):
-        os.mkdir(models_folder)
+    set_directory(config.root, chunkdist_name)
 
-    model_folder = os.path.join(models_folder, f"{dataset}_model_dist_{chunkdist_n}")
-    if not os.path.exists(model_folder):
-        os.mkdir(model_folder)
-    else:
-        assert False, f"Directory {model_folder} already exists, please remove it before continuing"
-
+    train_path = os.path.join(config.root, "trainingdata", chunkdist_name, "train")
+    train_chunks = os.listdir(train_path)
+    train_dataset = IterableDataset(train_chunks, train_path)
     
-    model_path = os.path.join(model_folder, "model")
+    eval_path = os.path.join(config.root, "trainingdata", chunkdist_name, "eval")
+    eval_chunks = os.listdir(eval_path)
+    eval_dataset = IterableDataset(eval_chunks, eval_path)
 
-    trainingdata_folder = os.path.join(root, dataset, "trainingdata")
-    if not os.path.exists(trainingdata_folder):
-        assert False, f"Trainingdata folder {trainingdata_folder} does not exist, please check your input"
-
-    chunk_dist = os.path.join(trainingdata_folder, f"{dataset}_chunkdist_{chunkdist_n}", "train")
-
-    chunks = sorted(os.listdir(chunk_dist))
-    all_train_data = []
-    for _, chunk in enumerate(chunks):
-        
-        chunk = os.path.join(chunk_dist, chunk)
-        train_data = pickle.load(open(chunk, "rb"))        
-        all_train_data.extend(train_data)
-
-    train_data, val_data = train_test_split(all_train_data, test_size=0.2, random_state=config.seed, shuffle=True)
-
-    train_tokenized = hf.tokenize_and_align_labels(train_data, config.tokenizer, orig_labels=True)
-    val_tokenized = hf.tokenize_and_align_labels(val_data, config.tokenizer, orig_labels=True) 
-
-    print()    
-    print("Train size: ", len(train_tokenized["input_ids"]))
-    print("Validation size: ", len(val_tokenized["input_ids"]))
-    print("Epochs: ", config.num_train_epochs)
-    print("Batch size: ", config.per_device_train_batch_size)
-    print()
+    model = CustomModel(config.num_tok_labels, config.num_seq_labels, config.neutral_weight, config.loss_weight).to(config.device)
     
-    tf.transformer_pipeline_custom(output_dir=model_path, 
-                                train_data=train_tokenized, 
-                                val_data=val_tokenized)
+    model_dir = os.path.join(config.root, "models", chunkdist_name)
+    
+    training_args = TrainingArguments(
+        output_dir = model_dir,
+        learning_rate = config.learning_rate,
+        per_device_train_batch_size = config.trainer_batch_size,
+        per_device_eval_batch_size = config.trainer_batch_size,
+        num_train_epochs = config.num_train_epochs,
+        evaluation_strategy = config.evaluation_strategy,
+        save_strategy = config.save_strategy,
+        load_best_model_at_end = config.load_best_model_at_end,
+        label_names = config.label_names,
+        )
+
+    if config.device != "cpu":
+        training_args = training_args.set_dataloader(pin_memory=False)
+
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        train_dataset=train_dataset,
+        eval_dataset=eval_dataset,
+        tokenizer=config.tokenizer,
+        compute_metrics=compute_metrics,
+        data_collator=custom_data_collator,
+        optimizers=(AdamW(model.parameters(), lr=config.learning_rate), None)
+        )
+
+    trainer.train()
+
+    torch.save(model, os.path.join(model_dir, "model_t"))
+
+    train_dataset = None
+    eval_dataset = None
+    model = None
+    trainer = None
+    
+    gc.collect()
     
     end_t = time.time()
 
     time_dict = {"time_hours" : (end_t - start_t) / 3600}
     
-    with open(os.path.join(model_folder, "time.json"), "w") as f:
+    with open(os.path.join(config.root, "models", chunkdist_name, "time.json"), "w") as f:
         json.dump(time_dict, f, indent=4)
         
 

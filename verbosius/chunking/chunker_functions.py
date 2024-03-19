@@ -3,6 +3,7 @@ import datasets as ds
 import pickle
 import json
 from time import perf_counter
+import gzip
 
 import pandas as pd
 import numpy as np
@@ -221,17 +222,7 @@ def chunk_data_multiclass(dataset,
     return train_x, train_y, val_x, val_y, train_y_orig, val_y_orig, n_classes
 
 
-def chunk_data_multiclass_supersample(dataset, 
-                                        n_chunks_per_mix : int, 
-                                        chunk_size : int, 
-                                        path : str, 
-                                        validation : bool = True,
-                                        test_chunk_size: int = -1,
-                                        test_size: float = 0.2, 
-                                        val_size: float = 0.5, 
-                                        shuffle : bool = True, 
-                                        seed : int = 42,
-                                        val_chunk_size : int = -1):  
+def chunk_data_multiclass_supersample(dataset, n_chunks_per_mix : int, chunk_size : int, shuffle : bool = True, seed : int = 42):  
     
     """
     dataset : dataset class
@@ -265,7 +256,7 @@ def chunk_data_multiclass_supersample(dataset,
     orig_chunk_size = chunk_size
     rng = np.random.default_rng(seed)
 
-    un_chunked_mix = dataset.load_data(path, test_size=test_size)
+    un_chunked_mix = dataset.load_data()
     train_data = un_chunked_mix
 
 
@@ -321,7 +312,9 @@ def write_chunks(output, data):
 
     n = len(dir)
 
-    with open(f"{output}/train_chunk_{n}.pkl", "wb") as f:
+    file = os.path.join(output, f"train_chunk_{n}_.pkl")
+
+    with gzip.open(file, "wb") as f:
         pickle.dump(data, f)
 
 
@@ -335,5 +328,7 @@ def write_meta_chunks(output, train_length, validation_length, dataset, n_classe
             "shuffle": shuffle,
             "chunk_amount": chunk_amount}
     
-    with open(f"{output}/meta.json", "w") as f:
+    file = os.path.join(output, "meta.json")
+
+    with open(file, "w") as f:
          json.dump(meta, f)

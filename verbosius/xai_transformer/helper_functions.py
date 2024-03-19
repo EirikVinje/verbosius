@@ -1,3 +1,7 @@
+import os
+import gzip
+import pickle
+
 import evaluate
 import torch
 import numpy as np
@@ -31,6 +35,42 @@ class Dataset(torch.utils.data.Dataset):
             'targets': targets,
             'sentiment': sentiment
         }
+    
+
+class IterableDataset(torch.utils.data.IterableDataset):
+    def __init__(self, chunks, dir):        
+        
+        self.rng = np.random.default_rng(seed=config.seed)
+        self.chunks = chunks
+        self.rng.shuffle(self.chunks)
+        self.dir = dir
+    
+    def __len__(self):
+
+        length = 0
+        for chunk in self.chunks:
+
+            with gzip.open(os.path.join(self.dir, chunk), "rb") as f:
+                data = pickle.load(f)
+            length += len(data)
+
+        return length
+            
+    def load_chunk(self, chunks):
+        
+        for chunk in chunks:
+        
+            with gzip.open(os.path.join(self.dir, chunk), "rb") as f:
+                data = pickle.load(f)
+            self.rng.shuffle(data)
+
+            for sample in data:
+                yield sample
+
+    def __iter__(self):
+        
+        for sample in self.load_chunk(self.chunks):
+            yield sample
 
 
 class Test_Dataset(torch.utils.data.Dataset):
@@ -99,60 +139,6 @@ def compute_metrics(eval_preds):
     return output
 
 
-def tokenize_and_align_labels(data, tokenizer, orig_labels : bool = False):
-    
-    if type(data) == type(None):
-        return None
-
-    if orig_labels:
-        Y = np.array([(i['orig_label']) for i in data])
-    else:
-        Y = np.array([i['sentiment'] for i in data])
-
-    tokenized_inputs = tokenizer([inst["tokens"] for inst in data], truncation=True, padding=False, is_split_into_words=True)
-
-    labels = []
-    targets = []
-    
-    for i, label in enumerate([inst["labels"] for inst in data]):
-        
-        word_ids = tokenized_inputs.word_ids(batch_index=i)  
-        
-        previous_word_idx = None
-
-        label_ids = []
-        target_ids = []
-        
-        for word_idx in word_ids:  
-
-            if word_idx is None:
-                target_ids.append(0)
-                label_ids.append(-100)
-
-            elif word_idx != previous_word_idx:  
-                target_ids.append(1)
-                label_ids.append(label[word_idx])
-
-            else:
-                target_ids.append(0)
-                label_ids.append(-100)
-
-            previous_word_idx = word_idx
-
-        targets.append(target_ids)
-        labels.append(label_ids)
-    
-    tokenized_inputs["labels"] = labels
-    tokenized_inputs["targets"] = targets
-
-    output = {}
-    output["input_ids"] = tokenized_inputs["input_ids"] 
-    output["attention_mask"] = tokenized_inputs["attention_mask"]
-    output["labels"] = tokenized_inputs["labels"]
-    output["targets"] = tokenized_inputs["targets"]
-    output["sentiment"] = Y
-
-    return output
 
 
 def extend_data(data, new_chunk):
@@ -214,4 +200,32 @@ def custom_data_collator(batch_input):
     return new_batch_input
 
 
+def set_directory(root, chunkdist_name):
 
+    models_folder = os.path.join(root, "models")
+    if not os.path.exists(models_folder):
+        os.mkdir(models_folder)
+
+    model_folder = os.path.join(models_folder, chunkdist_name)
+    if not os.path.exists(model_folder):
+        os.mkdir(model_folder)
+    else:
+        assert False, f"Directory {model_folder} already exists, please remove it before continuing"
+
+    trainingdata_folder = os.path.join(root, "trainingdata")
+    if not os.path.exists(trainingdata_folder):
+        assert False, f"Trainingdata folder {trainingdata_folder} does not exist, please check your input"
+
+
+def convert(data):
+
+    new_data = {"input_ids": [], "attention_mask": [], "labels": [], "targets": [], "sentiment": []}
+
+    for i in range(len(data)):
+        new_data["input_ids"].append(data[i]["input_ids"])
+        new_data["attention_mask"].append(data[i]["attention_mask"])
+        new_data["labels"].append(data[i]["labels"])
+        new_data["targets"].append(data[i]["targets"])
+        new_data["sentiment"].append(data[i]["sentiment"])
+    
+    return new_data

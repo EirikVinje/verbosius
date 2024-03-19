@@ -2,6 +2,7 @@ import pickle
 import argparse
 import os
 import shutil
+import argparse
 
 import optuna
 import numpy as np
@@ -9,7 +10,7 @@ import green_tsetlin as gt
 import config as config
 
 from chunking.stage_chunks import stage_chunks
-from preprocessing.stage_preprocess import stage_preprocess
+from preprocess.stage_preprocess import stage_preprocess
 from trainingdata.stage_trainingdata import stage_trainingdata
 from xai_transformer.stage_transformer import stage_transformer
 from xai_validation.stage_validation import stage_validation
@@ -20,50 +21,26 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 def objective(trial):
 
-    print("Trial: ", trial.number)
+    chunkdist_n = 6165
+    dataset = "amazon"
 
     config.learning_rate = trial.suggest_float("learning_rate", 1e-6, 1e-4, log=True)
     config.neutral_weight = trial.suggest_float("neutral_weight", 0, 0.05, step=0.0001)
     config.loss_weight = trial.suggest_float("loss_weight", 1, 10, step=0.1)
     
-    stage_transformer(dataset=config.dataset, 
-                      chunkdist_n=config.chunkdist_n)
+    stage_transformer(dataset, chunkdist_n)
 
-    seq_acc = model_accuracy(dataset=config.dataset, 
-                             chunkdist_n=config.chunkdist_n)
+    met = model_accuracy(dataset, chunkdist_n, "model_t", "big", False)
 
-    os.system(f"rm -rf {config.root}/{config.dataset}/models/*")
+    model_path = os.path.join(config.root, 'models', f"{dataset}_chunkdist_{chunkdist_n}")
+    os.system(f"rm -rf {model_path}")
 
-    return seq_acc
+    return met[0]
+
 
 if __name__ == "__main__":
     
-    config.root = f"/home/{config.user}/data/verbosius/hpsearch_env/"
-    config.seed = 42
-
-    config.chunkdist_n = 6147
-    config.dataset = "amazon"
-    config.chunk_size = 8000
-    config.chunk_amount = 75
-    config.TM_EPOCHS = 20
-    config.num_train_epochs = 5
-    config.per_device_train_batch_size = 8
-    config.per_device_eval_batch_size = 8
-    
-    study = optuna.create_study(study_name="transformer_params_hpsearch_cs8000_ca125_t20_final", direction="maximize", storage=f"sqlite:////home/{config.user}/projects/verbosius/sqlite3.db", load_if_exists=True)
-
-    stage_chunks(dataset=config.dataset,
-                 chunk_size=config.chunk_size,
-                 chunk_amount=config.chunk_amount,
-                 chunkdist_n=config.chunkdist_n)
-    
-    stage_preprocess(dataset=config.dataset,
-                     chunkdist_n=config.chunkdist_n)
-    
-    
-    stage_trainingdata(dataset=config.dataset,
-                       chunkdist_n=config.chunkdist_n)
-
+    study = optuna.create_study(study_name="new_transformer_search", direction="maximize", storage=f"sqlite:////home/{config.user}/projects/verbosius/sqlite3.db", load_if_exists=True)
 
     study.optimize(objective, n_trials=20, show_progress_bar=True)
     
