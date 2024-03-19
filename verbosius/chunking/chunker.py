@@ -1,11 +1,14 @@
 import os
 import gzip
 import pickle
+import argparse
 
 from tqdm import tqdm
 import numpy as np
 
 from chunking.get_data import get_dataset
+import config
+import arg_funcs as af
 
 
 class Chunker:
@@ -14,27 +17,38 @@ class Chunker:
                  chunkdist_n : int, 
                  chunk_amount : int,
                  seed : int = 42,
-                 chunk_size : int = 8000, 
-                 dataset : str = "amazon"):
+                 chunk_size : int = 8000):
         
         self.seed = seed
         self.chunkdist_n = chunkdist_n
         self.chunk_size = chunk_size
         self.chunk_amount = chunk_amount
+        self.size = size
 
-        self.data = get_dataset(dataset)(two_cat=True, size=size)
+
+    def load_amazon(self):
+
+        dir = os.path.join(config.root, "pre_chunking", self.size)
+        dir_orig_y = os.path.join(dir, "train_orig_labels.pkl")
+        dir_data = os.path.join(dir, "train_data.pkl")  
+
+        with open(dir_orig_y, "rb") as f:
+            self.train_orig_y = pickle.load(f)
+
+        with open(dir_data, "rb") as f:
+            self.train_data = pickle.load(f)
 
 
     def chunk_data(self):
 
-        if self.data is None:
+        if self.train_data is None:
             assert ValueError("self.data is None")
         
         rng = np.random.default_rng(self.seed)
 
-        x = self.data[:, 0].reshape(-1, 1)
-        y = self.data[:, 1].reshape(-1, 1)
-        orig_y = orig_y[:, 1].reshape(-1, 1)
+        x = self.train_data[:, 0].reshape(-1, 1)
+        y = self.train_data[:, 1].reshape(-1, 1)
+        self.train_orig_y = self.train_orig_y[:, 1].reshape(-1, 1)
 
         # _, labelcounts_y = np.unique(y, return_counts=True)
         # _, labelcounts_orig_y = np.unique(orig_y, return_counts=True)
@@ -83,9 +97,9 @@ class Chunker:
                 i_y_1 = y[idx_1]
                 i_y_2 = y[idx_2]
 
-                i_orig_y_0 = orig_y[idx_0]        
-                i_orig_y_1 = orig_y[idx_1]
-                i_orig_y_2 = orig_y[idx_2]
+                i_orig_y_0 = self.train_orig_y[idx_0]        
+                i_orig_y_1 = self.train_orig_y[idx_1]
+                i_orig_y_2 = self.train_orig_y[idx_2]
                 
                 i_0 = np.hstack((i_x_0, i_y_0, i_orig_y_0))
                 i_1 = np.hstack((i_x_1, i_y_1, i_orig_y_1))
@@ -120,3 +134,22 @@ class Chunker:
 
     
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Stage data for training")
+
+    parser.add_argument("--dataset", type=str, help="Dataset to stage")
+    parser.add_argument("--chunk_size", type=int, nargs='?', default=10000, help="Set size for individual chunk, must be greater than 0. Default value is 10000. If used together with a train/test - split this chunk size will be split up into a train and test part accordingly. ")
+    parser.add_argument("--chunk_amount", type=int, nargs ='?', default=1, help="Set amount of chunks to stage at a time. Minimum value is 1. Default value is 1.")
+    parser.add_argument("--chunkdist_n", type=int, help="Set size for individual batch, must be >= 0. ")
+    parser.add_argument("--size", type=str, help="Size of dataset to use")
+    
+    args = parser.parse_args()
+
+    af.dataset_checker(args.dataset)
+    af.chunk_size_checker(args.chunk_size)
+    af.chunk_amount_checker(args.chunk_amount)
+    af.chunckdist_n_checker(args.chunkdist_n)
+
+
+    chunker = Chunker(size=args.size, chunkdist_n=args.chunkdist_n, chunk_amount=args.chunk_amount)
+    chunker.chunk_data()
