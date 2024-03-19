@@ -168,7 +168,6 @@ def chunk_data_multiclass(dataset,
 
     train_x, train_y, train_y_orig = chunk_data(n_chunks_per_mix, n_classes, split_ind_train, texts_train, labels_train, dataset, seed)
 
-        
     if dataset.exists_validation_set and validation:
         texts_val = val_data[:, 0]
         labels_val = val_data[:, 1]
@@ -258,7 +257,6 @@ def chunk_data_multiclass_supersample(dataset, n_chunks_per_mix : int, chunk_siz
 
     un_chunked_mix = dataset.load_data()
     train_data = un_chunked_mix
-
 
     # TRAIN DATA vvvvvv
     texts_train = train_data[:, 0]

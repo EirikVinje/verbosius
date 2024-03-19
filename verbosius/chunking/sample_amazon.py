@@ -180,8 +180,8 @@ if __name__ == "__main__":
 
     train_data, train_orig_labels, test_data = sample_amazon(datapath, 
                                                              rng=rng, 
-                                                             data_size=30_000, 
-                                                             test_size=3000, 
+                                                             data_size=16_000, 
+                                                             test_size=1600, 
                                                              load_size=500_000)
                                                              
     save_to_pickle(train_data, train_orig_labels, test_data, store_dir)
