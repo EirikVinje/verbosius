@@ -14,26 +14,21 @@ import arg_funcs as af
 class Chunker:
     def __init__(self, 
                  size : str, 
-                 chunkdist_n : int, 
-                 chunk_amount : int,
+                 part_n : int, 
+                 n_chunks : int,
                  seed : int = 42,
                  chunk_size : int = 8000):
         
         self.seed = seed
-        self.chunkdist_n = chunkdist_n
         self.chunk_size = chunk_size
-        self.chunk_amount = chunk_amount
+        self.n_chunks = n_chunks
         self.size = size
+        
+        self.train_orig_y = None
+        self.train_data = None
 
-
-    def __call__(self):
-        print("Setting up environment...")
-        self._build_environment()
-        print("Loading data...")
-        self.load_amazon()
-        print("Chunking data...")
-        self.chunk_data()
-        print("Done!")
+        # self.chunking_dir = os.path.join(config.root, "chunking")
+        self.partition = f"part_{part_n}"
         
 
     def load_amazon(self):
@@ -49,10 +44,10 @@ class Chunker:
             self.train_data = pickle.load(f)
 
 
-    def chunk_data(self):
-
+    def _chunk_data(self, return_chunks : bool = False):
+        
         if self.train_data is None:
-            assert ValueError("self.data is None")
+            assert ValueError("self.train_data is none. Maybe forgot to load_amazon()")
         
         rng = np.random.default_rng(self.seed)
 
@@ -83,11 +78,11 @@ class Chunker:
         pre = 0
         curr = labels_in_each
 
-        with tqdm(total=self.chunk_amount, disable=False) as bar:
+        with tqdm(total=self.n_chunks, disable=False) as bar:
 
-            bar.set_description("Processing chunk 1 of {}:".format(self.chunk_amount))
+            bar.set_description("Processing chunk 1 of {}:".format(self.n_chunks))
 
-            for i in range(self.chunk_amount):
+            for i in range(self.n_chunks):
 
                 _i_0 = x_0[pre:curr]
                 _i_1 = x_1[pre:curr]
@@ -120,18 +115,21 @@ class Chunker:
                 pre = curr
                 curr += labels_in_each
 
-                bar.set_description("Processing chunk {} of {}".format(i+1, self.chunk_amount))
+                self._write_chunk(i_x)
+                
+                bar.set_description("Processing chunk {} of {}".format(i+1, self.n_chunks))
                 bar.update(1)
 
-                self._write_chunk(i_x)
 
+    def _write_chunk(self, data):
     
-    def _write_chunk(self):
-    
-        n = len(dir)
-        file = os.path.join(self.chunking_dir, f"train_chunk_{n}_.pkl")
+        part_dir = os.path.join(self.chunking_dir, self.partition)
+        
+        n = len(os.listdir(part_dir))
+
+        file = os.path.join(part_dir, f"chunk_{n}_.pkl")
         with gzip.open(file, "wb") as f:
-            pickle.dump(file, f)
+            pickle.dump(data, f)
 
 
     def _build_environment(self):
@@ -141,7 +139,7 @@ class Chunker:
 
         self.chunking_dir = os.path.join(config.root, "chunking")
         preprocess_dir = os.path.join(config.root, "preprocess")
-        weighted_dir = os.path.join(config.root, "weighted")
+        weighter_dir = os.path.join(config.root, "weighter")
         trainingdata_dir = os.path.join(config.root, "trainingdata")
         models_dir = os.path.join(config.root, "models")
 
@@ -151,40 +149,43 @@ class Chunker:
         if not os.path.exists(preprocess_dir):
             os.mkdir(preprocess_dir)
         
-        if not os.path.exists(weighted_dir):
-            os.mkdir(weighted_dir)
+        if not os.path.exists(weighter_dir):
+            os.mkdir(weighter_dir)
         
         if not os.path.exists(trainingdata_dir):
             os.mkdir(trainingdata_dir)
         
-        train = os.path.join(trainingdata_dir, "train")
-        eval = os.path.join(trainingdata_dir, "eval")
-
-        if not os.path.exists(train):
-            os.mkdir(train)
-
-        if not os.path.exists(eval):
-            os.mkdir(eval)
-
         if not os.path.exists(models_dir):
             os.mkdir(models_dir)
 
-    
+        part_dir = os.path.join(self.chunking_dir, self.partition)
+        if not os.path.exists(part_dir):
+            os.mkdir(part_dir)
+
+        else:
+            assert False, f"{part_dir} already exists, remove from {self.chunking_dir} before continuing"
+
+
+    def run(self):
+
+        self._build_environment()
+        self.load_amazon()
+        self._chunk_data()
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Stage data for training")
 
-    parser.add_argument("--dataset", type=str)
-    parser.add_argument("--chunk_size", type=int)
-    parser.add_argument("--chunk_amount", type=int)
-    parser.add_argument("--chunkdist_n", type=int)
+    parser.add_argument("--n_chunks", type=int)
+    parser.add_argument("--part_n", type=int)
     parser.add_argument("--size", type=str)
     
     args = parser.parse_args()
 
-    af.dataset_checker(args.dataset)
-    af.chunk_size_checker(args.chunk_size)
-    af.chunk_amount_checker(args.chunk_amount)
-    af.chunckdist_n_checker(args.chunkdist_n)
+    af.chunk_amount_checker(args.n_chunks)
+    af.chunckdist_n_checker(args.part_n)
 
-    Chunker(size=args.size, chunkdist_n=args.chunkdist_n, chunk_amount=args.chunk_amount)
+    chunker = Chunker(size=args.size, part_n=args.part_n, n_chunks=args.n_chunks)
+
+    chunker.run()

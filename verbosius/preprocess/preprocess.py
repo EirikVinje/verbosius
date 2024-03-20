@@ -3,24 +3,36 @@ import pickle
 import os
 import gzip
 import warnings
+import argparse
 
 from bs4 import BeautifulSoup
+from tqdm import tqdm
 import spacy
 
 import config
+import arg_funcs as af
 
 
 
 class Preprocess:
-    def __init__(self, partion_n):
+    def __init__(self, partion_n : int, call : bool = False):
 
         self.chunking_dir = os.path.join(config.root, "chunking")
         self.preprocess_dir = os.path.join(config.root, "preprocess")
         self.partition = f"part_{partion_n}"
+        self.call = call
         
-            
-    def __call__(self):
-        pass
+
+    def _set_dir(self):
+
+        if not os.path.exists(os.path.join(self.chunking_dir, self.partition)):
+            assert ValueError(f"Partition {self.partition} in {self.chunking_dir} does not exist")
+
+        part_dir = os.path.join(self.preprocess_dir, self.partition)
+        if not os.path.exists(part_dir):
+            os.mkdir(part_dir)
+        else:
+            assert False, f"partion {part_dir} already exists in {self.preprocess_dir}"
 
 
     def _load_chunk(self, chunkname):
@@ -82,10 +94,12 @@ class Preprocess:
     
 
     def _map_tokens(self, x, token_x):
+        
+        split_x = [t.split() for t in x]
 
         ids = []
 
-        for i in range(len(x)):
+        for i in range(len(split_x)):
             
             id = []
             topw = 0
@@ -93,26 +107,26 @@ class Preprocess:
             
             while True:
 
-                if topt >= len(token_x[i]) or topw >= len(x[i]):
+                if topt >= len(token_x[i]) or topw >= len(split_x[i]):
                     break
 
-                elif token_x[i][topt] == x[i][topw]:
+                elif token_x[i][topt] == split_x[i][topw]:
                     id.append(topw)
                     topw += 1 
                     topt += 1
 
-                elif token_x[i][topt] in x[i][topw]:
+                elif token_x[i][topt] in split_x[i][topw]:
                     top_len = len(token_x[i][topt])  
                     id.append(topw)
                     topt += 1
 
                     while True:
 
-                        if top_len == len(x[i][topw]):
+                        if top_len == len(split_x[i][topw]):
                             topw += 1
                             break
                         
-                        elif x[i][topw].find(token_x[i][topt], top_len) == top_len:
+                        elif split_x[i][topw].find(token_x[i][topt], top_len) == top_len:
                             id.append(topw)
                             top_len += len(token_x[i][topt])
                             topt += 1
@@ -138,24 +152,63 @@ class Preprocess:
                         "y": y[i],
                         "orig_x" : x[i],
                         "token_id_x": token_id_x[i],
-                        "orig_y": orig_y[i]}
+                        "orig_y": orig_y[i],
+                        "x" : x[i]}
 
             train_data.append(instance)
 
-        n = len(os.listdir(self.preprocess_dir))
-        chunk_dir = os.path.join(self.preprocess_dir, f"chunk_{n}_.pkl")
+        part_dir = os.path.join(self.preprocess_dir, self.partition)
+        n = len(os.listdir(part_dir))
+        chunk_dir = os.path.join(part_dir, f"chunk_{n}_.pkl")
 
         with gzip.open(chunk_dir, "wb") as f:
             pickle.dump(train_data, f)
     
 
-    def main_loop(self):
+    def _main_loop(self):
+
 
         chunks = os.listdir(os.path.join(self.chunking_dir, self.partition))
-        sorted_chunks = sorted(chunks, key=lambda x: int(x.split("_")[2]))
+        sorted_chunks = sorted(chunks, key=lambda x: int(x.split("_")[1]))
 
-        for chunkname in sorted_chunks:
-
-            chunk = self._load_chunk(chunkname)
-
+        with tqdm(total=len(chunks), disable=False) as bar:
+        
+            bar.set_description("Processing chunk 1 of {}".format(len(chunks)))
             
+            for i, chunkname in enumerate(sorted_chunks):
+
+                chunk = self._load_chunk(chunkname)
+
+                x = chunk[:, 0]
+                y = chunk[:, 1]
+                orig_y = chunk[:, 2]
+
+                x = self._clean_text(x)
+
+                token_x, lemma_x = self._lemmatize(x)
+
+                token_ids = self._map_tokens(x, token_x)
+
+                self._write_part(token_x, lemma_x, token_ids, y, orig_y, x)
+
+                bar.set_description("Processing chunk {} of {}".format(i+1, len(chunks)))
+                bar.update(1)
+    
+
+    def run(self):
+        self._set_dir()
+        self._main_loop()
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Stage data for training")
+
+    parser.add_argument("--part_n", type=int, help="Which chunk to stage")
+
+    args = parser.parse_args()
+
+    af.chunckdist_n_checker(args.part_n)
+    
+    preprocess = Preprocess(args.part_n, call=True)
+
+    preprocess.run()
