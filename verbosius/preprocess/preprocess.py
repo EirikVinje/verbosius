@@ -199,6 +199,7 @@ class Preprocess:
         self._set_dir()
         self._main_loop()
 
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Stage data for training")

@@ -32,14 +32,6 @@ class Weighter:
         self.partition = f"part_{part_n}"
 
 
-    def __call__(self) -> None:
-        if self.call:
-            self._set_dir()
-            self.main_loop()
-        else:
-            pass
-
-
     def _set_dir(self) -> None:
 
         if not os.path.exists(os.path.join(self.preprocess_dir, self.partition)):
@@ -367,7 +359,12 @@ class Weighter:
                 bin_x = None
 
                 gc.collect()
-    
+
+
+    def run(self):
+
+        self._set_dir()
+        self.main_loop()
 
 if __name__ == "__main__":
 
