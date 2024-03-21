@@ -149,13 +149,14 @@ class Preprocess:
         return ids
 
 
-    def _write_chunk(self, token_x, lemma_x, token_id_x, y, orig_y, x):
+    def _write_chunk(self, token_x, lemma_x, token_id_x, y, orig_y, x, sample_index):
 
         train_data = []
-    
+
         for i in range(len(y)):
             
             instance = {
+                        "sample_index" : sample_index,
                         "token_x": token_x[i],
                         "lemma_x": lemma_x[i],
                         "y": y[i],
@@ -165,13 +166,17 @@ class Preprocess:
 
             train_data.append(instance)
 
+            sample_index += 1
+
         part_dir = os.path.join(self.preprocess_dir, self.partition)
         n = len(os.listdir(part_dir))
         chunk_dir = os.path.join(part_dir, f"chunk_{n}_.pkl")
 
         with gzip.open(chunk_dir, "wb") as f:
             pickle.dump(train_data, f)
-    
+
+        return sample_index
+
 
     def _main_loop(self):
 
@@ -181,7 +186,8 @@ class Preprocess:
         with tqdm(total=len(chunks), disable=self.progress_bar is False) as bar:
         
             bar.set_description("Processing chunk 1 of {}".format(len(chunks)))
-            
+
+            sample_index = 0
             for i, chunkname in enumerate(sorted_chunks):
 
                 chunk = self._load_chunk(chunkname)
@@ -194,7 +200,7 @@ class Preprocess:
                 token_x, lemma_x = self._lemmatize(x)
                 token_ids = self._map_tokens(x, token_x)
 
-                self._write_chunk(token_x, lemma_x, token_ids, y, orig_y, x)
+                sample_index = self._write_chunk(token_x, lemma_x, token_ids, y, orig_y, x, sample_index)    
 
                 bar.set_description("Processing chunk {} of {}".format(i+1, len(chunks)))
                 bar.update(1)

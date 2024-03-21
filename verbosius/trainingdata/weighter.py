@@ -4,8 +4,10 @@ import argparse
 import shutil
 import pickle 
 import gzip
+import glob
 import os
 import gc
+
 
 from sklearn.feature_selection import SelectKBest, chi2, f_classif, mutual_info_classif
 from sklearn.feature_extraction.text import CountVectorizer
@@ -22,19 +24,22 @@ import arg_funcs as af
 
 
 class Weighter:
-
-    def __init__(self, part_n : int, force_write : bool = False) -> None:
+    def __init__(self, part_n : int, progress_bar : bool = False, force_write : bool = False) -> None:
 
         self.preprocess_dir = os.path.join(config.root, "preprocess")
         self.weighter_dir = os.path.join(config.root, "weighter")
         self.partition = f"part_{part_n}"
+
+        self.progress_bar = progress_bar
 
         self.force_write = force_write
 
 
     def _set_dir(self) -> None:
 
-        if not os.path.exists(os.path.join(self.preprocess_dir, self.partition)):
+        pre_part_dir = os.path.join(self.preprocess_dir, self.partition)
+
+        if not os.path.exists(pre_part_dir):
             assert ValueError(f"Partition {self.partition} in {self.preprocess_dir} does not exist")
 
         part_dir = os.path.join(self.weighter_dir, self.partition)
@@ -47,6 +52,12 @@ class Weighter:
 
         else:
             assert False, f"partion {part_dir} already exists in {self.weighter_dir}"
+
+        remove_e_chunks = os.path.join(pre_part_dir, "*e.pkl")
+        e_chunks = glob.glob(remove_e_chunks)
+
+        for chunk in e_chunks:
+            os.remove(chunk)
 
     
     def _bag_of_words(self, train_x, train_y, error_params : bool = False) -> np.ndarray:
@@ -177,9 +188,10 @@ class Weighter:
 
             lemma_x = inst["lemma_x"]
             token_ids_x = inst["token_ids_x"]
-            bin_x = inst["bin_x"]
             
             x = inst["x"]
+            sample_index = inst["sample_index"]
+
 
             if idx in true_x:
 
@@ -191,18 +203,20 @@ class Weighter:
 
                 labels = self._label_tokens(y, weights_x)
 
-                true_inst = {"token_x" : newtokens_x,
+                true_inst = {"sample_index" : sample_index,
+                            "token_x" : newtokens_x,
                             "weights" : weights_x,
-                            "x" : x,
                             "y" : y,
                             "labels" : labels,
                             "orig_y" : orig_y}
 
                 true_data.append(true_inst)
                 
+
             elif idx in false_x:
                 
-                false_inst = {"y" : y,
+                false_inst = {"sample_index" : sample_index,
+                            "y" : y,
                             "lemma_x" : lemma_x,
                             "token_x" : token_x,
                             "token_ids_x" : token_ids_x,
@@ -211,6 +225,7 @@ class Weighter:
 
                 false_data.append(false_inst)
         
+
         return true_data, false_data
     
 
@@ -292,7 +307,7 @@ class Weighter:
 
     def _write_chunk(self, data, n) -> None:
 
-        filepath = os.path.join(self.weighter_dir, self.partition, f"train_chunk_{n}_.pkl")
+        filepath = os.path.join(self.weighter_dir, self.partition, f"chunk_{n}_.pkl")
         with gzip.open(filepath, "wb") as file:
             pickle.dump(data, file)
 
@@ -311,7 +326,7 @@ class Weighter:
         
         error_params = False
 
-        with tqdm(total=dir_len, disable=True) as bar:
+        with tqdm(total=dir_len, disable=self.progress_bar is False) as bar:
             bar.set_description("Processing chunk 1 of {}:".format(dir_len))
         
             for n in range(dir_len):
