@@ -32,8 +32,10 @@ class Chunker:
         
 
     def load_amazon(self):
+        
+        root = "/home/bigtech/data/verbosius/amazon"
 
-        dir = os.path.join(config.root, "pre_chunking", self.size)
+        dir = os.path.join(root, "pre_chunking", self.size)
         dir_orig_y = os.path.join(dir, "train_orig_labels.pkl")
         dir_data = os.path.join(dir, "train_data.pkl")  
 

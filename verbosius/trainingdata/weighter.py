@@ -23,9 +23,7 @@ import arg_funcs as af
 
 class Weighter:
 
-    def __init__(self, part_n : int, call : bool = False) -> None:
-
-        self.call = call
+    def __init__(self, part_n : int) -> None:
 
         self.preprocess_dir = os.path.join(config.root, "preprocess")
         self.weighter_dir = os.path.join(config.root, "weighter")
@@ -63,30 +61,33 @@ class Weighter:
         return train_x_bin, feature_names
 
     
-    def _select_k_best(self, train_x_bin, train_y, error_params : bool = False) -> np.ndarray:
+    def _select_k_best(self, bin_x, y, feature_names, error_params : bool = False) -> np.ndarray:
 
         SKB = SelectKBest(score_func=config.SKB_score_func, k=config.MAX_FEATURES if not error_params else config.ERROR_MAX_FEATURES)
 
-        SKB.fit(train_x_bin, train_y)
+        SKB.fit(bin_x, y)
         feature_names = SKB.get_feature_names_out(input_features=feature_names)
         
-        train_x_bin = SKB.transform(train_x_bin).toarray()
+        bin_x = SKB.transform(bin_x).toarray()
         
-        return train_x_bin
+        return bin_x, feature_names
 
 
-    def _generate_ruleset(self, train_x_bin, train_y, error_params : bool = False) -> gt.RulePredictor:
+    def _generate_ruleset(self, bin_x, y, error_params : bool = False) -> gt.RulePredictor:
 
-        tm = gt.TsetlinMachine(n_literals=train_x_bin.shape[1], 
+        y = np.array(y, dtype=np.uint32)
+        bin_x = bin_x.astype(np.uint8)
+
+        tm = gt.TsetlinMachine(n_literals=bin_x.shape[1], 
                             n_clauses=config.NUMBER_OF_CLAUSES if not error_params else config.ERROR_NUMBER_OF_CLAUSES, 
                             n_classes=config.NUM_TM_LABELS,
                             s=config.S if not error_params else config.ERROR_S,
                             n_literal_budget=config.LITERAL_BUDGET if not error_params else config.ERROR_LITERAL_BUDGET)
 
-        copy_train_x_bin = deepcopy(train_x_bin)
-        copy_train_y = deepcopy(train_y)
+        copy_bin_x = deepcopy(bin_x)
+        copy_y = deepcopy(y)
 
-        c_train_x, c_val_x, c_train_y, c_val_y = train_test_split(copy_train_x_bin, copy_train_y, test_size=0.2, random_state=config.seed)
+        c_train_x, c_val_x, c_train_y, c_val_y = train_test_split(copy_bin_x, copy_y, test_size=0.2, random_state=config.seed)
 
         tm.set_train_data(c_train_x, c_train_y)
         tm.set_test_data(c_val_x, c_val_y)
@@ -96,12 +97,12 @@ class Weighter:
                             seed=config.seed, 
                             n_jobs=config.N_JOBS, 
                             early_exit_acc=config.EARLY_STOP_ACC,
-                            progress_bar=False)
+                            progress_bar=True)
 
         trainer.train(tm)    
 
         ruleset = gt.RulePredictor()
-        fm = list(range(train_x_bin.shape[1]))
+        fm = list(range(bin_x.shape[1]))
         ruleset.create_from_state(tm.get_state(), fm)
         
         return ruleset
@@ -168,7 +169,7 @@ class Weighter:
             orig_y = inst["orig_y"]
 
             lemma_x = inst["lemma_x"]
-            token_ids_x = inst["token_id_x"]
+            token_ids_x = inst["token_ids_x"]
             bin_x = inst["bin_x"]
             
             x = inst["x"]
@@ -183,23 +184,23 @@ class Weighter:
 
                 labels = self._label_tokens(y, weights_x)
 
-                true_inst = {"tokens" : newtokens_x,
+                true_inst = {"token_x" : newtokens_x,
                             "weights" : weights_x,
-                            "text" : x,
-                            "sentiment" : y,
+                            "x" : x,
+                            "y" : y,
                             "labels" : labels,
-                            "orig_label" : orig_y}
+                            "orig_y" : orig_y}
 
                 true_data.append(true_inst)
                 
             elif idx in false_x:
                 
-                false_inst = {"sentiment" : y,
-                            "lemmas" : lemma_x,
-                            "tokens" : token_x,
-                            "token_ids" : token_ids_x,
-                            "orig_labels" : orig_y,
-                            "orig_text" : x}
+                false_inst = {"y" : y,
+                            "lemma_x" : lemma_x,
+                            "token_x" : token_x,
+                            "token_ids_x" : token_ids_x,
+                            "orig_y" : orig_y,
+                            "x" : x}
 
                 false_data.append(false_inst)
         
@@ -291,23 +292,24 @@ class Weighter:
 
     def _write_e_chunk(self, data, n) -> None:
         
-        filepath = os.path.join(self.preprocess_dir, self.partition, f"preprocess_chunk_{n+100000}_e.pkl")
+        filepath = os.path.join(self.preprocess_dir, self.partition, f"chunk_{n+100000}_e.pkl")
         with gzip.open(filepath, "wb") as file:
             pickle.dump(data, file)
 
 
-    def main_loop(self) -> None:
+    def _main_loop(self) -> None:
 
         part_dir = os.path.join(self.preprocess_dir, self.partition)
         dir_len = len(os.listdir(part_dir)) * 2
         
-        with tqdm(total=dir_len, disable=True) as bar:
-            
-            bar.set_description("Processing chunk 1 of {}:".format(dir_len))
+        error_params = False
 
+        with tqdm(total=dir_len, disable=True) as bar:
+            bar.set_description("Processing chunk 1 of {}:".format(dir_len))
+        
             for n in range(dir_len):
                 
-                dir = sorted(os.listdir(part_dir), key=lambda x: int(x.split("_")[2]))
+                dir = sorted(os.listdir(part_dir), key=lambda x: int(x.split("_")[1]))
 
                 if n > len(dir):
                     assert False, "Something went wrong here."
@@ -317,46 +319,32 @@ class Weighter:
                 with gzip.open(chunkname, "rb") as f:
                     chunk = pickle.load(f)
 
-                if chunkname[-5] != "e":
+                error_params = False if chunkname[-5] != "e" else True
 
-                    lemma_x = [instance["lemma_x"] for instance in chunk]
-                    y = [instance["y"] for instance in chunk]
-                    
-                    bin_x, feature_names = self._bag_of_words(lemma_x, y, error_params=False)
-                    bin_x = self._select_k_best(bin_x, y, error_params=False)
-                    ruleset = self._generate_ruleset(bin_x, y, error_params=False)
+                lemma_x = [instance["lemma_x"] for instance in chunk]
+                y = [instance["y"] for instance in chunk]
+                
+                bin_x, feature_names = self._bag_of_words(lemma_x, y, error_params=error_params)
+                bin_x, feature_names = self._select_k_best(bin_x, y, feature_names, error_params=error_params)
+                ruleset = self._generate_ruleset(bin_x, y, error_params=error_params)
 
-                    for i in range(len(chunk)):
-                        chunk[i]["bin_x"] = bin_x[i]
+                for i in range(len(chunk)):
+                    chunk[i]["bin_x"] = bin_x[i]
 
-                    true_data, false_data = self._do_weighting(chunk, feature_names, ruleset)
+                true_data, false_data = self._do_weighting(chunk, feature_names, ruleset)
 
-                    self._write_chunk(true_data, n)
+                self._write_chunk(true_data, n)
+                
+                if not error_params:
                     self._write_e_chunk(false_data, n)
 
-                    
-                elif chunkname[-5] == "e":
-                    
-                    lemma_x = [instance["lemma_x"] for instance in chunk]
-                    y = [instance["y"] for instance in chunk]
-                    
-                    bin_x, feature_names = self._bag_of_words(lemma_x, y, error_params=True)
-                    bin_x = self._select_k_best(bin_x, y, error_params=True)
-                    ruleset = self._generate_ruleset(bin_x, y, error_params=True)
-
-                    for i in range(len(chunk)):
-                        chunk[i]["bin_x"] = bin_x[i]
-
-                    true_data, _ = self._do_weighting(chunk, feature_names, ruleset)
-
-                    self._write_chunk(true_data, n)
-                
                 bar.set_description("Processing chunk {} of {}:".format(n+1, dir_len))
 
                 true_data = None
                 false_data = None
                 ruleset = None
                 bin_x = None
+                chunk = None
 
                 gc.collect()
 
@@ -364,7 +352,8 @@ class Weighter:
     def run(self):
 
         self._set_dir()
-        self.main_loop()
+        self._main_loop()
+
 
 if __name__ == "__main__":
 
@@ -376,4 +365,6 @@ if __name__ == "__main__":
 
     af.chunckdist_n_checker(args.part_n)
     
-    Weighter(args.part_n, call=True)
+    weighter = Weighter(args.part_n)
+
+    weighter.run()

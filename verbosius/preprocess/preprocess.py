@@ -80,7 +80,7 @@ class Preprocess:
     def _lemmatize(self, x):
 
         nlp = spacy.load("en_core_web_sm")
-        docs = nlp.pipe(x, n_process=4) 
+        docs = nlp.pipe(x, n_process=-1) 
 
         tokens = []
         lemmas = []
@@ -150,8 +150,7 @@ class Preprocess:
                         "token_x": token_x[i],
                         "lemma_x": lemma_x[i],
                         "y": y[i],
-                        "orig_x" : x[i],
-                        "token_id_x": token_id_x[i],
+                        "token_ids_x": token_id_x[i],
                         "orig_y": orig_y[i],
                         "x" : x[i]}
 
@@ -166,7 +165,6 @@ class Preprocess:
     
 
     def _main_loop(self):
-
 
         chunks = os.listdir(os.path.join(self.chunking_dir, self.partition))
         sorted_chunks = sorted(chunks, key=lambda x: int(x.split("_")[1]))
