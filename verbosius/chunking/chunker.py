@@ -19,7 +19,8 @@ class Chunker:
                  n_chunks : int,
                  seed : int = 42,
                  chunk_size : int = 8000,
-                 force_write : bool = False):
+                 force_write : bool = False,
+                 progress_bar : bool = False):
         
         self.seed = seed
         self.chunk_size = chunk_size
@@ -31,6 +32,8 @@ class Chunker:
 
         self.chunking_dir = os.path.join(config.root, "chunking")
         self.partition = f"part_{part_n}"
+
+        self.progress_bar = progress_bar
 
         self.force_write = force_write
         
@@ -84,7 +87,7 @@ class Chunker:
         pre = 0
         curr = labels_in_each
 
-        with tqdm(total=self.n_chunks, disable=False) as bar:
+        with tqdm(total=self.n_chunks, disable=self.progress_bar is False) as bar:
 
             bar.set_description("Processing chunk 1 of {}:".format(self.n_chunks))
 

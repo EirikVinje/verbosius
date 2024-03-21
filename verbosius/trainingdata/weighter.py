@@ -115,7 +115,7 @@ class Weighter:
                             seed=config.seed, 
                             n_jobs=config.N_JOBS, 
                             early_exit_acc=config.EARLY_STOP_ACC,
-                            progress_bar=True)
+                            progress_bar=False)
 
         trainer.train(tm)    
 

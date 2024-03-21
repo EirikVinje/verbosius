@@ -16,11 +16,11 @@ import arg_funcs as af
 
 
 class Preprocess:
-    def __init__(self, partion_n : int, progress_bar : bool = False, force_write : bool = False):
+    def __init__(self, part_n : int, progress_bar : bool = False, force_write : bool = False):
 
         self.chunking_dir = os.path.join(config.root, "chunking")
         self.preprocess_dir = os.path.join(config.root, "preprocess")
-        self.partition = f"part_{partion_n}"
+        self.partition = f"part_{part_n}"
 
         self.progress_bar = progress_bar
         
