@@ -4,6 +4,7 @@ import os
 import gzip
 import warnings
 import argparse
+import shutil
 
 from bs4 import BeautifulSoup
 from tqdm import tqdm
@@ -15,13 +16,16 @@ import arg_funcs as af
 
 
 class Preprocess:
-    def __init__(self, partion_n : int, call : bool = False):
+    def __init__(self, partion_n : int, progress_bar : bool = False, force_write : bool = False):
 
         self.chunking_dir = os.path.join(config.root, "chunking")
         self.preprocess_dir = os.path.join(config.root, "preprocess")
         self.partition = f"part_{partion_n}"
-        self.call = call
+
+        self.progress_bar = progress_bar
         
+        self.force_write = force_write
+
 
     def _set_dir(self):
 
@@ -31,6 +35,11 @@ class Preprocess:
         part_dir = os.path.join(self.preprocess_dir, self.partition)
         if not os.path.exists(part_dir):
             os.mkdir(part_dir)
+
+        elif self.force_write:
+            shutil.rmtree(part_dir)
+            os.mkdir(part_dir)
+
         else:
             assert False, f"partion {part_dir} already exists in {self.preprocess_dir}"
 
@@ -140,7 +149,7 @@ class Preprocess:
         return ids
 
 
-    def _write_part(self, token_x, lemma_x, token_id_x, y, orig_y, x):
+    def _write_chunk(self, token_x, lemma_x, token_id_x, y, orig_y, x):
 
         train_data = []
     
@@ -169,7 +178,7 @@ class Preprocess:
         chunks = os.listdir(os.path.join(self.chunking_dir, self.partition))
         sorted_chunks = sorted(chunks, key=lambda x: int(x.split("_")[1]))
 
-        with tqdm(total=len(chunks), disable=False) as bar:
+        with tqdm(total=len(chunks), disable=self.progress_bar is False) as bar:
         
             bar.set_description("Processing chunk 1 of {}".format(len(chunks)))
             
@@ -182,12 +191,10 @@ class Preprocess:
                 orig_y = chunk[:, 2]
 
                 x = self._clean_text(x)
-
                 token_x, lemma_x = self._lemmatize(x)
-
                 token_ids = self._map_tokens(x, token_x)
 
-                self._write_part(token_x, lemma_x, token_ids, y, orig_y, x)
+                self._write_chunk(token_x, lemma_x, token_ids, y, orig_y, x)
 
                 bar.set_description("Processing chunk {} of {}".format(i+1, len(chunks)))
                 bar.update(1)
@@ -208,6 +215,6 @@ if __name__ == "__main__":
 
     af.chunckdist_n_checker(args.part_n)
     
-    preprocess = Preprocess(args.part_n, call=True)
+    preprocess = Preprocess(args.part_n, progress_bar=True)
 
     preprocess.run()

@@ -23,11 +23,13 @@ import arg_funcs as af
 
 class Weighter:
 
-    def __init__(self, part_n : int) -> None:
+    def __init__(self, part_n : int, force_write : bool = False) -> None:
 
         self.preprocess_dir = os.path.join(config.root, "preprocess")
         self.weighter_dir = os.path.join(config.root, "weighter")
         self.partition = f"part_{part_n}"
+
+        self.force_write = force_write
 
 
     def _set_dir(self) -> None:
@@ -38,6 +40,11 @@ class Weighter:
         part_dir = os.path.join(self.weighter_dir, self.partition)
         if not os.path.exists(part_dir):
             os.mkdir(part_dir)
+        
+        elif self.force_write:
+            shutil.rmtree(part_dir)
+            os.mkdir(part_dir)
+
         else:
             assert False, f"partion {part_dir} already exists in {self.weighter_dir}"
 

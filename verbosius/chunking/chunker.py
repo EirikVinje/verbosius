@@ -2,6 +2,7 @@ import os
 import gzip
 import pickle
 import argparse
+import shutil
 
 from tqdm import tqdm
 import numpy as np
@@ -17,7 +18,8 @@ class Chunker:
                  part_n : int, 
                  n_chunks : int,
                  seed : int = 42,
-                 chunk_size : int = 8000):
+                 chunk_size : int = 8000,
+                 force_write : bool = False):
         
         self.seed = seed
         self.chunk_size = chunk_size
@@ -27,8 +29,10 @@ class Chunker:
         self.train_orig_y = None
         self.train_data = None
 
-        # self.chunking_dir = os.path.join(config.root, "chunking")
+        self.chunking_dir = os.path.join(config.root, "chunking")
         self.partition = f"part_{part_n}"
+
+        self.force_write = force_write
         
 
     def load_amazon(self):
@@ -46,7 +50,7 @@ class Chunker:
             self.train_data = pickle.load(f)
 
 
-    def _chunk_data(self, return_chunks : bool = False):
+    def _chunk_data(self):
         
         if self.train_data is None:
             assert ValueError("self.train_data is none. Maybe forgot to load_amazon()")
@@ -139,14 +143,14 @@ class Chunker:
         if not os.path.exists(config.root):
             assert False, f"Directory {config.root} does not exist, please create it before continuing"
 
-        self.chunking_dir = os.path.join(config.root, "chunking")
+        chunking_dir = os.path.join(config.root, "chunking")
         preprocess_dir = os.path.join(config.root, "preprocess")
         weighter_dir = os.path.join(config.root, "weighter")
         trainingdata_dir = os.path.join(config.root, "trainingdata")
         models_dir = os.path.join(config.root, "models")
 
-        if not os.path.exists(self.chunking_dir):
-            os.mkdir(self.chunking_dir)
+        if not os.path.exists(chunking_dir):
+            os.mkdir(chunking_dir)
 
         if not os.path.exists(preprocess_dir):
             os.mkdir(preprocess_dir)
@@ -160,12 +164,16 @@ class Chunker:
         if not os.path.exists(models_dir):
             os.mkdir(models_dir)
 
-        part_dir = os.path.join(self.chunking_dir, self.partition)
+        part_dir = os.path.join(chunking_dir, self.partition)
         if not os.path.exists(part_dir):
             os.mkdir(part_dir)
 
+        elif self.force_write:
+            shutil.rmtree(part_dir)
+            os.mkdir(part_dir)
+        
         else:
-            assert False, f"{part_dir} already exists, remove from {self.chunking_dir} before continuing"
+            assert False, f"{part_dir} already exists, remove from {chunking_dir} before continuing"
 
 
     def run(self):

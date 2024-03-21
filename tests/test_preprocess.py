@@ -52,7 +52,7 @@ def test_main_loop():
     with gzip.open(chunk, "rb") as f:
         data1 = pickle.load(f)
 
-    preprocess = Preprocess(1)
+    preprocess = Preprocess(1, progress_bar=False, force_write=True)
     preprocess.run()
 
     chunk = os.path.join(config.root, "preprocess", "part_1", "chunk_0_.pkl")
@@ -65,7 +65,6 @@ def test_main_loop():
     assert data1[0][1] == data2[0]["y"], f"{data1[0][1]} != {data2[0]['y']}"
     assert data1[0][2] == data2[0]["orig_y"], f"{data1[0][2]} != {data2[0]['orig_y']}"
 
-    os.system(f"rm -rf {os.path.join(config.root, 'preprocess', 'part_1')}")
 
 
 
@@ -74,8 +73,8 @@ if __name__ == "__main__":
     # test_clean_text()
     # test_lemmatize()
     # test_map_tokens()
+    # test_main_loop()
 
-    test_main_loop()
 
     print("<done tests:", __file__, ">")
 
