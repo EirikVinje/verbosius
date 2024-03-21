@@ -73,7 +73,7 @@ if __name__ == "__main__":
     # test_clean_text()
     # test_lemmatize()
     # test_map_tokens()
-    # test_main_loop()
+    test_main_loop()
 
 
     print("<done tests:", __file__, ">")

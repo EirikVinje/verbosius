@@ -1,3 +1,9 @@
+import pickle
+import gzip
+import os
+
+
+import config
 from trainingdata.weighter import Weighter
 
 
@@ -58,11 +64,46 @@ def test_label_tokens():
     assert labels == [2, 2, 1, 1, 0, 0], f"{labels} != {weights} when y={y}"
 
 
+def test_main_loop():
+
+    config.root = "/home/bigtech/data/verbosius/testing/root"
+    chunk = os.path.join(config.root, "preprocess", "part_1", "chunk_0_.pkl")
+
+    with gzip.open(chunk, "rb") as f:
+        data1 = pickle.load(f)    
+
+    config.TM_EPOCHS = 1
+    weighter = Weighter(1, force_write=True)
+    weighter.run()
+
+    config.root = "/home/bigtech/data/verbosius/testing/root"
+    chunk = os.path.join(config.root, "weighter", "part_1", "chunk_0_.pkl")
+
+    with gzip.open(chunk, "rb") as f:
+        data2 = pickle.load(f)    
+
+    s_idx = [s["sample_index"] for s in data2]
+    
+    s1 = None
+    s2 = None
+    for sample in data1:
+        if sample["sample_index"] in s_idx and sample["y"] != 0:
+            idx = s_idx.index(sample["sample_index"])
+            
+            s1 = sample
+            s2 = data2[idx]
+            
+
+    assert s1["y"] == s2["y"]
+    assert s1["orig_y"] == s2["orig_y"]    
+    assert s1["x"] == " ".join(s2["token_x"])
+
 
 if __name__ == "__main__":
 
     # test_label_tokens()
     # test_weight_tokens()
-    test_connect_tokens()
+    # test_connect_tokens()
+    test_main_loop()
 
     print("<done tests:", __file__, ">")
