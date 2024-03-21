@@ -1,5 +1,10 @@
-from preprocess.preprocess import Preprocess
+import gzip
+import pickle
+import os
 
+from preprocess.preprocess import Preprocess
+from chunking.chunker import Chunker
+import config
 
 def test_clean_text():
     
@@ -39,11 +44,39 @@ def test_map_tokens():
     assert ids[1] == [0, 1, 1, 1, 1, 2, 2, 2, 2], ids[1]
 
 
+def test_main_loop():
+
+    config.root = "/home/bigtech/data/verbosius/testing/root"
+    chunk = os.path.join(config.root, "chunking", "part_1", "chunk_0_.pkl")
+
+    with gzip.open(chunk, "rb") as f:
+        data1 = pickle.load(f)
+
+    preprocess = Preprocess(1)
+    preprocess.run()
+
+    chunk = os.path.join(config.root, "preprocess", "part_1", "chunk_0_.pkl")
+
+    with gzip.open(chunk, "rb") as f:
+        data2 = pickle.load(f)
+
+    assert len(data1) == len(data2), f"length in : {len(data1)} length out : {len(data2)}"  
+
+    assert data1[0][1] == data2[0]["y"], f"{data1[0][1]} != {data2[0]['y']}"
+    assert data1[0][2] == data2[0]["orig_y"], f"{data1[0][2]} != {data2[0]['orig_y']}"
+
+    os.system(f"rm -rf {os.path.join(config.root, 'preprocess', 'part_1')}")
+
+
+
 if __name__ == "__main__":
 
     # test_clean_text()
     # test_lemmatize()
-    test_map_tokens()
+    # test_map_tokens()
+
+    test_main_loop()
+
     print("<done tests:", __file__, ">")
 
 

@@ -13,8 +13,7 @@ checkpoint=0
 # python verbosius/chunking/chunker.py --n_chunks $n_chunks --part_n $part_n --size $size 
 
 python verbosius/preprocess/preprocess.py --part_n $part_n 
-
-# python verbosius/trainingdata/weighter.py --part_n $part_n
+python verbosius/trainingdata/weighter.py --part_n $part_n
 
 
 # python verbosius/train_eval_tokenize/stage_train_eval_tokenize.py --dataset $dataset --chunkdist_n $chunkdist_n
