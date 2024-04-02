@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from chunking.chunker import Chunker
+from chunker import Chunker
 
 def test_orig_labels():
 

@@ -3,7 +3,7 @@ import pickle
 import os
 
 from preprocess.preprocess import Preprocess
-from chunking.chunker import Chunker
+from chunker import Chunker
 import config
 
 def test_clean_text():

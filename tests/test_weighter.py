@@ -4,7 +4,7 @@ import os
 
 
 import config
-from trainingdata.weighter import Weighter
+from weighter import Weighter
 
 
 def test_make_weighted_data():

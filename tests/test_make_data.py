@@ -1,6 +1,6 @@
-from chunking.chunker import Chunker
+from chunker import Chunker
 from preprocess.preprocess import Preprocess
-from trainingdata.weighter import Weighter
+from weighter import Weighter
 from train_eval_tokenize.trainingdata import Trainingdata
 import config
 
