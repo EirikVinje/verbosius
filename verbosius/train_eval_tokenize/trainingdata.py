@@ -65,10 +65,9 @@ class Trainingdata:
         class_y_balance = np.unique(temp_y, return_counts=True)[1]
         # class_orig_y_balance = np.unique(temp_orig_y, return_counts=True)[1]
 
-        self.balance_train = [(class_y_balance * 0.8).astype(int), [0, 0, 0]]
-        self.balance_eval = [(class_y_balance * 0.2).astype(int), [0, 0, 0]]
-
-        return class_y_balance
+        self.class_y_balance = list(class_y_balance)
+        self.balance_train = [list((class_y_balance * 0.8).astype(int)), [0, 0, 0]]
+        self.balance_eval = [list((class_y_balance * 0.2).astype(int)), [0, 0, 0]]
 
         
     def _tokenize_and_align_labels(self, chunk):
@@ -155,7 +154,9 @@ class Trainingdata:
         n_e = 0
         n_t = 0
 
-        with tqdm(total=len(chunks), desc="Making tokenized train and eval", disable=self.progress_bar is False) as pbar:
+        chunk_size = 24000
+
+        with tqdm(total=len(chunks), desc="(trainingdata) trainsplit", disable=self.progress_bar is False) as pbar:
             
             for chunk in chunks:
                 
@@ -184,7 +185,7 @@ class Trainingdata:
                         self.balance_eval[1][2] += 1
                         eval.append(sample)
 
-                    if len(train) >= 8000:
+                    if len(train) >= chunk_size:
                         
                         tokenized_train = self._tokenize_and_align_labels(train)
                         
@@ -193,7 +194,7 @@ class Trainingdata:
                         train = []
                         n_t += 1
 
-                    if len(eval) >= 8000:
+                    if len(eval) >= chunk_size:
 
                         tokenized_eval = self._tokenize_and_align_labels(eval)
                         
@@ -217,6 +218,7 @@ class Trainingdata:
 
     def run(self):
         self._set_dir()
+        self._get_class_balance()
         self._main_loop()
 
 

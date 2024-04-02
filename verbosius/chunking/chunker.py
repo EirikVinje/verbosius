@@ -89,7 +89,7 @@ class Chunker:
 
         with tqdm(total=self.n_chunks, disable=self.progress_bar is False) as bar:
 
-            bar.set_description("Processing chunk 1 of {}:".format(self.n_chunks))
+            bar.set_description("(chunking) Processing chunk 1 of {}:".format(self.n_chunks))
 
             for i in range(self.n_chunks):
 
@@ -126,7 +126,7 @@ class Chunker:
 
                 self._write_chunk(i_x)
                 
-                bar.set_description("Processing chunk {} of {}".format(i+1, self.n_chunks))
+                bar.set_description("(chunking) Processing chunk {} of {}".format(i+1, self.n_chunks))
                 bar.update(1)
 
 
@@ -199,6 +199,6 @@ if __name__ == "__main__":
     af.chunk_amount_checker(args.n_chunks)
     af.chunckdist_n_checker(args.part_n)
 
-    chunker = Chunker(size=args.size, part_n=args.part_n, n_chunks=args.n_chunks)
+    chunker = Chunker(size=args.size, part_n=args.part_n, n_chunks=args.n_chunks, progress_bar=True)
 
     chunker.run()

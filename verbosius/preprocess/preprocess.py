@@ -185,7 +185,7 @@ class Preprocess:
 
         with tqdm(total=len(chunks), disable=self.progress_bar is False) as bar:
         
-            bar.set_description("Processing chunk 1 of {}".format(len(chunks)))
+            bar.set_description("(preprocess) Processing chunk 1 of {}".format(len(chunks)))
 
             sample_index = 0
             for i, chunkname in enumerate(sorted_chunks):
@@ -202,7 +202,7 @@ class Preprocess:
 
                 sample_index = self._write_chunk(token_x, lemma_x, token_ids, y, orig_y, x, sample_index)    
 
-                bar.set_description("Processing chunk {} of {}".format(i+1, len(chunks)))
+                bar.set_description("(preprocess) Processing chunk {} of {}".format(i+1, len(chunks)))
                 bar.update(1)
     
 

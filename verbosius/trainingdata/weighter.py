@@ -327,7 +327,7 @@ class Weighter:
         error_params = False
 
         with tqdm(total=dir_len, disable=self.progress_bar is False) as bar:
-            bar.set_description("Processing chunk 1 of {}:".format(dir_len))
+            bar.set_description("(weighter) Processing chunk 1 of {}".format(dir_len))
         
             for n in range(dir_len):
                 
@@ -360,7 +360,7 @@ class Weighter:
                 if not error_params:
                     self._write_e_chunk(false_data, n)
 
-                bar.set_description("Processing chunk {} of {}:".format(n+1, dir_len))
+                bar.set_description("(weighter) Processing chunk {} of {}".format(n+1, dir_len))
 
                 true_data = None
                 false_data = None
@@ -369,6 +369,8 @@ class Weighter:
                 chunk = None
 
                 gc.collect()
+
+                bar.update(1)
 
 
     def run(self):
@@ -387,6 +389,6 @@ if __name__ == "__main__":
 
     af.chunckdist_n_checker(args.part_n)
     
-    weighter = Weighter(args.part_n)
+    weighter = Weighter(args.part_n, progress_bar=True)
 
     weighter.run()
