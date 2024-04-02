@@ -9,7 +9,7 @@ from tqdm import tqdm
 import numpy as np
 
 import utils.arg_funcs as af
-import config
+import utils.config as config
 
 
 class Trainingdata:

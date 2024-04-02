@@ -6,7 +6,7 @@ import pickle
 import numpy as np
 
 from train_eval_tokenize.trainingdata import Trainingdata
-import config
+import utils.config as config
 
 def test_tokenizing():
 

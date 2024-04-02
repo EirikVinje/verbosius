@@ -18,7 +18,7 @@ import evaluate
 import torch
 
 from xai_transformer.xai_model import CustomModel
-import config as config
+import utils.config as config
 import utils.arg_funcs as af
 
 

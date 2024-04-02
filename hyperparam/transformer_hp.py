@@ -7,7 +7,7 @@ import argparse
 import optuna
 import numpy as np
 import green_tsetlin as gt
-import config as config
+import utils.config as config
 
 from chunker import Chunker
 from preprocess.preprocess import Preprocess

@@ -18,7 +18,7 @@ import numpy as np
 from trainingdata.helper_functions import make_weighted_data, write_train_chunk, write_error_chunk, set_directory, make_eval
 import trainingdata.helper_functions as gen_data
 import green_tsetlin as gt
-import config as config
+import utils.config as config
 import utils.arg_funcs as af
 
 

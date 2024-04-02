@@ -3,7 +3,7 @@ import argparse
 import json
 from datetime import datetime
 
-import config as config
+import utils.config as config
 import performance as md
 import utils.arg_funcs as af
 

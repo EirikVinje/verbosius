@@ -3,7 +3,7 @@ import gzip
 import os
 
 
-import config
+import utils.config as config
 from weighter import Weighter
 
 

@@ -4,7 +4,7 @@ import argparse
 
 from numba import njit
 
-import config as config
+import utils.config as config
 
 
 @njit

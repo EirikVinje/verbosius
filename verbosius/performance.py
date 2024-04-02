@@ -16,7 +16,7 @@ import torch
 import xai_validation.helper_functions_xaival as hf_xaival
 import xai_transformer.helper_functions as hf
 from transformer import CustomModel
-import config as config
+import utils.config as config
 
 
 

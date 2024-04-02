@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 import spacy
 
-import config
+import utils.config as config
 import utils.arg_funcs as af
 
 

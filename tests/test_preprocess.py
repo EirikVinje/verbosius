@@ -4,7 +4,7 @@ import os
 
 from preprocess.preprocess import Preprocess
 from chunker import Chunker
-import config
+import utils.config as config
 
 def test_clean_text():
     

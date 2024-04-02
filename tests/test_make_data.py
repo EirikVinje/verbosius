@@ -2,7 +2,7 @@ from chunker import Chunker
 from preprocess.preprocess import Preprocess
 from weighter import Weighter
 from train_eval_tokenize.trainingdata import Trainingdata
-import config
+import utils.config as config
 
 def make_data():
 
