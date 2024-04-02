@@ -11,8 +11,7 @@ from tqdm import tqdm
 import spacy
 
 import config
-import arg_funcs as af
-
+import utils.arg_funcs as af
 
 
 class Preprocess:

@@ -8,7 +8,7 @@ import gc
 from tqdm import tqdm
 import numpy as np
 
-import arg_funcs as af
+import utils.arg_funcs as af
 import config
 
 

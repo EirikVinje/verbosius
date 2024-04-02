@@ -10,7 +10,7 @@ from preprocess.stage_preprocess import stage_preprocess
 from trainingdata.stage_trainingdata import stage_trainingdata
 from xai_transformer.stage_transformer import stage_transformer
 from xai_validation.stage_validation import stage_validation
-from xai_transformer.model_accuracy import model_accuracy
+from performance import model_accuracy
 import config as config
 
 

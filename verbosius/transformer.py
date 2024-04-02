@@ -19,7 +19,7 @@ import torch
 
 from xai_transformer.xai_model import CustomModel
 import config as config
-import arg_funcs as af
+import utils.arg_funcs as af
 
 
 logging.getLogger("transformers.modeling_utils").setLevel(logging.ERROR)
@@ -135,15 +135,16 @@ class Transformer:
     def _set_trainer(self):
 
         self.training_args = TrainingArguments(
-            output_dir = os.path.join(self.model_dir, self.model_name),
+            
             learning_rate = config.learning_rate,
             per_device_train_batch_size = config.trainer_batch_size,
             per_device_eval_batch_size = config.trainer_batch_size,
+            
+            output_dir = os.path.join(self.model_dir, self.model_name),
             num_train_epochs = config.num_train_epochs,
-            evaluation_strategy = config.evaluation_strategy,
-            save_strategy = config.save_strategy,
-            load_best_model_at_end = config.load_best_model_at_end,
-            label_names = config.label_names,
+            evaluation_strategy = "epoch",
+            save_strategy = "epoch",
+            load_best_model_at_end = True
             )
 
         if config.device != "cpu":

@@ -7,9 +7,9 @@ import shutil
 from tqdm import tqdm
 import numpy as np
 
-from chunking.get_data import get_dataset
+from utils.get_data import get_dataset
 import config
-import arg_funcs as af
+import utils.arg_funcs as af
 
 
 class Chunker:

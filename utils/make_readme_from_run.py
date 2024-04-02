@@ -4,8 +4,8 @@ import json
 from datetime import datetime
 
 import config as config
-import xai_transformer.model_accuracy as md
-import arg_funcs as af
+import performance as md
+import utils.arg_funcs as af
 
 
 def make_readme_from_run(dataset, chunkdist_n):

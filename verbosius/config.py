@@ -8,8 +8,8 @@ seed = 42
 
 user = os.environ.get("USER")
 root = f"/home/{user}/data/verbosius/amazon" 
-TM_EPOCHS = 1
-num_train_epochs = 1
+TM_EPOCHS = 50
+num_train_epochs = 10
 
 num_tok_labels = 3 # transformer
 num_seq_labels = 5 # transformer

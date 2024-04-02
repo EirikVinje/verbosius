@@ -9,12 +9,14 @@ import numpy as np
 import green_tsetlin as gt
 import config as config
 
-from chunking.stage_chunks import stage_chunks
-from preprocess.stage_preprocess import stage_preprocess
-from trainingdata.stage_trainingdata import stage_trainingdata
+from chunker import Chunker
+from preprocess.preprocess import Preprocess
+from weighter import Weighter
+from train_eval_tokenize.trainingdata import Trainingdata
+
 from xai_transformer.stage_transformer import stage_transformer
 from xai_validation.stage_validation import stage_validation
-from xai_transformer.model_accuracy import model_accuracy
+from performance import model_accuracy
 
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"

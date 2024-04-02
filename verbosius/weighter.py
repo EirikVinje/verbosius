@@ -19,7 +19,7 @@ from trainingdata.helper_functions import make_weighted_data, write_train_chunk,
 import trainingdata.helper_functions as gen_data
 import green_tsetlin as gt
 import config as config
-import arg_funcs as af
+import utils.arg_funcs as af
 
 
 
