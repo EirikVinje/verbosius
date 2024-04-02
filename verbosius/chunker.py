@@ -7,7 +7,6 @@ import shutil
 from tqdm import tqdm
 import numpy as np
 
-from utils.get_data import get_dataset
 import utils.config as config
 import utils.arg_funcs as af
 
