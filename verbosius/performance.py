@@ -45,17 +45,64 @@ class ModelMetrics:
 
         rng.shuffle(test)
 
-        new_test_x = hf_xaival.tokenize_to_model([text for text, _ in test], config.tokenizer, config.device)
+        new_test_x = self._tokenize_to_model([text for text, _ in test], config.tokenizer, config.device)
 
         test_x = {"input_ids": [], "attention_mask": [], "targets": []}
         
-        test_x = hf.extend_test(test_x, new_test_x)
+        test_x = self._extend_test(test_x, new_test_x)
         test_y = [label for _, label in test]
 
         test_x = Test_Dataset(**test_x)
 
         self.test_x = test_x
         self.test_y = test_y
+
+
+    def _extend_test(self, data, new_chunk):
+
+        data["input_ids"].extend(new_chunk["input_ids"])
+        data["attention_mask"].extend(new_chunk["attention_mask"])
+        data["targets"].extend(new_chunk["targets"])
+
+        return data
+
+
+    def _tokenize_to_model(self, data, tokenizer, device):
+    
+        tokenized_inputs = tokenizer(data, 
+                                    truncation=True, 
+                                    padding="longest", 
+                                    return_tensors='pt',
+                                    max_length=512,
+                                    )
+        
+        targets = []
+        
+        for i in range(len(data)):
+        
+            word_ids = tokenized_inputs.word_ids(batch_index=i)      
+            previous_word_idx = None
+            target_ids = []
+            
+            for word_idx in word_ids:  
+                
+                if word_idx is None:
+                    target_ids.append(0)
+
+                elif word_idx != previous_word_idx: 
+                    target_ids.append(1)
+
+                else:
+                    target_ids.append(0)
+
+                previous_word_idx = word_idx
+            targets.append(target_ids)
+            
+        tokenized_inputs["targets"] = torch.tensor(targets).to(device = device)
+        tokenized_inputs["input_ids"]= tokenized_inputs["input_ids"].to(device = device) 
+        tokenized_inputs["attention_mask"] = tokenized_inputs["attention_mask"].to(device = device) 
+    
+        return tokenized_inputs
 
 
     def set_model(self):

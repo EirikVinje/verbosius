@@ -5,7 +5,7 @@ import pickle
 
 import numpy as np
 
-from train_eval_tokenize.trainingdata import Trainingdata
+from verbosius.trainingdata import Trainingdata
 import utils.config as config
 
 def test_tokenizing():
