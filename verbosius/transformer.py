@@ -66,7 +66,7 @@ class Transformer:
 
     def _set_trainer(self):
 
-        self.training_args = TrainingArguments(
+        training_args = TrainingArguments(
             learning_rate = config.learning_rate,
             per_device_train_batch_size = config.trainer_batch_size,
             per_device_eval_batch_size = config.trainer_batch_size,
@@ -79,11 +79,11 @@ class Transformer:
             )
 
         if config.device != "cpu":
-            self.training_args = self.training_args.set_dataloader(pin_memory=False)
+            training_args = training_args.set_dataloader(pin_memory=False)
 
         self.trainer = Trainer(
             model=self.model,
-            args=self.training_args,
+            args=training_args,
             train_dataset=self.train_dataset,
             eval_dataset=self.eval_dataset,
             tokenizer=config.tokenizer,
@@ -110,14 +110,6 @@ class Transformer:
         self.model = None
         self.trainer = None
         gc.collect()
-
-
-    def run(self):
-        self._set_dir()
-        self._set_train_eval()
-        self._set_model()
-        self._set_trainer()
-        self._train()
 
 
     def _custom_data_collator(self, batch_input):
@@ -200,6 +192,13 @@ class Transformer:
         
         return output
 
+
+    def run(self):
+        self._set_dir()
+        self._set_train_eval()
+        self._set_model()
+        self._set_trainer()
+        self._train()
 
 
 class IterableDataset_Custom(torch.utils.data.IterableDataset):
