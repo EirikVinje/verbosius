@@ -1,5 +1,6 @@
 import argparse
 import logging
+import shutil
 import pickle
 import os
 import json
@@ -25,12 +26,14 @@ logging.getLogger("transformers.modeling_utils").setLevel(logging.ERROR)
 
 
 class Transformer:
-    def __init__(self, part_n : int, model_name : str):
+    def __init__(self, part_n : int, model_name : str, force_write : bool = False):
 
         self.partition = f"part_{part_n}"
         self.trainingdata_dir = os.path.join(config.root, "trainingdata")
         self.model_dir = os.path.join(config.root, "models")
         self.model_name = model_name
+
+        self.force_write = force_write
 
 
     def _set_dir(self):
@@ -43,6 +46,11 @@ class Transformer:
         part_dir = os.path.join(self.model_dir, self.model_name)
         if not os.path.exists(part_dir):
             os.mkdir(part_dir)
+
+        elif self.force_write:
+            shutil.rmtree(part_dir)
+            os.mkdir(part_dir)
+        
         else:
             assert False, f"partion {part_dir} already exists in {self.model_dir}"
 
@@ -59,18 +67,15 @@ class Transformer:
     def _set_trainer(self):
 
         self.training_args = TrainingArguments(
-            
             learning_rate = config.learning_rate,
             per_device_train_batch_size = config.trainer_batch_size,
             per_device_eval_batch_size = config.trainer_batch_size,
-            
             output_dir = os.path.join(self.model_dir, self.model_name),
             num_train_epochs = config.num_train_epochs,
             evaluation_strategy = config.evaluation_strategy,
             save_strategy = config.save_strategy,
             load_best_model_at_end = True,
             label_names=config.label_names
-            
             )
 
         if config.device != "cpu":
@@ -91,9 +96,7 @@ class Transformer:
     def _train(self):
     
         start_t = time.time()
-
         self.trainer.train()
-
         end_t = time.time()
 
         torch.save(self.model, os.path.join(self.model_dir, self.model_name, self.model_name))
@@ -106,12 +109,10 @@ class Transformer:
         self.eval_dataset = None
         self.model = None
         self.trainer = None
-        
         gc.collect()
 
-    
-    def run(self):
 
+    def run(self):
         self._set_dir()
         self._set_train_eval()
         self._set_model()
@@ -288,11 +289,6 @@ class CustomModel(nn.Module): # transformers.modeling_utils.PreTrainedModel
         
         else:
             return TokenClassifierOutput(logits=logits)
-
-
-
-
-
 
 
 

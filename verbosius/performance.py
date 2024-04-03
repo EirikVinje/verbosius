@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from transformer import CustomModel
+from verbosius.transformer import CustomModel
 import utils.config as config
 
 
@@ -34,11 +34,11 @@ class ModelMetrics:
         self.model_dir = os.path.join(config.root, "models", self.model_name)
 
 
-    def load_test(self):
+    def _load_test(self):
         
         rng = np.random.default_rng(seed=config.seed)
 
-        test_path = os.path.join(config.root, "pre_chunking", self.size, "test_data.pkl")
+        test_path = os.path.join("/home/bigtech/data/verbosius/amazon", "pre_chunking", self.size, "test_data.pkl")
 
         with open(test_path, "rb") as f:
             test = pickle.load(f)
@@ -105,7 +105,7 @@ class ModelMetrics:
         return tokenized_inputs
 
 
-    def set_model(self):
+    def _set_model(self):
 
         if self.checkpoint:
             raise NotImplementedError
@@ -127,6 +127,9 @@ class ModelMetrics:
 
 
     def get_metrics(self):
+
+        self._load_test()
+        self._set_model()
 
         preds = self.trainer.predict(self.test_x)
     
@@ -201,10 +204,8 @@ if __name__ == "__main__":
     size = args.size 
 
     model_metrics = ModelMetrics(model_name=model_name, checkpoint=checkpoint, size=size)
-    model_metrics.load_test()
-    model_metrics.set_model()
     model_metrics.get_metrics()
 
     print(model_metrics.metrics)
 
-    model_metrics.save_metrics()
+    # model_metrics.save_metrics()
