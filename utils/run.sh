@@ -12,10 +12,9 @@ size="small"
 model_name="model_02_04"
 checkpoint=0
 
-# CUDA_VISIBLE_DEVICES=0 python verbosius/old_transformer.py
 CUDA_VISIBLE_DEVICES=0 python verbosius/transformer.py --part_n $part_n --model_name $model_name
-
-
 # CUDA_VISIBLE_DEVICES=0 python verbosius/performance.py --model_name $model_name --size $size 
+
+
 
 

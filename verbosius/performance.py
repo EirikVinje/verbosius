@@ -17,7 +17,6 @@ from verbosius.transformer import CustomModel
 import utils.config as config
 
 
-
 logging.getLogger("transformers.modeling_utils").setLevel(logging.ERROR)
 
 

@@ -179,7 +179,6 @@ class Chunker:
 
 
     def run(self):
-
         self._build_environment()
         self.load_amazon()
         self._chunk_data()
