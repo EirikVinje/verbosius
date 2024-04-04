@@ -28,11 +28,8 @@ def objective(trial):
     Transformer(part_n, "model_1", force_write=True).run()
 
     model_metrics = ModelMetrics("model_1", "big")
-    model_metrics.load_test()
-    model_metrics.set_model()
     model_metrics.get_metrics()
-
-    # shutil.rmtree(os.path.join(config.root, 'models', "model_1"))
+    model_metrics.save_metrics()
     
     return model_metrics.metrics["seq_acc"]
 
@@ -46,12 +43,12 @@ if __name__ == "__main__":
     part_n = 202
     n_chunks = 25
 
-    Chunker("big", part_n, n_chunks, progress_bar=True, force_write=True).run()
-    Preprocess(part_n, progress_bar=True, force_write=True).run()
-    Weighter(part_n, progress_bar=True, force_write=True).run()
-    Trainingdata(part_n, progress_bar=True, force_write=True).run()
+    # Chunker("big", part_n, n_chunks, progress_bar=True, force_write=True).run()
+    # Preprocess(part_n, progress_bar=True, force_write=True).run()
+    # Weighter(part_n, progress_bar=True, force_write=True).run()
+    # Trainingdata(part_n, progress_bar=True, force_write=True).run()
 
-    study = optuna.create_study(study_name="transformersearch_02_04", direction="maximize", storage=f"sqlite:////home/{config.user}/projects/verbosius/sqlite3.db", load_if_exists=True)
+    study = optuna.create_study(study_name="transformersearch_04_04", direction="maximize", storage=f"sqlite:////home/{config.user}/projects/verbosius/sqlite3.db", load_if_exists=True)
 
     study.optimize(objective, n_trials=20, show_progress_bar=False)
     
