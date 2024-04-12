@@ -15,9 +15,13 @@ import utils.arg_funcs as af
 
 
 class Preprocess:
-    def __init__(self, part_n : int, progress_bar : bool = False, force_write : bool = False):
+    def __init__(self, 
+                 ds_path : str, 
+                 part_n : int, 
+                 progress_bar : bool = True, 
+                 force_write : bool = False):
 
-        self.chunking_dir = os.path.join(config.root, "chunking")
+        self.ds_path = ds_path
         self.preprocess_dir = os.path.join(config.root, "preprocess")
         self.partition = f"part_{part_n}"
 
@@ -26,26 +30,43 @@ class Preprocess:
         self.force_write = force_write
 
 
-    def _set_dir(self):
+    def _set_env(self):
 
-        if not os.path.exists(os.path.join(self.chunking_dir, self.partition)):
-            assert ValueError(f"Partition {self.partition} in {self.chunking_dir} does not exist")
+        if not os.path.exists(config.root):
+            os.mkdir(config.root)
 
-        part_dir = os.path.join(self.preprocess_dir, self.partition)
+        preprocess_dir = os.path.join(config.root, "preprocess")
+        weighter_dir = os.path.join(config.root, "weighter")
+        trainingdata_dir = os.path.join(config.root, "trainingdata")
+        models_dir = os.path.join(config.root, "models")
+
+        if not os.path.exists(preprocess_dir):
+            os.mkdir(preprocess_dir)
+        
+        if not os.path.exists(weighter_dir):
+            os.mkdir(weighter_dir)
+        
+        if not os.path.exists(trainingdata_dir):
+            os.mkdir(trainingdata_dir)
+        
+        if not os.path.exists(models_dir):
+            os.mkdir(models_dir)
+
+        part_dir = os.path.join(preprocess_dir, self.partition)
         if not os.path.exists(part_dir):
             os.mkdir(part_dir)
 
         elif self.force_write:
             shutil.rmtree(part_dir)
             os.mkdir(part_dir)
-
+        
         else:
-            assert False, f"partion {part_dir} already exists in {self.preprocess_dir}"
+            assert False, f"{part_dir} already exists, remove from {preprocess_dir} before continuing"
 
 
     def _load_chunk(self, chunkname):
 
-        chunk_path = os.path.join(self.chunking_dir, self.partition, chunkname)
+        chunk_path = os.path.join(self.ds_path, "train", chunkname)
         if not os.path.exists(chunk_path):
             assert False, f"Chunk does not exist : {chunk_path}"
 
@@ -86,6 +107,8 @@ class Preprocess:
         
     
     def _lemmatize(self, x):
+        
+        x = [str(t) for t in x]
 
         nlp = spacy.load("en_core_web_sm")
         docs = nlp.pipe(x, n_process=-1) 
@@ -179,7 +202,7 @@ class Preprocess:
 
     def _main_loop(self):
 
-        chunks = os.listdir(os.path.join(self.chunking_dir, self.partition))
+        chunks = os.listdir(os.path.join(self.ds_path, "train"))
         sorted_chunks = sorted(chunks, key=lambda x: int(x.split("_")[1]))
 
         with tqdm(total=len(chunks), disable=self.progress_bar is False) as bar:
@@ -206,7 +229,7 @@ class Preprocess:
     
 
     def run(self):
-        self._set_dir()
+        self._set_env()
         self._main_loop()
 
 
@@ -214,12 +237,15 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Stage data for training")
 
+    parser.add_argument("--ds_path", type=str, help="Path to dataset")
     parser.add_argument("--part_n", type=int, help="Which chunk to stage")
+    parser.add_argument("--fw", type=int, help="Force write")
+    parser.add_argument("--pb", type=int, help="Show progress bar")
 
     args = parser.parse_args()
 
     af.chunckdist_n_checker(args.part_n)
     
-    preprocess = Preprocess(args.part_n, progress_bar=True)
+    preprocess = Preprocess(ds_path=args.ds_path, part_n=args.part_n, force_write=args.fw, progress_bar=args.pb)
 
     preprocess.run()

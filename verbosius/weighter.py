@@ -22,7 +22,10 @@ import utils.arg_funcs as af
 
 
 class Weighter:
-    def __init__(self, part_n : int, progress_bar : bool = False, force_write : bool = False) -> None:
+    def __init__(self, 
+                 part_n : int, 
+                 progress_bar : bool = True, 
+                 force_write : bool = False) -> None:
 
         self.preprocess_dir = os.path.join(config.root, "preprocess")
         self.weighter_dir = os.path.join(config.root, "weighter")
@@ -124,42 +127,75 @@ class Weighter:
         return ruleset
 
 
-    def _do_weighting(self, train_data, feature_names, ruleset) -> Tuple[list[dict], list[dict]]:
-    
+    def _get_preds_exp(self, train_data, ruleset, feature_names):
+
         true_x_idx = []
         false_x_idx = []
         explanations = []
 
         for idx, inst in enumerate(train_data):
         
-            bin_x = inst["bin_x"]
-            y = inst["y"]
-        
-            prediction = ruleset.predict(bin_x, explain=False)
-            
-            expl = ruleset.explain(bin_x, [0, 1, 2])
-            
-            if prediction == 2:
-                expl  = expl[2] - (expl[1] + expl[0])
-            
-            if prediction == 1:
-                expl = expl[1] - (expl[2] + expl[0])
-            
-            if prediction == 0:
-                expl = np.array([0 for _ in range(len(feature_names))])
+            if config.NUM_TM_LABELS == 3:
 
-            explanations.append(expl)
-            
-            votes = ruleset._inference.get_votes()
-            n_votes = votes[prediction]
-            
-            if y == prediction and n_votes > 0: 
-                true_x_idx.append([n_votes, idx])
-            
-            else:
-                false_x_idx.append(idx)
-        
+                bin_x = inst["bin_x"]
+                y = inst["y"]
+                prediction = ruleset.predict(bin_x, explain=False)
+                
+                expl = ruleset.explain(bin_x, [0, 1, 2])
+                if prediction == 2:
+                    expl  = expl[2] - (expl[1] + expl[0])
+                
+                if prediction == 1:
+                    expl = expl[1] - (expl[2] + expl[0])
+                
+                if prediction == 0:
+                    expl = np.array([0 for _ in range(len(feature_names))])
+
+                explanations.append(expl)
+                
+                votes = ruleset._inference.get_votes()
+                n_votes = votes[prediction]
+                
+                if y == prediction and n_votes > 0: 
+                    true_x_idx.append([n_votes, idx])
+                
+                else:
+                    false_x_idx.append(idx)
+
+            elif config.NUM_TM_LABELS == 2:
+                
+                bin_x = inst["bin_x"]
+                y = inst["y"]
+                prediction = ruleset.predict(bin_x, explain=False)
+
+                expl = ruleset.explain(bin_x, [0, 1])
+                
+                if prediction == 1:
+                    expl = expl[1] - expl[0]
+                
+                if prediction == 0:
+                    expl = expl[0] - expl[1]
+
+                explanations.append(expl)
+
+                votes = ruleset._inference.get_votes()
+                n_votes = votes[prediction]
+                
+                if y == prediction and n_votes > 0:
+                    
+                    true_x_idx.append([n_votes, idx])
+                
+                else:
+                    false_x_idx.append(idx)
+
         true_x_idx = np.array(true_x_idx)
+
+        return true_x_idx, false_x_idx, explanations
+
+
+    def _do_weighting(self, train_data, feature_names, ruleset) -> Tuple[list[dict], list[dict]]:
+    
+        true_x_idx, false_x_idx, explanations = self._get_preds_exp(train_data, ruleset, feature_names)
         
         percentile_25 = np.percentile(true_x_idx[:, 0], 25)
 
@@ -189,7 +225,6 @@ class Weighter:
             
             x = inst["x"]
             sample_index = inst["sample_index"]
-
 
             if idx in true_x:
 
@@ -324,6 +359,9 @@ class Weighter:
         
         error_params = False
 
+        total_true = 0
+        total = 0
+
         with tqdm(total=dir_len, disable=self.progress_bar is False) as bar:
             bar.set_description("(weighter) Processing chunk 1 of {}".format(dir_len))
         
@@ -344,8 +382,11 @@ class Weighter:
                 lemma_x = [instance["lemma_x"] for instance in chunk]
                 y = [instance["y"] for instance in chunk]
                 
+                total += len(y) if not error_params else 0
+
                 bin_x, feature_names = self._bag_of_words(lemma_x, y, error_params=error_params)
                 bin_x, feature_names = self._select_k_best(bin_x, y, feature_names, error_params=error_params)
+                
                 ruleset = self._generate_ruleset(bin_x, y, error_params=error_params)
 
                 for i in range(len(chunk)):
@@ -359,6 +400,8 @@ class Weighter:
                     self._write_e_chunk(false_data, n)
 
                 bar.set_description("(weighter) Processing chunk {} of {}".format(n+1, dir_len))
+                
+                total_true += len(true_data)
 
                 true_data = None
                 false_data = None
@@ -369,6 +412,9 @@ class Weighter:
                 gc.collect()
 
                 bar.update(1)
+
+        self.true_x = total_true
+        self.all_x = total
 
 
     def run(self):
@@ -382,11 +428,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Stage trainingdata to transformer")
 
     parser.add_argument("--part_n", type=int, help="Set size for individual batch, must be greater than 0. Default value is 10000")
+    parser.add_argument("--fw", type=int, help="Force write")
+    parser.add_argument("--pb", type=int, help="Progress bar")
 
     args = parser.parse_args()
 
-    af.chunckdist_n_checker(args.part_n)
-    
-    weighter = Weighter(args.part_n, progress_bar=True)
+    weighter = Weighter(part_n=args.part_n, force_write=args.fw, progress_bar=args.pb)
 
     weighter.run()

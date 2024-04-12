@@ -13,7 +13,10 @@ import utils.config as config
 
 
 class Trainingdata:
-    def __init__(self, part_n : int, progress_bar : bool = False, force_write : bool = False):
+    def __init__(self, 
+                 part_n : int, 
+                 progress_bar : bool = False, 
+                 force_write : bool = False):
         
         self.partition = f"part_{part_n}"
         self.weighter_dir = os.path.join(config.root, "weighter")
@@ -227,10 +230,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Stage trainingdata to transformer")
 
     parser.add_argument("--part_n", type=int, help="Set size for individual batch, must be greater than 0. Default value is 10000")
+    parser.add_argument("--pb", type=int, help="Progress bar")
+    parser.add_argument("--fw", type=int, help="Force write")
 
     args = parser.parse_args()
 
-    af.chunckdist_n_checker(args.part_n)
-
-    trainingdata = Trainingdata(args.part_n, progress_bar=True)
+    trainingdata = Trainingdata(part_n=args.part_n, force_write=args.fw, progress_bar=args.pb)
     trainingdata.run()
