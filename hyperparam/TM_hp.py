@@ -1,16 +1,12 @@
 import os
+import gc
 
 import optuna
-import numpy as np
-import green_tsetlin as gt
-from sklearn.feature_selection import chi2, f_classif, mutual_info_classif
 
-from chunking.stage_chunks import stage_chunks
-from preprocess.stage_preprocess import stage_preprocess
-from trainingdata.stage_trainingdata import stage_trainingdata
-from xai_transformer.stage_transformer import stage_transformer
-from xai_validation.stage_validation import stage_validation
-from performance import model_accuracy
+from verbosius.chunker import Chunker
+from verbosius.preprocess import Preprocess
+from verbosius.weighter import Weighter 
+
 import utils.config as config
 
 
@@ -39,36 +35,25 @@ def objective(trial):
     config.STOPWORDS = trial.suggest_categorical("STOPWORDS", [None, "english"])
     # config.n_badtexts = trial.suggest_int("n_badtexts", 1000, 5000, step=100)
 
-    correct_x = stage_trainingdata(dataset=config.dataset,
-                       chunkdist_n=config.chunkdist_n)
+    weighter = Weighter(part_n, progress_bar=True, force_write=True)
 
-    acc = correct_x / (config.chunk_size * config.chunk_amount)
-    
-    os.system(f"rm -rf {config.root}/{config.dataset}/trainingdata/{config.dataset}_chunkdist_{config.chunkdist_n}/")
-
-    return acc
+    weighter.run()
 
 if __name__ == "__main__":
     
-    config.root = f"/home/{config.user}/data/verbosius/hpsearch_env/"
+    config.root = f"/home/{config.user}/data/verbosius/hpsearch/"
     config.seed = 42
 
-    config.chunkdist_n = 19404
-    config.dataset = "amazon"
-    config.chunk_size = 8000
-    config.chunk_amount = 25
     config.TM_EPOCHS = 50
     
-    study = optuna.create_study(study_name="TM_param_search_official_cs8000_ca75_final", direction="maximize", storage=f"sqlite:////home/{config.user}/projects/verbosius/sqlite3.db", load_if_exists=True)
-    
-    # stage_chunks(dataset=config.dataset,
-    #              chunk_size=config.chunk_size,
-    #              chunk_amount=config.chunk_amount,
-    #              chunkdist_n=config.chunkdist_n)
-    
-    # stage_preprocess(dataset=config.dataset,
-    #                  chunkdist_n=config.chunkdist_n)
+    n_chunks = 25
+    part_n = 1235
 
+    Chunker("huge", part_n, n_chunks, progress_bar=True, force_write=True).run()
+    Preprocess(part_n, progress_bar=True, force_write=True).run()
+    
+    study = optuna.create_study(study_name="TM_hpsearch_09_04", direction="maximize", storage=f"sqlite:////home/{config.user}/projects/verbosius/sqlite3.db", load_if_exists=True)
+    
     study.optimize(objective, n_trials=100, show_progress_bar=True)
     
     print(study.best_params)
