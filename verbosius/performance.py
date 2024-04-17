@@ -1,19 +1,23 @@
 import argparse
-import logging
 import pathlib
+import logging
+import pickle
+import gzip
 import json
+import time
 import os
 import gc
-import time
-import pickle
 
 from sklearn.metrics import accuracy_score, precision_score, confusion_matrix, ConfusionMatrixDisplay, f1_score
 from transformers import TrainingArguments, Trainer
+from torch.nn.utils.rnn import pad_sequence
 import matplotlib.pyplot as plt
 import numpy as np
+import evaluate
 import torch
 
 from verbosius.transformer import CustomModel
+from verbosius.chunker import Chunker
 import utils.config as config
 
 
@@ -22,29 +26,31 @@ logging.getLogger("transformers.modeling_utils").setLevel(logging.ERROR)
 
 class ModelMetrics:
     def __init__(self, model_name : str, 
-                 size : str, 
+                 testpath : str, 
                  seed : int = 42, 
-                 checkpoint : bool = False):
+                 checkpoint : bool = False,
+                 n_chunks : int = 10):
         
         self.model_name = model_name
-        self.size = size
+        self.testpath = testpath
         self.seed = seed
         self.checkpoint = checkpoint
         self.model_dir = os.path.join(config.root, "models", self.model_name)
+        self.n_chunks = n_chunks
 
 
     def _load_test(self):
         
         rng = np.random.default_rng(seed=config.seed)
 
-        test_path = os.path.join("/home/bigtech/data/verbosius/amazon", "pre_chunking", self.size, "test_data.pkl")
+        test_path = os.path.join(self.testpath, "test", "test.pkl")
 
-        with open(test_path, "rb") as f:
+        with gzip.open(test_path, "rb") as f:
             test = pickle.load(f)
 
         rng.shuffle(test)
 
-        new_test_x = self._tokenize_to_model([text for text, _ in test], config.tokenizer, config.device)
+        new_test_x = self._tokenize_to_model([text for text, _ in test])
 
         test_x = {"input_ids": [], "attention_mask": [], "targets": []}
         
@@ -66,9 +72,9 @@ class ModelMetrics:
         return data
 
 
-    def _tokenize_to_model(self, data, tokenizer, device):
+    def _tokenize_to_model(self, data):
     
-        tokenized_inputs = tokenizer(data, 
+        tokenized_inputs = config.tokenizer(data, 
                                     truncation=True, 
                                     padding="longest", 
                                     return_tensors='pt',
@@ -97,11 +103,92 @@ class ModelMetrics:
                 previous_word_idx = word_idx
             targets.append(target_ids)
             
-        tokenized_inputs["targets"] = torch.tensor(targets).to(device = device)
-        tokenized_inputs["input_ids"]= tokenized_inputs["input_ids"].to(device = device) 
-        tokenized_inputs["attention_mask"] = tokenized_inputs["attention_mask"].to(device = device) 
+        tokenized_inputs["targets"] = torch.tensor(targets).to(device = config.device)
+        tokenized_inputs["input_ids"]= tokenized_inputs["input_ids"].to(device = config.device) 
+        tokenized_inputs["attention_mask"] = tokenized_inputs["attention_mask"].to(device = config.device) 
     
         return tokenized_inputs
+
+
+    def _custom_data_collator(self, batch_input):
+
+        input_ids = [torch.tensor(inst["input_ids"], dtype=torch.long) for inst in batch_input]
+        attention_mask = [torch.tensor(inst["attention_mask"], dtype=torch.long) for inst in batch_input]
+        targets = [torch.tensor(inst["targets"], dtype=torch.long) for inst in batch_input]
+        labels = [torch.tensor(inst["labels"], dtype=torch.long) for inst in batch_input] if "labels" in batch_input[0].keys() else None
+        sentiment = [torch.tensor(inst["sentiment"], dtype=torch.long) for inst in batch_input] if "sentiment" in batch_input[0].keys() else None
+
+        input_ids = pad_sequence(input_ids, batch_first=True, padding_value=1)
+        attention_mask = pad_sequence(attention_mask, batch_first=True, padding_value=0)
+        targets = pad_sequence(targets, batch_first=True, padding_value=0)
+        
+        if labels != None:
+            labels = pad_sequence(labels, batch_first=True, padding_value=-100) 
+
+        if sentiment == None and labels == None:
+            
+            new_batch_input = {
+            "input_ids": input_ids.to(config.device),
+            "attention_mask": attention_mask.to(config.device),
+            "targets": targets.to(config.device)
+            }
+
+            return new_batch_input
+
+        new_batch_input = {
+            "input_ids": input_ids.to(config.device),
+            "attention_mask": attention_mask.to(config.device),
+            "labels": labels.to(config.device),
+            "targets": targets.to(config.device),
+            "sentiment": torch.stack(sentiment).to(config.device)
+        }
+
+        return new_batch_input
+    
+
+    def _compute_metrics(self, eval_preds):
+    
+        metric = evaluate.load("accuracy")
+        logits, labels = eval_preds
+        predictions = np.argmax(logits[1], axis=1)
+        token_predictions = np.argmax(logits[0], axis=2)
+        
+        nz = (predictions!=0).sum()
+        token_negative = (token_predictions==1).sum()
+        token_neutral = (token_predictions==0).sum()
+        token_positive = (token_predictions==2).sum()
+
+        seqeval = evaluate.load("seqeval")
+        
+        label_list = ["neutral", "negative", "positive"]
+
+        true_predictions = [
+
+            [label_list[p] for (p, l) in zip(prediction, label) if l != -100]
+
+            for prediction, label in zip(token_predictions, labels[0])
+
+        ]
+
+        true_labels = [
+
+            [label_list[l] for (p, l) in zip(prediction, label) if l != -100]
+
+            for prediction, label in zip(token_predictions, labels[0])
+
+        ]
+
+        results = seqeval.compute(predictions=true_predictions, references=true_labels)
+        output = {
+            "token_accuracy": results["overall_accuracy"],
+            "sequence_accuracy": (metric.compute(predictions=predictions, references=labels[1]))['accuracy'],
+            "nz": nz,
+            "token_neutral": token_neutral,
+            "token_negative": token_negative,
+            "token_positive": token_positive
+        }
+        
+        return output
 
 
     def _set_model(self):
@@ -114,15 +201,15 @@ class ModelMetrics:
 
         training_args = TrainingArguments(
             output_dir = "/home/bigtech/",
-            per_device_train_batch_size = 64,
-            per_device_eval_batch_size = 64,
+            per_device_train_batch_size = 32,
+            per_device_eval_batch_size = 32,
             label_names = config.label_names,        
             )
 
         if config.device != "cpu":
             training_args = training_args.set_dataloader(pin_memory=False)
 
-        self.trainer = Trainer(model=self.model, args=training_args)    
+        self.trainer = Trainer(model=self.model, args=training_args, data_collator=self._custom_data_collator, compute_metrics=self._compute_metrics)    
 
 
     def get_metrics(self):
@@ -156,12 +243,9 @@ class ModelMetrics:
         
         metric_dict = {"seq_acc": self.seq_acc, "seq_prec": self.seq_prec, "seq_f1": self.seq_f1}
 
-
-
         with open(os.path.join(self.metric_folder, f"metrics_{self.model_name}.json"), "w") as f:
             json.dump(metric_dict, f)
         
-
         if gitsave:
             os.system(f"git add {self.metric_folder} && git commit -m 'save run' && git push origin HEAD")
 
@@ -185,7 +269,6 @@ class Test_Dataset(torch.utils.data.Dataset):
             'attention_mask': attention_mask,
             'targets': targets
         }
-
 
     
 if __name__ == "__main__":
